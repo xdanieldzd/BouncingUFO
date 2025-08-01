@@ -3,19 +3,30 @@ using System.Numerics;
 
 namespace GameTest1
 {
+    // TODO: further tileset+stage scaffolding, related cleanup
+
     // https://github.com/FosterFramework/Samples/tree/5b97ca5329e61768f85a45d655da5df7f882519d/TinyLink
 
     public class Game : App
     {
+        public const int TileSize = 16;
+
+        private const string startOnStage = "Test";
+
         private Rect Viewport => new(0f, 0f, Window.WidthInPixels, Window.HeightInPixels);
 
         private readonly FrameCounter frameCounter = new();
 
+        private readonly Assets assets;
         private readonly Controls controls;
 
         private readonly Batcher batcher;
         private readonly Target screen;
-        private readonly SpriteFont font;
+
+        //
+
+        private Stage? stage;
+        private Tileset? tileset;
 
         //
 
@@ -73,11 +84,11 @@ namespace GameTest1
         {
             GraphicsDevice.VSync = true;
 
+            assets = new(GraphicsDevice);
             controls = new(Input);
 
             batcher = new(GraphicsDevice);
             screen = new(GraphicsDevice, screenWidth, screenHeight, "Screen");
-            font = new(GraphicsDevice, Path.Join("Assets", "Fonts", "monogram-extended.ttf"), 16);
 
             var playerTexture = new Texture(GraphicsDevice, new Image(Path.Join("Assets", "Sprites", "UFO.png")), "Player");
             for (var i = 0; i < playerTexture.Width / playerSize.X; i++)
@@ -102,6 +113,8 @@ namespace GameTest1
             switch (gameState)
             {
                 case GameState.Init:
+                    GoToStage(startOnStage);
+
                     playerPosition = screen.Bounds.Center - playerSize / 2f + new Vector2(0f, playfieldBounds.Y);
 
                     var rngSeed = (ulong)DateTime.Now.Ticks;
@@ -142,6 +155,12 @@ namespace GameTest1
                 case GameState.End:
                     break;
             }
+        }
+
+        private void GoToStage(string name)
+        {
+            stage = assets.Stages[startOnStage];
+            tileset = assets.Tilesets[stage.Tileset];
         }
 
         private void SpawnTargets(ulong rngSeed)
@@ -297,14 +316,16 @@ namespace GameTest1
         {
             screen.Clear(0x3E4F65);
 
-            RenderBackground();
+            RenderStage();
+            //RenderBackground();
             RenderGameObjects();
             RenderBigMessage();
             RenderGameHud();
-
 #if DEBUG
             RenderDebugText();
 #endif
+            //batcher.Image(assets.Tilesets.First().Value.Tiles[1], Color.White);
+
             batcher.Render(screen);
             batcher.Clear();
         }
@@ -320,6 +341,24 @@ namespace GameTest1
 
             batcher.RectLine(playfieldBounds, 2f, Color.Yellow);
 #endif
+        }
+
+        private void RenderStage()
+        {
+            if (stage == null || tileset == null) return;
+
+            for (var l = 0; l < stage.Layers.Length; l++)
+            {
+                for (var y = 0; y < stage.Height; y++)
+                {
+                    for (var x = 0; x < stage.Width; x++)
+                    {
+                        var position = new Vector2(x, y) * TileSize;
+                        var tile = stage.Layers[l][x, y];
+                        batcher.Image(tileset.Tiles[tile], position, Color.White);
+                    }
+                }
+            }
         }
 
         private void RenderGameObjects()
@@ -356,12 +395,12 @@ namespace GameTest1
                 var secondText = timer < 1f ? "GO!!" : (timer < 4f ? $"{timer}..." : string.Empty);
                 batcher.PushMatrix(Matrix3x2.CreateTranslation(screen.Bounds.Center));
                 batcher.PushMatrix(Matrix3x2.CreateTranslation(0f, -5f) * Matrix3x2.CreateScale(4f));
-                batcher.Text(font, "Get Ready!", Vector2.One, new(0.5f), Color.Black);
-                batcher.Text(font, "Get Ready!", Vector2.Zero, new(0.5f), Color.Yellow);
+                batcher.Text(assets.Font, "Get Ready!", Vector2.One, new(0.5f), Color.Black);
+                batcher.Text(assets.Font, "Get Ready!", Vector2.Zero, new(0.5f), Color.Yellow);
                 batcher.PopMatrix();
                 batcher.PushMatrix(Matrix3x2.CreateTranslation(0f, 7.5f) * Matrix3x2.CreateScale(2f));
-                batcher.Text(font, secondText, Vector2.One, new(0.5f), Color.Black);
-                batcher.Text(font, secondText, Vector2.Zero, new(0.5f), Color.White);
+                batcher.Text(assets.Font, secondText, Vector2.One, new(0.5f), Color.Black);
+                batcher.Text(assets.Font, secondText, Vector2.Zero, new(0.5f), Color.White);
                 batcher.PopMatrix();
                 batcher.PopMatrix();
             }
@@ -369,12 +408,12 @@ namespace GameTest1
             {
                 batcher.PushMatrix(Matrix3x2.CreateTranslation(screen.Bounds.Center));
                 batcher.PushMatrix(Matrix3x2.CreateTranslation(0f, -5f) * Matrix3x2.CreateScale(4f));
-                batcher.Text(font, "GAME OVER!", Vector2.One, new(0.5f), Color.Black);
-                batcher.Text(font, "GAME OVER!", Vector2.Zero, new(0.5f), Color.Green);
+                batcher.Text(assets.Font, "GAME OVER!", Vector2.One, new(0.5f), Color.Black);
+                batcher.Text(assets.Font, "GAME OVER!", Vector2.Zero, new(0.5f), Color.Green);
                 batcher.PopMatrix();
                 batcher.PushMatrix(Matrix3x2.CreateTranslation(0f, 7.5f) * Matrix3x2.CreateScale(2f));
-                batcher.Text(font, $"Your time: {gameEndTime - gameStartTime:mm\\:ss\\:ff}", Vector2.One, new(0.5f), Color.Black);
-                batcher.Text(font, $"Your time: {gameEndTime - gameStartTime:mm\\:ss\\:ff}", Vector2.Zero, new(0.5f), Color.White);
+                batcher.Text(assets.Font, $"Your time: {gameEndTime - gameStartTime:mm\\:ss\\:ff}", Vector2.One, new(0.5f), Color.Black);
+                batcher.Text(assets.Font, $"Your time: {gameEndTime - gameStartTime:mm\\:ss\\:ff}", Vector2.Zero, new(0.5f), Color.White);
                 batcher.PopMatrix();
                 batcher.PopMatrix();
             }
@@ -382,17 +421,17 @@ namespace GameTest1
 
         private void RenderGameHud()
         {
-            batcher.Text(font, $"Time: {gameEndTime - gameStartTime:mm\\:ss\\:ff}", new(9f), Color.Black);
-            batcher.Text(font, $"Time: {gameEndTime - gameStartTime:mm\\:ss\\:ff}", new(8f), Color.White);
-            batcher.Text(font, $"Left: {targetProperties.Count(x => x.isAlive)}", new Vector2(screen.Width - 7f, 9f), new Vector2(1f, 0f), Color.Black);
-            batcher.Text(font, $"Left: {targetProperties.Count(x => x.isAlive)}", new Vector2(screen.Width - 8f, 8f), new Vector2(1f, 0f), Color.White);
+            batcher.Text(assets.Font, $"Time: {gameEndTime - gameStartTime:mm\\:ss\\:ff}", new(9f), Color.Black);
+            batcher.Text(assets.Font, $"Time: {gameEndTime - gameStartTime:mm\\:ss\\:ff}", new(8f), Color.White);
+            batcher.Text(assets.Font, $"Left: {targetProperties.Count(x => x.isAlive)}", new Vector2(screen.Width - 7f, 9f), new Vector2(1f, 0f), Color.Black);
+            batcher.Text(assets.Font, $"Left: {targetProperties.Count(x => x.isAlive)}", new Vector2(screen.Width - 8f, 8f), new Vector2(1f, 0f), Color.White);
         }
 
         private void RenderDebugText()
         {
             var text = $"Current FPS:{frameCounter.CurrentFps:00.00} Average FPS:{frameCounter.AverageFps:00.00}\nPosition:{playerPosition:0.0000} Velocity:{playerVelocity:0.0000} Cooldown:{playerCurrentBounceCooldown}\n{controls.Move.Name}:{controls.Move.IntValue} {controls.Action1.Name}:{controls.Action1.Down} {controls.Action2.Name}:{controls.Action2.Down}";
-            batcher.Text(font, text, new Vector2(9f, screen.Height - 7f), new Vector2(0f, 1f), Color.Black);
-            batcher.Text(font, text, new Vector2(8f, screen.Height - 8f), new Vector2(0f, 1f), Color.White);
+            batcher.Text(assets.Font, text, new Vector2(9f, screen.Height - 7f), new Vector2(0f, 1f), Color.Black);
+            batcher.Text(assets.Font, text, new Vector2(8f, screen.Height - 8f), new Vector2(0f, 1f), Color.White);
         }
 
         private void RenderScreenToWindow()
