@@ -303,7 +303,6 @@ namespace GameTest1
             RenderGameHud();
 
 #if DEBUG
-            //RenderTestStuffsText();
             RenderDebugText();
 #endif
             batcher.Render(screen);
@@ -387,14 +386,6 @@ namespace GameTest1
             batcher.Text(font, $"Time: {gameEndTime - gameStartTime:mm\\:ss\\:ff}", new(8f), Color.White);
             batcher.Text(font, $"Left: {targetProperties.Count(x => x.isAlive)}", new Vector2(screen.Width - 7f, 9f), new Vector2(1f, 0f), Color.Black);
             batcher.Text(font, $"Left: {targetProperties.Count(x => x.isAlive)}", new Vector2(screen.Width - 8f, 8f), new Vector2(1f, 0f), Color.White);
-        }
-
-        private void RenderTestStuffsText()
-        {
-            batcher.Text(font, $"This is a test of FosterFramework!\nCurrent FPS is {frameCounter.CurrentFps:0.00}, average FPS is {frameCounter.AverageFps:0.00}, delta time is {Time.Delta:0.00000}!", new(0, 0), Color.White);
-            batcher.Text(font, "Framework project repo: https://github.com/FosterFramework/Foster\nFont is monogram-extended (CC0): https://datagoblin.itch.io/monogram", new(0, 30), Color.White);
-
-            batcher.Text(font, $"Action: {(controls.Action1.Down ? "held down" : "not held")} -- Move X/Y: {controls.Move.IntValue}", new(0, 100), Color.White);
         }
 
         private void RenderDebugText()
