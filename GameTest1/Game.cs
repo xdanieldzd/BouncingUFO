@@ -13,7 +13,7 @@ namespace GameTest1
 
         private const string startOnStage = "Test";
 
-        private Rect Viewport => new(0f, 0f, Window.WidthInPixels, Window.HeightInPixels);
+
 
         private readonly FrameCounter frameCounter = new();
 
@@ -62,8 +62,6 @@ namespace GameTest1
         private readonly (Vector2 position, int sprite, bool isAlive)[] targetProperties = new (Vector2, int, bool)[50];
         private Vector2 targetSize = new(16f);
 
-        private readonly Texture skyBackground, stageBackground;
-
         enum GameState { Init, Start, InProgress, End }
 
         private GameState gameState = GameState.Init;
@@ -97,9 +95,6 @@ namespace GameTest1
             var targetTexture = new Texture(GraphicsDevice, new Image(Path.Join("Assets", "Sprites", "Target.png")), "Target");
             for (var i = 0; i < targetTexture.Width / targetSize.X; i++)
                 targetSprites.Add(new(targetTexture, new Rect(new(targetSize.X * i, 0f), targetSize)));
-
-            skyBackground = new Texture(GraphicsDevice, new Image(Path.Join("Assets", "Sprites", "Sky.png")), "Sky");
-            stageBackground = new Texture(GraphicsDevice, new Image(Path.Join("Assets", "Sprites", "Stage.png")), "Stage");
         }
 
         protected override void Startup() { }
@@ -118,17 +113,11 @@ namespace GameTest1
                     playerPosition = screen.Bounds.Center - playerSize / 2f + new Vector2(0f, playfieldBounds.Y);
 
                     var rngSeed = (ulong)DateTime.Now.Ticks;
-#if DEBUG
-                    rngSeed = 0x801197e3;
-#endif
+                    if (Globals.FixedSeed) rngSeed = 0x801197e3;
                     SpawnTargets(rngSeed);
 
                     gameState = GameState.Start;
-#if DEBUG
-                    gameStartTimer = 0.0f;
-#else
-                    gameStartTimer = 5.0f;
-#endif
+                    gameStartTimer = Globals.QuickStart ? 0.0f : 5.0f;
                     break;
 
                 case GameState.Start:
@@ -159,7 +148,7 @@ namespace GameTest1
 
         private void GoToStage(string name)
         {
-            stage = assets.Stages[startOnStage];
+            stage = assets.Stages[name];
             tileset = assets.Tilesets[stage.Tileset];
         }
 
@@ -317,30 +306,17 @@ namespace GameTest1
             screen.Clear(0x3E4F65);
 
             RenderStage();
-            //RenderBackground();
             RenderGameObjects();
             RenderBigMessage();
             RenderGameHud();
-#if DEBUG
-            RenderDebugText();
-#endif
-            //batcher.Image(assets.Tilesets.First().Value.Tiles[1], Color.White);
+
+            if (Globals.ShowDebugInfo)
+            {
+                RenderDebugText();
+            }
 
             batcher.Render(screen);
             batcher.Clear();
-        }
-
-        private void RenderBackground()
-        {
-            batcher.Image(skyBackground, Color.White);
-            batcher.Image(stageBackground, new(0f, playfieldEdgeTop), Color.White);
-
-#if DEBUG
-            var skyRect = new Rect(0f, 0f, screen.Width, playfieldEdgeTop);
-            batcher.RectLine(skyRect, 2f, Color.Blue);
-
-            batcher.RectLine(playfieldBounds, 2f, Color.Yellow);
-#endif
         }
 
         private void RenderStage()
@@ -368,10 +344,6 @@ namespace GameTest1
                 if (!targetAlive) continue;
 
                 batcher.Image(targetSprites[targetSpriteIdx], targetPos, Color.White);
-#if DEBUG
-                var targetRect = new Rect(targetPos.X, targetPos.Y, targetSize.X, targetSize.Y);
-                batcher.RectLine(targetRect, 1f, Color.Red);
-#endif
             }
 
             batcher.PushMatrix(
@@ -381,10 +353,6 @@ namespace GameTest1
                 Matrix3x2.CreateTranslation(playerPosition));
             batcher.Image(playerSprites[playerSpriteIndex], Color.White);
             batcher.PopMatrix();
-#if DEBUG
-            var playerRect = new Rect(playerPosition.X, playerPosition.Y + (playerSize.Y / 2f), playerSize.X, playerSize.Y / 2f);
-            batcher.RectLine(playerRect, 1f, Color.Red);
-#endif
         }
 
         private void RenderBigMessage()
@@ -436,10 +404,11 @@ namespace GameTest1
 
         private void RenderScreenToWindow()
         {
-            var scale = MathF.Max(1f, MathF.Floor(Calc.Min(Viewport.Size.X / screen.Width, Viewport.Size.Y / screen.Height)));
+            var viewport = new Rect(0f, 0f, Window.WidthInPixels, Window.HeightInPixels);
+            var scale = MathF.Max(1f, MathF.Floor(Calc.Min(viewport.Size.X / screen.Width, viewport.Size.Y / screen.Height)));
 
             batcher.PushSampler(new(TextureFilter.Nearest, TextureWrap.Clamp, TextureWrap.Clamp));
-            batcher.Image(screen, Viewport.Center.Floor(), screen.Bounds.Size / 2f, Vector2.One * scale, 0f, Color.White);
+            batcher.Image(screen, viewport.Center.Floor(), screen.Bounds.Size / 2f, Vector2.One * scale, 0f, Color.White);
             batcher.PopSampler();
             batcher.Render(Window);
             batcher.Clear();
