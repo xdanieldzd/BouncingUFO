@@ -48,8 +48,6 @@ namespace GameTest1
             screenWidth - playfieldEdges - playfieldEdges,
             screenHeight - playfieldEdges - playfieldEdgeTop);
 
-        private readonly List<Subtexture> playerSprites = [];
-        private int playerSpriteIndex = 0;
         private Vector2 playerPosition = Vector2.Zero;
         private Vector2 playerSize = new(32f);
         private RectInt playerHitbox = new(0, 16, 32, 16);
@@ -58,8 +56,7 @@ namespace GameTest1
         private Vector2 playerCurrentBounceCooldown = Vector2.Zero;
         private float playerCurrentSpriteRotation = 0f;
 
-        private readonly List<Subtexture> targetSprites = [];
-        private readonly (Vector2 position, int sprite, bool isAlive)[] targetProperties = new (Vector2, int, bool)[50];
+        private readonly (Vector2 position, bool isAlive)[] targetProperties = new (Vector2, bool)[50];
         private Vector2 targetSize = new(16f);
 
         enum GameState { Init, Start, InProgress, End }
@@ -87,14 +84,6 @@ namespace GameTest1
 
             batcher = new(GraphicsDevice);
             screen = new(GraphicsDevice, screenWidth, screenHeight, "Screen");
-
-            var playerTexture = new Texture(GraphicsDevice, new Image(Path.Join("Assets", "Sprites", "UFO.png")), "Player");
-            for (var i = 0; i < playerTexture.Width / playerSize.X; i++)
-                playerSprites.Add(new(playerTexture, new Rect(new(playerSize.X * i, 0f), playerSize)));
-
-            var targetTexture = new Texture(GraphicsDevice, new Image(Path.Join("Assets", "Sprites", "Target.png")), "Target");
-            for (var i = 0; i < targetTexture.Width / targetSize.X; i++)
-                targetSprites.Add(new(targetTexture, new Rect(new(targetSize.X * i, 0f), targetSize)));
         }
 
         protected override void Startup() { }
@@ -136,8 +125,6 @@ namespace GameTest1
 
                     HandlePlayerTargetCollision();
 
-                    AnimateObjects();
-
                     gameEndTime = DateTime.Now;
                     break;
 
@@ -166,7 +153,7 @@ namespace GameTest1
             positions.Sort((x, y) => x.Y.CompareTo(y.Y));
 
             for (var i = 0; i < targetProperties.Length; i++)
-                targetProperties[i] = new(positions[i], i % 2, true);
+                targetProperties[i] = new(positions[i], true);
         }
 
         private void CalcPlayerVelocityAndRotation(Point2 direction, bool action1, bool action2)
@@ -255,7 +242,7 @@ namespace GameTest1
             var playerRect = new Rect(playerPosition.X, playerPosition.Y + (playerSize.Y / 2f), playerSize.X, playerSize.Y / 2f);
             for (var i = 0; i < targetProperties.Length; i++)
             {
-                var (targetPos, _, targetAlive) = targetProperties[i];
+                var (targetPos, targetAlive) = targetProperties[i];
                 if (!targetAlive) continue;
 
                 var targetRect = new Rect(targetPos.X, targetPos.Y, targetSize.X, targetSize.Y);
@@ -265,24 +252,6 @@ namespace GameTest1
 
             if (targetProperties.All(x => !x.isAlive))
                 gameState = GameState.End;
-        }
-
-        private void AnimateObjects()
-        {
-            if (Time.OnInterval(0.1f))
-            {
-                playerSpriteIndex++;
-                playerSpriteIndex %= playerSprites.Count;
-            }
-
-            if (Time.OnInterval(0.5f))
-            {
-                for (var i = 0; i < targetProperties.Length; i++)
-                {
-                    targetProperties[i].sprite++;
-                    targetProperties[i].sprite %= targetSprites.Count;
-                }
-            }
         }
 
         protected override void Render()
@@ -339,11 +308,11 @@ namespace GameTest1
 
         private void RenderGameObjects()
         {
-            foreach (var (targetPos, targetSpriteIdx, targetAlive) in targetProperties)
+            foreach (var (targetPos, targetAlive) in targetProperties)
             {
                 if (!targetAlive) continue;
 
-                batcher.Image(targetSprites[targetSpriteIdx], targetPos, Color.White);
+                batcher.Rect(targetPos, targetSize, Color.Blue);
             }
 
             batcher.PushMatrix(
@@ -351,7 +320,7 @@ namespace GameTest1
                 Matrix3x2.CreateRotation(Calc.DegToRad * playerCurrentSpriteRotation) *
                 Matrix3x2.CreateTranslation(playerSize / 2f) *
                 Matrix3x2.CreateTranslation(playerPosition));
-            batcher.Image(playerSprites[playerSpriteIndex], Color.White);
+            batcher.Rect(Vector2.Zero, playerSize, Color.Yellow);
             batcher.PopMatrix();
         }
 
