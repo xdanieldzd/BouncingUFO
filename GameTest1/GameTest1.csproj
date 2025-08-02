@@ -5,6 +5,7 @@
 		<TargetFramework>net9.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
 		<!-- TODO -->
 		<PublishAot>false</PublishAot>
@@ -14,16 +15,11 @@
 
 	<ItemGroup>
 		<PackageReference Include="FosterFramework" Version="0.2.2" />
+		<PackageReference Include="ImGui.NET" Version="1.91.6.1" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<None Update="Assets\Fonts\monogram-extended.ttf">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="Assets\Stages\Test.txt">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="Assets\Tilesets\Tileset1.png">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 	</ItemGroup>

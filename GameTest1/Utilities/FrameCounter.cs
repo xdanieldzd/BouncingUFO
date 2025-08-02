@@ -1,4 +1,4 @@
-﻿namespace GameTest1
+﻿namespace GameTest1.Utilities
 {
     public class FrameCounter
     {
