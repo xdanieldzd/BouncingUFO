@@ -4,7 +4,8 @@
     {
         protected readonly Manager manager = manager;
 
-        public abstract void Update();
+        public abstract void UpdateApp();
+        public virtual void UpdateUI() { }
         public abstract void Render();
     }
 }

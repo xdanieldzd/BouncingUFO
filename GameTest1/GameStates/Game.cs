@@ -3,9 +3,9 @@ using System.Numerics;
 
 namespace GameTest1.GameStates
 {
-    internal class Game(Manager manager) : GameState(manager), IGameState
+    public class Game(Manager manager) : GameState(manager), IGameState
     {
-        public override void Update()
+        public override void UpdateApp()
         {
             //
         }

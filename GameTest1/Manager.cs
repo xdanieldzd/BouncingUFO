@@ -41,7 +41,7 @@ namespace GameTest1
             Controls = new(Input);
             FrameCounter = new();
 
-            GameStates.Push(new Game(this));
+            GameStates.Push(new Editor(this));
         }
 
         protected override void Startup() { }
@@ -56,14 +56,14 @@ namespace GameTest1
             if (Input.Keyboard.Pressed(Keys.Escape)) Exit();
 
             if (GameStates.TryPeek(out IGameState? gameState))
-                gameState.Update();
+                gameState.UpdateApp();
 
             ImGuiRenderer.BeginLayout();
 
             if (ImGuiRenderer.WantsTextInput) Window.StartTextInput();
             else Window.StopTextInput();
 
-            ImGui.ShowDemoWindow();
+            gameState?.UpdateUI();
 
             ImGuiRenderer.EndLayout();
         }

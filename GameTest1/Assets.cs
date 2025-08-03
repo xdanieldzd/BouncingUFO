@@ -1,10 +1,13 @@
 ﻿using Foster.Framework;
+using System.Text.Json;
 
 namespace GameTest1
 {
     public class Assets
     {
         private const string assetsFolderName = "Assets";
+
+        public readonly static JsonSerializerOptions SerializerOptions = new() { WriteIndented = true };
 
         public SpriteFont Font { get; private set; }
 

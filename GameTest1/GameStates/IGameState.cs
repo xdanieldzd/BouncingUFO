@@ -2,7 +2,8 @@
 {
     public interface IGameState
     {
-        void Update();
+        void UpdateApp();
+        void UpdateUI();
         void Render();
     }
 }
