@@ -3,6 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace GameTest1.Levels
 {
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     [Flags]
     public enum CellFlag
     {

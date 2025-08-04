@@ -3,7 +3,7 @@ using System.Numerics;
 
 namespace GameTest1.GameStates
 {
-    public class Game(Manager manager) : GameState(manager), IGameState
+    public class Game(Manager manager) : GameStateBase(manager), IGameState
     {
         public override void UpdateApp()
         {

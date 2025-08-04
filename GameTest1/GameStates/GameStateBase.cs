@@ -1,6 +1,6 @@
 ﻿namespace GameTest1.GameStates
 {
-    public abstract class GameState(Manager manager) : IGameState
+    public abstract class GameStateBase(Manager manager) : IGameState
     {
         protected readonly Manager manager = manager;
 

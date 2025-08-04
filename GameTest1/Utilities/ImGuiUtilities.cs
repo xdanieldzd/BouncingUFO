@@ -5,11 +5,15 @@ namespace GameTest1.Utilities
 {
     public static class ImGuiUtilities
     {
-        readonly static ImGuiStylePtr style;
-
-        static ImGuiUtilities()
+        public static Color GetFosterColor(ImGuiCol idx, byte alpha)
         {
-            style = ImGui.GetStyle();
+            var fosterColor = new Color();
+            var imguiColor = ImGui.GetColorU32(idx);
+            fosterColor.A = alpha;
+            fosterColor.B = (byte)(imguiColor >> 16);
+            fosterColor.G = (byte)(imguiColor >> 8);
+            fosterColor.R = (byte)(imguiColor >> 0);
+            return fosterColor;
         }
 
         public static bool ComboPoint2(string label, ref Point2 v, Point2[] v_valid, string format)
