@@ -25,7 +25,7 @@ namespace GameTest1.Utilities
         {
             ImGui.InputText(label, ref input, 1024, ImGuiInputTextFlags.ReadOnly);
             ImGui.SameLine();
-            if (ImGui.Button("...")) filesystem.OpenFileDialog(callback, filters, input);
+            if (ImGui.Button("Browse...")) filesystem.OpenFileDialog(callback, filters, input);
         }
     }
 }

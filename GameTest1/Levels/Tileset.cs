@@ -20,7 +20,7 @@ namespace GameTest1.Levels
         [JsonInclude]
         public Point2 CellSize = ValidCellSizes[1];
         [JsonInclude]
-        public string TilesheetFile = @"D:\Programming\UFO\Tilesets\00.png";
+        public string TilesheetFile = string.Empty;
         [JsonInclude]
         public CellFlag[] CellFlags = [];
 

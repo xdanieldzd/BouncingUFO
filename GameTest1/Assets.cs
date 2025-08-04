@@ -5,7 +5,11 @@ namespace GameTest1
 {
     public class Assets
     {
-        private const string assetsFolderName = "Assets";
+        public const string AssetsFolderName = "Assets";
+        public const string FontsFolderName = "Fonts";
+        public const string TilesetFolderName = "Tilesets";
+
+        //
 
         public readonly static JsonSerializerOptions SerializerOptions = new() { WriteIndented = true };
 
@@ -15,7 +19,7 @@ namespace GameTest1
 
         public Assets(GraphicsDevice graphicsDevice)
         {
-            Font = new(graphicsDevice, Path.Join(assetsFolderName, "Fonts", "monogram-extended.ttf"), 16);
+            Font = new(graphicsDevice, Path.Join(AssetsFolderName, "Fonts", "monogram-extended.ttf"), 16);
 
             //
         }
