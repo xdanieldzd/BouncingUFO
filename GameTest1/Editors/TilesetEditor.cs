@@ -9,8 +9,6 @@ namespace GameTest1.Editors
 {
     public class TilesetEditor(Manager manager) : EditorBase(manager), IEditor
     {
-        // TODO: rewrite grid & selector to use foster batcher like mapeditor!
-
         public override string Name => "Tileset Editor";
 
         const float zoom = 3f;
@@ -19,14 +17,16 @@ namespace GameTest1.Editors
 
         private string currentTilesetPath = string.Empty;
         private int hoveredCell = -1, selectedCell = 0;
-        private uint hoveredHighlightColor, selectedHighlightColor;
-        private readonly uint hoveredBorderColor = 0x7F00FF00, selectedBorderColor = 0x7F0000FF;
+        private Color gridColor, hoveredHighlightColor, selectedHighlightColor, hoveredBorderColor, selectedBorderColor;
         private bool drawCellGrid = true;
 
         public override void Setup()
         {
-            //if (hoveredHighlightColor == 0) hoveredHighlightColor = 0x7F000000 | (ImGui.GetColorU32(ImGuiCol.Border) & 0x00FFFFFF);
-            //if (selectedHighlightColor == 0) selectedHighlightColor = 0x7F000000 | (ImGui.GetColorU32(ImGuiCol.TextSelectedBg) & 0x00FFFFFF);
+            if (gridColor.RGBA == 0) gridColor = Color.FromHexStringRGBA("0x0000007F");
+            if (hoveredBorderColor.RGBA == 0) hoveredBorderColor = Color.FromHexStringRGBA("0x00FF007F");
+            if (selectedBorderColor.RGBA == 0) selectedBorderColor = Color.FromHexStringRGBA("0xFF00007F");
+            if (hoveredHighlightColor.RGBA == 0) hoveredHighlightColor = ImGuiUtilities.GetFosterColor(ImGuiCol.Border, 0x7F);
+            if (selectedHighlightColor.RGBA == 0) selectedHighlightColor = ImGuiUtilities.GetFosterColor(ImGuiCol.TextSelectedBg, 0x7F);
         }
 
         public override void Run()
@@ -105,7 +105,7 @@ namespace GameTest1.Editors
 
                 if (tileset != null)
                 {
-                    ImGui.NewLine();
+                    ImGui.Separator();
 
                     ImGui.BeginGroup();
                     ImGui.Text($"Current tileset: {(string.IsNullOrWhiteSpace(currentTilesetPath) ? "unsaved" : currentTilesetPath)}");
@@ -121,36 +121,48 @@ namespace GameTest1.Editors
                     }));
                     ImGui.EndGroup();
 
-                    ImGui.NewLine();
-
                     ImGui.BeginGroup();
                     ImGui.Checkbox("Draw cell grid", ref drawCellGrid);
                     ImGui.EndGroup();
 
                     if (tileset.TilesheetTexture != null)
                     {
+                        ImGui.Separator();
+
                         ImGui.BeginGroup();
                         var imagePos = ImGui.GetCursorScreenPos();
                         if (manager.ImGuiRenderer.BeginBatch(new(tileset.TilesheetTexture.Width * zoom, tileset.TilesheetTexture.Height * zoom), out var batcher, out var bounds))
                         {
                             batcher.CheckeredPattern(bounds, 8, 8, Color.Gray, Color.LightGray);
                             batcher.Image(tileset.TilesheetTexture, Vector2.Zero, Vector2.Zero, Vector2.One * zoom, 0f, Color.White);
-                        }
-                        manager.ImGuiRenderer.EndBatch();
-                        ImGui.SetCursorScreenPos(imagePos);
-                        ImGui.InvisibleButton($"##dummy", new(tileset.TilesheetTexture.Width * zoom, tileset.TilesheetTexture.Height * zoom));
 
-                        if (drawCellGrid)
-                        {
                             for (var x = 0; x < tileset.TilesheetSizeInCells.X; x++)
                             {
                                 for (var y = 0; y < tileset.TilesheetSizeInCells.Y; y++)
                                 {
-                                    var cellPos = imagePos + new Vector2(x, y) * zoom * tileset.CellSize;
-                                    drawList.AddRect(cellPos, cellPos + tileset.CellSize * zoom, 0x7F000000);
+                                    var cellPos = new Vector2(x, y) * zoom * tileset.CellSize;
+                                    var cellRect = new Rect(cellPos, tileset.CellSize * zoom);
+                                    if (drawCellGrid)
+                                        batcher.RectLine(cellRect, 1f, gridColor);
+
+                                    var cellIdx = y * tileset.TilesheetSizeInCells.X + x;
+                                    if (selectedCell == cellIdx)
+                                    {
+                                        batcher.Rect(cellRect, selectedHighlightColor);
+                                        batcher.RectLine(cellRect, 1f, selectedBorderColor);
+                                    }
+
+                                    if (hoveredCell != -1 && hoveredCell == cellIdx)
+                                    {
+                                        batcher.Rect(cellRect, hoveredHighlightColor);
+                                        batcher.RectLine(cellRect, 1f, hoveredBorderColor);
+                                    }
                                 }
                             }
                         }
+                        manager.ImGuiRenderer.EndBatch();
+                        ImGui.SetCursorScreenPos(imagePos);
+                        ImGui.InvisibleButton($"##dummy", new(tileset.TilesheetTexture.Width * zoom, tileset.TilesheetTexture.Height * zoom));
 
                         for (var x = 0; x < tileset.TilesheetSizeInCells.X; x++)
                         {
@@ -165,18 +177,6 @@ namespace GameTest1.Editors
                                     hoveredCell = cellIdx;
                                     if (ImGui.IsMouseDown(ImGuiMouseButton.Left))
                                         selectedCell = hoveredCell;
-                                }
-
-                                if (selectedCell == cellIdx)
-                                {
-                                    drawList.AddRectFilled(cellPos, cellPos + tileset.CellSize * zoom, selectedHighlightColor);
-                                    drawList.AddRect(cellPos, cellPos + tileset.CellSize * zoom, selectedBorderColor, 0f, ImDrawFlags.None, 4f);
-                                }
-
-                                if (hoveredCell != -1 && hoveredCell == cellIdx)
-                                {
-                                    drawList.AddRectFilled(cellPos, cellPos + tileset.CellSize * zoom, hoveredHighlightColor);
-                                    drawList.AddRect(cellPos, cellPos + tileset.CellSize * zoom, hoveredBorderColor, 0f, ImDrawFlags.None, 4f);
                                 }
                             }
                         }

@@ -11,7 +11,7 @@ namespace GameTest1.Editors
     {
         public override string Name => "Map Editor";
 
-        const float mapZoom = 2f, zoom = 3f;
+        const float mapZoom = 2f, tilesetZoom = 3f;
 
         private Map? map;
         private Tileset? tileset;
@@ -36,16 +36,9 @@ namespace GameTest1.Editors
         {
             if (!isOpen) return;
 
-            //ImGui.ShowDemoWindow();
-            //return;
-
-            if (map == null) map = Map.GetTestmap();
-
-            if (map != null && tileset == null)
-                tileset = manager.Assets.Tilesets[map.Tileset];
-
             if (ImGui.Begin(Name, ref isOpen, ImGuiWindowFlags.AlwaysAutoResize))
             {
+                var style = ImGui.GetStyle();
                 var drawList = ImGui.GetWindowDrawList();
 
                 ImGui.BeginGroup();
@@ -54,6 +47,7 @@ namespace GameTest1.Editors
                     if (map != null) ImGui.OpenPopup("New");
                     else map = new();
                 }
+                ImGui.SameLine();
 
                 var center = ImGui.GetMainViewport().GetCenter();
                 ImGui.SetNextWindowPos(center, ImGuiCond.Appearing, new(0.5f));
@@ -61,7 +55,7 @@ namespace GameTest1.Editors
                 {
                     ImGui.Text("A map is currently open; overwrite?");
                     ImGui.Separator();
-                    if (ImGui.Button("Yes")) { map = new(); ImGui.CloseCurrentPopup(); }
+                    if (ImGui.Button("Yes")) { map = new(); currentMapPath = string.Empty; ImGui.CloseCurrentPopup(); }
                     ImGui.SameLine();
                     ImGui.SetItemDefaultFocus();
                     if (ImGui.Button("No")) ImGui.CloseCurrentPopup();
@@ -79,6 +73,7 @@ namespace GameTest1.Editors
                         }
                     }), [new("JSON files (*.json)", "json")], currentMapPath);
                 }
+                ImGui.SameLine();
 
                 if (map == null) ImGui.BeginDisabled();
                 if (ImGui.Button("Save Map") && map != null)
@@ -90,6 +85,7 @@ namespace GameTest1.Editors
                     }), [new("JSON files (*.json)", "json")], currentMapPath);
                 }
                 if (map == null) ImGui.EndDisabled();
+                ImGui.SameLine();
 
                 if (map == null) ImGui.BeginDisabled();
                 if (ImGui.Button("Export as Asset") && map != null)
@@ -97,35 +93,83 @@ namespace GameTest1.Editors
                     //
                 }
                 if (map == null) ImGui.EndDisabled();
-                ImGui.EndGroup();
-
-                ImGui.SameLine();
-
                 if (map != null)
                 {
-                    ImGui.BeginGroup();
+                    ImGui.SameLine();
+                    ImGui.Dummy(new(10f, 0f));
+                    ImGui.SameLine();
                     ImGui.Text($"Current map: {(string.IsNullOrWhiteSpace(currentMapPath) ? "unsaved" : currentMapPath)}");
-                    if (ImGui.SliderInt2("Map size", ref map.Size.X, 1, 40))
-                        map.ResizeLayers();
-                    if (ImGui.InputText("Tileset", ref map.Tileset, 128))
-                        tileset = manager.Assets.Tilesets[map.Tileset];
-                    ImGui.EndGroup();
+                }
+                ImGui.EndGroup();
 
+                ImGui.BeginGroup();
+                if (map != null)
+                {
+                    ImGui.Separator();
+
+                    var layersDirty = false;
+                    var tilesetDirty = tileset == null;
+
+                    ImGui.BeginGroup();
+                    if (ImGui.SliderInt2("Map size", ref map.Size.X, 1, 40))
+                        layersDirty = true;
+                    if (ImGui.InputText("Tileset", ref map.Tileset, 128))
+                        tilesetDirty = true;
+
+                    var currentLayerCount = map.Layers.Count;
+                    if (currentLayerCount >= 8) ImGui.BeginDisabled();
+                    if (ImGui.Button("Add new layer"))
+                    {
+                        map.Layers.Add(new(map.Size));
+                        layersDirty = true;
+                    }
+                    if (currentLayerCount >= 8) ImGui.EndDisabled();
+                    ImGui.SameLine();
+                    if (currentLayerCount <= 0) ImGui.BeginDisabled();
+                    if (ImGui.Button("Remove active layer"))
+                    {
+                        map.Layers.RemoveAt(activeLayer);
+                        layersDirty = true;
+                    }
+                    if (currentLayerCount <= 0) ImGui.EndDisabled();
+                    ImGui.EndGroup();
+                    ImGui.SameLine();
+
+                    ImGui.Dummy(new(10f, 0f));
                     ImGui.SameLine();
 
                     ImGui.BeginGroup();
-                    ImGui.Checkbox("Draw map cell grid", ref drawMapCellGrid);
-                    ImGui.Checkbox("Draw tileset cell grid", ref drawTilesetCellGrid);
-                    ImGui.SliderInt("Active layer", ref activeLayer, 0, map.Layers.Length - 1);
+                    ImGui.Checkbox("Draw map grid", ref drawMapCellGrid);
+                    ImGui.SameLine();
+                    ImGui.Checkbox("Draw tileset grid", ref drawTilesetCellGrid);
+                    if (map.Layers.Count == 0) ImGui.BeginDisabled();
+                    ImGui.SliderInt("Active layer", ref activeLayer, 0, map.Layers.Count == 0 ? 0 : map.Layers.Count - 1);
+                    if (map.Layers.Count == 0) ImGui.EndDisabled();
                     ImGui.Checkbox("Dim inactive layers", ref dimInactiveLayers);
                     ImGui.EndGroup();
 
-                    if (map != null && tileset != null && tileset.CellTextures != null)
+                    if (layersDirty)
                     {
+                        hoveredMapCell = -1;
+                        map.ResizeLayers();
+                        layersDirty = false;
+                    }
+
+                    if (tilesetDirty && manager.Assets.Tilesets.TryGetValue(map.Tileset, out Tileset? value))
+                    {
+                        tileset = value;
+                        tilesetDirty = false;
+                    }
+
+                    if (tileset != null && tileset.CellTextures != null && map.Layers.Count != 0)
+                    {
+                        ImGui.Separator();
+
                         var mapScrollHeight = 0f;
+                        var tileScrollWidth = tileset.CellSize.X * 2 * tilesetZoom + style.ScrollbarSize;
 
                         ImGui.BeginGroup();
-                        if (ImGui.BeginChild("mapscroll", new(600f, 0f), ImGuiChildFlags.AlwaysAutoResize | ImGuiChildFlags.AutoResizeY, ImGuiWindowFlags.AlwaysHorizontalScrollbar))
+                        if (ImGui.BeginChild("mapscroll", new(850f - tileScrollWidth, 0f), ImGuiChildFlags.AlwaysAutoResize | ImGuiChildFlags.AutoResizeY, ImGuiWindowFlags.AlwaysHorizontalScrollbar))
                         {
                             ImGui.BeginGroup();
 
@@ -133,7 +177,7 @@ namespace GameTest1.Editors
                             if (manager.ImGuiRenderer.BeginBatch(new(map.Size.X * tileset.CellSize.X * mapZoom, map.Size.Y * tileset.CellSize.Y * mapZoom), out var batcher, out var bounds))
                             {
                                 batcher.CheckeredPattern(bounds, 8, 8, Color.DarkGray, Color.Gray);
-                                for (var i = 0; i < map.Layers.Length; i++)
+                                for (var i = 0; i < map.Layers.Count; i++)
                                 {
                                     for (var x = 0; x < map.Size.X; x++)
                                     {
@@ -186,7 +230,7 @@ namespace GameTest1.Editors
                             }
                             ImGui.EndGroup();
 
-                            mapScrollHeight = ImGui.GetWindowHeight();
+                            mapScrollHeight = Math.Max(ImGui.GetWindowHeight(), tileset.CellSize.Y * 4 * tilesetZoom + style.ScrollbarSize);
                         }
                         ImGui.EndChild();
                         ImGui.EndGroup();
@@ -194,22 +238,22 @@ namespace GameTest1.Editors
                         ImGui.SameLine();
 
                         ImGui.BeginGroup();
-                        if (ImGui.BeginChild("tilescroll", new(tileset.CellSize.X * 2 * zoom + ImGui.GetStyle().ScrollbarSize, mapScrollHeight), ImGuiChildFlags.None, ImGuiWindowFlags.AlwaysVerticalScrollbar))
+                        if (ImGui.BeginChild("tilescroll", new(tileScrollWidth, mapScrollHeight), ImGuiChildFlags.None, ImGuiWindowFlags.AlwaysVerticalScrollbar))
                         {
                             ImGui.BeginGroup();
 
                             var tilesetViewSize = new Vector2(tileset.CellSize.X * 2, tileset.CellFlags.Length / 2 * tileset.CellSize.Y);
 
                             var imagePos = ImGui.GetCursorScreenPos();
-                            if (manager.ImGuiRenderer.BeginBatch(tilesetViewSize * zoom, out var batcher, out var bounds))
+                            if (manager.ImGuiRenderer.BeginBatch(tilesetViewSize * tilesetZoom, out var batcher, out var bounds))
                             {
                                 batcher.CheckeredPattern(bounds, 8, 8, Color.DarkGray, Color.Gray);
                                 for (var i = 0; i < tileset.TilesheetSizeInCells.X * tileset.TilesheetSizeInCells.Y; i++)
                                 {
-                                    var cellPos = new Vector2(i % 2, i / 2) * zoom * tileset.CellSize;
-                                    batcher.Image(tileset.CellTextures[i], cellPos, Vector2.Zero, new(zoom), 0f, Color.White);
+                                    var cellPos = new Vector2(i % 2, i / 2) * tilesetZoom * tileset.CellSize;
+                                    batcher.Image(tileset.CellTextures[i], cellPos, Vector2.Zero, new(tilesetZoom), 0f, Color.White);
 
-                                    var cellRect = new Rect(cellPos, tileset.CellSize * zoom);
+                                    var cellRect = new Rect(cellPos, tileset.CellSize * tilesetZoom);
                                     if (drawTilesetCellGrid)
                                         batcher.RectLine(cellRect, 1f, gridColor);
 
@@ -228,12 +272,12 @@ namespace GameTest1.Editors
                             }
                             manager.ImGuiRenderer.EndBatch();
                             ImGui.SetCursorScreenPos(imagePos);
-                            ImGui.InvisibleButton($"##dummy2", tilesetViewSize * zoom);
+                            ImGui.InvisibleButton($"##dummy2", tilesetViewSize * tilesetZoom);
 
                             for (var i = 0; i < tileset.TilesheetSizeInCells.X * tileset.TilesheetSizeInCells.Y; i++)
                             {
-                                var cellPos = imagePos + new Vector2(i % 2, i / 2) * zoom * tileset.CellSize;
-                                var isHovering = ImGui.IsMouseHoveringRect(cellPos, cellPos + tileset.CellSize * zoom);
+                                var cellPos = imagePos + new Vector2(i % 2, i / 2) * tilesetZoom * tileset.CellSize;
+                                var isHovering = ImGui.IsMouseHoveringRect(cellPos, cellPos + tileset.CellSize * tilesetZoom);
                                 if (ImGui.IsWindowFocused(ImGuiFocusedFlags.RootAndChildWindows) && isHovering)
                                 {
                                     hoveredTilemapCell = i;
@@ -247,6 +291,7 @@ namespace GameTest1.Editors
                         ImGui.EndGroup();
                     }
                 }
+                ImGui.EndGroup();
             }
             ImGui.End();
         }
