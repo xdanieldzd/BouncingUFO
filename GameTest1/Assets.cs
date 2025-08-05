@@ -34,7 +34,13 @@ namespace GameTest1
                 Tilesets.Add(Path.GetFileNameWithoutExtension(tilesetFile), tileset);
             }
 
-            //
+            foreach (var mapFile in Directory.EnumerateFiles(Path.Join(AssetsFolderName, MapFolderName), "*.json", SearchOption.AllDirectories))
+            {
+                var map = JsonSerializer.Deserialize<Map>(File.ReadAllText(mapFile), SerializerOptions);
+                if (map == null) continue;
+
+                Maps.Add(Path.GetFileNameWithoutExtension(mapFile), map);
+            }
         }
     }
 }

@@ -6,7 +6,7 @@ namespace GameTest1.Levels
     public record Map
     {
         [JsonInclude]
-        public string Name = string.Empty;
+        public string Title = string.Empty;
         [JsonInclude]
         public Point2 Size = Point2.One;
         [JsonInclude]

@@ -22,6 +22,8 @@ namespace GameTest1.Editors
         private bool drawMapCellGrid = true, drawTilesetCellGrid = true, dimInactiveLayers = true;
         private int activeLayer = 0;
 
+        public (Map? Map, Tileset? Tileset) CurrentMapAndTileset => (map, tileset);
+
         public override void Setup()
         {
             if (gridColor.RGBA == 0) gridColor = Color.FromHexStringRGBA("0x0000007F");
@@ -87,12 +89,6 @@ namespace GameTest1.Editors
                 if (map == null) ImGui.EndDisabled();
                 ImGui.SameLine();
 
-                if (map == null) ImGui.BeginDisabled();
-                if (ImGui.Button("Export as Asset") && map != null)
-                {
-                    //
-                }
-                if (map == null) ImGui.EndDisabled();
                 if (map != null)
                 {
                     ImGui.SameLine();
@@ -111,11 +107,18 @@ namespace GameTest1.Editors
                     var tilesetDirty = tileset == null;
 
                     ImGui.BeginGroup();
-                    if (ImGui.SliderInt2("Map size", ref map.Size.X, 1, 40))
+                    ImGui.InputText("Title", ref map.Title, 128);
+                    if (ImGui.SliderInt2("Size", ref map.Size.X, 1, 40))
                         layersDirty = true;
                     if (ImGui.InputText("Tileset", ref map.Tileset, 128))
                         tilesetDirty = true;
+                    ImGui.EndGroup();
+                    ImGui.SameLine();
 
+                    ImGui.Dummy(new(10f, 0f));
+                    ImGui.SameLine();
+
+                    ImGui.BeginGroup();
                     var currentLayerCount = map.Layers.Count;
                     if (currentLayerCount >= 8) ImGui.BeginDisabled();
                     if (ImGui.Button("Add new layer"))
@@ -124,7 +127,6 @@ namespace GameTest1.Editors
                         layersDirty = true;
                     }
                     if (currentLayerCount >= 8) ImGui.EndDisabled();
-                    ImGui.SameLine();
                     if (currentLayerCount <= 0) ImGui.BeginDisabled();
                     if (ImGui.Button("Remove active layer"))
                     {
@@ -184,9 +186,9 @@ namespace GameTest1.Editors
                                         for (var y = 0; y < map.Size.Y; y++)
                                         {
                                             var cellOffset = y * map.Size.X + x;
-                                            var cellIdx = map.Layers[i].Tiles[cellOffset];
+                                            var cellValue = map.Layers[i].Tiles[cellOffset];
                                             var cellPos = new Vector2(x, y) * mapZoom * tileset.CellSize;
-                                            batcher.Image(tileset.CellTextures[cellIdx], cellPos, Vector2.Zero, new(mapZoom), 0f, i == activeLayer || !dimInactiveLayers ? Color.White : inactiveLayerColor);
+                                            batcher.Image(tileset.CellTextures[cellValue], cellPos, Vector2.Zero, new(mapZoom), 0f, i == activeLayer || !dimInactiveLayers ? Color.White : inactiveLayerColor);
 
                                             var cellRect = new Rect(cellPos, tileset.CellSize * mapZoom);
                                             if (drawMapCellGrid)

@@ -1,7 +1,6 @@
 ﻿using Foster.Framework;
 using GameTest1.GameStates;
 using GameTest1.Utilities;
-using ImGuiNET;
 using System.Numerics;
 
 using var manager = new GameTest1.Manager();
@@ -11,6 +10,8 @@ namespace GameTest1
 {
     public class Manager : App
     {
+        public const int DefaultZoom = 2;
+
         public readonly Batcher Batcher;
         public readonly Target Screen;
 
@@ -19,16 +20,18 @@ namespace GameTest1
         public readonly Controls Controls;
         public readonly FrameCounter FrameCounter;
 
+        public readonly MapRenderer MapRenderer;
+
         public Stack<IGameState> GameStates = [];
 
         public Manager() : base(new AppConfig()
         {
             ApplicationName = "GameTest1",
             WindowTitle = "Game Test #1 - Bouncing UFO (REWRITE)",
-            Width = 1280,
-            Height = 720,
+            Width = Globals.NormalStartup ? 480 * DefaultZoom : 1280,
+            Height = Globals.NormalStartup ? 272 * DefaultZoom : 720,
             UpdateMode = UpdateMode.UnlockedStep(),
-            Resizable = true
+            Resizable = !Globals.NormalStartup
         })
         {
             GraphicsDevice.VSync = true;
@@ -41,7 +44,9 @@ namespace GameTest1
             Controls = new(Input);
             FrameCounter = new();
 
-            GameStates.Push(new Editor(this));
+            MapRenderer = new(this);
+
+            GameStates.Push(Globals.NormalStartup ? new Game(this) : new Editor(this));
         }
 
         protected override void Startup() { }
@@ -73,12 +78,10 @@ namespace GameTest1
             FrameCounter.Update(Time.Delta);
 
             ClearWindow();
-            if (GameStates.TryPeek(out IGameState? gameState))
-            {
-                gameState.Render();
-                Batcher.Render(Screen);
-                Batcher.Clear();
-            }
+            if (GameStates.TryPeek(out IGameState? gameState)) gameState.Render();
+            else Batcher.Text(Assets.Font, "Error: GameState stack is empty!", Vector2.Zero, Color.Red);
+            Batcher.Render(Screen);
+            Batcher.Clear();
 
             RenderScreenToWindow();
 

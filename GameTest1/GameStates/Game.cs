@@ -14,6 +14,8 @@ namespace GameTest1.GameStates
         {
             manager.Screen.Clear(0x3E4F65);
 
+            manager.MapRenderer.Render("TestMap");
+
             manager.Batcher.Text(manager.Assets.Font, "This is a test! This is the 'Game' GameState!", Vector2.Zero, Color.White);
             manager.Batcher.Text(manager.Assets.Font, $"Current FPS:{manager.FrameCounter.CurrentFps:00.00}, average FPS:{manager.FrameCounter.AverageFps:00.00}", new(0f, 20f), Color.White);
         }

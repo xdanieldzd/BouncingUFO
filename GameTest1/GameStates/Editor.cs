@@ -1,7 +1,6 @@
 ﻿using Foster.Framework;
 using GameTest1.Editors;
 using ImGuiNET;
-using System.Numerics;
 
 namespace GameTest1.GameStates
 {
@@ -22,12 +21,7 @@ namespace GameTest1.GameStates
                 foreach (var editor in editors) editor.Setup();
             }
 
-
-            mapEditor.IsOpen = true;
-
-
-
-            if (ImGui.Begin("Level Editor", ImGuiWindowFlags.AlwaysAutoResize))
+            if (ImGui.Begin("Editors", ImGuiWindowFlags.AlwaysAutoResize))
             {
                 foreach (var editor in editors)
                 {
@@ -47,8 +41,7 @@ namespace GameTest1.GameStates
         {
             manager.Screen.Clear(Color.DarkGray);
 
-            manager.Batcher.Text(manager.Assets.Font, "This is a test! This is the 'Editor' GameState!", Vector2.Zero, Color.White);
-            manager.Batcher.Text(manager.Assets.Font, $"Current FPS:{manager.FrameCounter.CurrentFps:00.00}, average FPS:{manager.FrameCounter.AverageFps:00.00}", new(0f, 20f), Color.White);
+            manager.MapRenderer.Render(mapEditor.CurrentMapAndTileset.Map, mapEditor.CurrentMapAndTileset.Tileset);
         }
     }
 }
