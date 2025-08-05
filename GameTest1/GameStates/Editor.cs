@@ -1,6 +1,7 @@
 ﻿using Foster.Framework;
 using GameTest1.Editors;
 using ImGuiNET;
+using System.Numerics;
 
 namespace GameTest1.GameStates
 {
@@ -8,6 +9,7 @@ namespace GameTest1.GameStates
     {
         private readonly TilesetEditor tilesetEditor = new(manager);
         private readonly MapEditor mapEditor = new(manager);
+        private readonly SpriteEditor spriteEditor = new(manager);
 
         private IEditor[]? editors;
 
@@ -17,7 +19,7 @@ namespace GameTest1.GameStates
         {
             if (editors == null)
             {
-                editors = [tilesetEditor, mapEditor];
+                editors = [tilesetEditor, mapEditor, spriteEditor];
                 foreach (var editor in editors) editor.Setup();
             }
 
@@ -41,7 +43,21 @@ namespace GameTest1.GameStates
         {
             manager.Screen.Clear(Color.DarkGray);
 
-            manager.MapRenderer.Render(mapEditor.CurrentMapAndTileset.Map, mapEditor.CurrentMapAndTileset.Tileset);
+            var focusedEditor = editors?.FirstOrDefault(x => x.IsFocused) ?? null;
+            if (focusedEditor == tilesetEditor)
+            {
+                manager.Batcher.Text(manager.Assets.Font, "Tileset editor preview here", Vector2.Zero, Color.White);
+            }
+            else if (focusedEditor == mapEditor)
+            {
+                manager.MapRenderer.Render(mapEditor.CurrentMapAndTileset.Map, mapEditor.CurrentMapAndTileset.Tileset);
+            }
+            else if (focusedEditor == spriteEditor)
+            {
+                manager.Batcher.Text(manager.Assets.Font, "Sprite editor preview here", Vector2.Zero, Color.White);
+            }
+            else
+                manager.Batcher.Text(manager.Assets.Font, "No editor selected.", 1024f, new(0f, manager.Screen.Height), new(0f, 1.5f), Color.White);
         }
     }
 }

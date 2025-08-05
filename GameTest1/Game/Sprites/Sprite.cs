@@ -1,0 +1,44 @@
+﻿using System.Numerics;
+using System.Text.Json.Serialization;
+
+namespace GameTest1.Game.Sprites
+{
+    /* https://github.com/FosterFramework/Samples/blob/5b97ca5329e61768f85a45d655da5df7f882519d/TinyLink/Source/Assets/Sprite.cs */
+
+    public record Sprite
+    {
+        [JsonInclude]
+        public string Name = string.Empty;
+        [JsonInclude]
+        public string SpritesheetFile = string.Empty;
+        [JsonInclude]
+        public Vector2 Origin = Vector2.Zero;
+        [JsonInclude]
+        public List<Frame> Frames = [];
+        [JsonInclude]
+        public List<Animation> Animations = [];
+
+        public Frame GetFrameAt(Animation animation, float time, bool loop)
+        {
+            if (time >= animation.Duration && !loop)
+                return Frames[animation.FrameStart + animation.FrameCount - 1];
+
+            time %= animation.Duration;
+            for (var i = animation.FrameStart; i < animation.FrameStart + animation.FrameCount; i++)
+            {
+                time -= Frames[i].Duration;
+                if (time <= 0f) return Frames[i];
+            }
+
+            return Frames[animation.FrameStart];
+        }
+
+        public void AddAnimation(string name, int frameStart, int frameCount)
+        {
+            var duration = 0f;
+            for (var i = 0; i < frameStart + frameCount; i++)
+                duration += Frames[i].Duration;
+            Animations.Add(new() { Name = name, FrameStart = frameStart, FrameCount = frameCount, Duration = duration });
+        }
+    }
+}

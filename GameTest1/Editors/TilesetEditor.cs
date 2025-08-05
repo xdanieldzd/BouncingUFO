@@ -1,5 +1,5 @@
 ﻿using Foster.Framework;
-using GameTest1.Levels;
+using GameTest1.Game.Levels;
 using GameTest1.Utilities;
 using ImGuiNET;
 using System.Numerics;
@@ -35,7 +35,7 @@ namespace GameTest1.Editors
 
             if (ImGui.Begin(Name, ref isOpen, ImGuiWindowFlags.AlwaysAutoResize))
             {
-                var drawList = ImGui.GetWindowDrawList();
+                isFocused = ImGui.IsWindowFocused(ImGuiFocusedFlags.RootAndChildWindows);
 
                 ImGui.BeginGroup();
                 if (ImGui.Button("New Tileset"))
@@ -210,6 +210,7 @@ namespace GameTest1.Editors
                     }
                 }
             }
+            isCollapsed = ImGui.IsWindowCollapsed();
             ImGui.End();
         }
     }

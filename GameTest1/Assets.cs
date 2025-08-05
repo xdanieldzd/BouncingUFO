@@ -1,5 +1,6 @@
 ﻿using Foster.Framework;
-using GameTest1.Levels;
+using GameTest1.Game.Levels;
+using GameTest1.Game.Sprites;
 using System.Text.Json;
 
 namespace GameTest1
@@ -10,6 +11,7 @@ namespace GameTest1
         public const string FontsFolderName = "Fonts";
         public const string TilesetFolderName = "Tilesets";
         public const string MapFolderName = "Maps";
+        public const string SpriteFolderName = "Sprites";
 
         //
 
@@ -18,6 +20,7 @@ namespace GameTest1
         public SpriteFont Font { get; private set; }
         public Dictionary<string, Tileset> Tilesets { get; private set; } = [];
         public Dictionary<string, Map> Maps { get; private set; } = [];
+        public Dictionary<string, Sprite> Sprites { get; private set; } = [];
 
         //
 
@@ -41,6 +44,8 @@ namespace GameTest1
 
                 Maps.Add(Path.GetFileNameWithoutExtension(mapFile), map);
             }
+
+            //
         }
     }
 }

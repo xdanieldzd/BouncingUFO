@@ -1,17 +1,17 @@
 ﻿using Foster.Framework;
 using System.Text.Json.Serialization;
 
-namespace GameTest1.Levels
+namespace GameTest1.Game.Levels
 {
     [JsonConverter(typeof(JsonStringEnumConverter))]
     [Flags]
     public enum CellFlag
     {
         Empty = 0,
-        Ground = (1 << 0),
-        Wall = (1 << 1),
-        Damaging = (1 << 2),
-        Healing = (1 << 3)
+        Ground = 1 << 0,
+        Wall = 1 << 1,
+        Damaging = 1 << 2,
+        Healing = 1 << 3
     }
 
     public record Tileset

@@ -1,5 +1,5 @@
 ﻿using Foster.Framework;
-using GameTest1.Levels;
+using GameTest1.Game.Levels;
 using System.Numerics;
 
 namespace GameTest1

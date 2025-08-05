@@ -1,5 +1,5 @@
 ﻿using Foster.Framework;
-using GameTest1.Levels;
+using GameTest1.Game.Levels;
 using GameTest1.Utilities;
 using ImGuiNET;
 using System.Numerics;
@@ -40,8 +40,9 @@ namespace GameTest1.Editors
 
             if (ImGui.Begin(Name, ref isOpen, ImGuiWindowFlags.AlwaysAutoResize))
             {
+                isFocused = ImGui.IsWindowFocused(ImGuiFocusedFlags.RootAndChildWindows);
+
                 var style = ImGui.GetStyle();
-                var drawList = ImGui.GetWindowDrawList();
 
                 ImGui.BeginGroup();
                 if (ImGui.Button("New Map"))
@@ -295,6 +296,7 @@ namespace GameTest1.Editors
                 }
                 ImGui.EndGroup();
             }
+            isCollapsed = ImGui.IsWindowCollapsed();
             ImGui.End();
         }
     }

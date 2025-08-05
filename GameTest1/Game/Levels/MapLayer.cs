@@ -1,7 +1,7 @@
 ﻿using Foster.Framework;
 using System.Text.Json.Serialization;
 
-namespace GameTest1.Levels
+namespace GameTest1.Game.Levels
 {
     public record MapLayer
     {
