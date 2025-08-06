@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using Foster.Framework;
+using System.Numerics;
 using System.Text.Json.Serialization;
 
 namespace GameTest1.Game.Sprites
@@ -17,6 +18,13 @@ namespace GameTest1.Game.Sprites
         public List<Frame> Frames = [];
         [JsonInclude]
         public List<Animation> Animations = [];
+
+        public Texture? SpritesheetTexture;
+
+        public void LoadTexture(GraphicsDevice graphicsDevice)
+        {
+            SpritesheetTexture = new(graphicsDevice, new(SpritesheetFile), $"Sprite {Name}");
+        }
 
         public Frame GetFrameAt(Animation animation, float time, bool loop)
         {

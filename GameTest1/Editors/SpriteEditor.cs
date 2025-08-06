@@ -15,12 +15,17 @@ namespace GameTest1.Editors
         private Sprite? sprite;
 
         private string currentSpritePath = string.Empty;
-
+        private bool isFrameEditorOpen = false, isFrameEditorFocused = false;
+        private int selectedFrame = -1;
         //
 
         public override void Setup()
         {
-            //
+            // TEST TEST TEST
+            isOpen = true;
+            isFrameEditorOpen = true;
+            currentSpritePath = @"D:\Programming\UFO\Sprites\PlayerTest.json";
+            sprite = JsonSerializer.Deserialize<Sprite>(File.ReadAllText(currentSpritePath), Assets.SerializerOptions);
         }
 
         public override void Run()
@@ -29,7 +34,7 @@ namespace GameTest1.Editors
 
             if (ImGui.Begin(Name, ref isOpen, ImGuiWindowFlags.AlwaysAutoResize))
             {
-                isFocused = ImGui.IsWindowFocused(ImGuiFocusedFlags.RootAndChildWindows);
+                isFocused = ImGui.IsWindowFocused(ImGuiFocusedFlags.RootAndChildWindows) || isFrameEditorFocused;
 
                 ImGui.BeginGroup();
                 if (ImGui.Button("New Sprite"))
@@ -96,6 +101,9 @@ namespace GameTest1.Editors
 
                 if (sprite != null)
                 {
+                    if (sprite.SpritesheetTexture == null)
+                        sprite.LoadTexture(manager.GraphicsDevice);
+
                     ImGui.Separator();
 
                     ImGui.BeginGroup();
@@ -114,10 +122,104 @@ namespace GameTest1.Editors
 
                     //
 
-                    ImGui.Text("more stuffs here");
+                    if (ImGui.Button("Frame Editor"))
+                        isFrameEditorOpen = true;
+
+                    RunFrameEditor();
                 }
             }
             isCollapsed = ImGui.IsWindowCollapsed();
+            ImGui.End();
+        }
+
+        private void RunFrameEditor()
+        {
+            if (!isFrameEditorOpen || sprite == null) return;
+
+            ImGui.ShowDemoWindow();
+
+            if (ImGui.Begin("Frame Editor", ref isFrameEditorOpen, ImGuiWindowFlags.AlwaysAutoResize))
+            {
+                isFrameEditorFocused = ImGui.IsWindowFocused(ImGuiFocusedFlags.RootAndChildWindows);
+
+                if (ImGui.BeginTable("framestable", 6, ImGuiTableFlags.Borders | ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.NoHostExtendY, new(0f, 100f)))
+                {
+                    ImGui.TableSetupColumn("Frame #");
+                    ImGui.TableSetupColumn("Source X");
+                    ImGui.TableSetupColumn("Source Y");
+                    ImGui.TableSetupColumn("Source Width");
+                    ImGui.TableSetupColumn("Source Height");
+                    ImGui.TableSetupColumn("Duration");
+
+                    ImGui.TableHeadersRow();
+
+                    if (sprite.Frames.Count != 0)
+                    {
+                        unsafe
+                        {
+                            var maxX = (float)(sprite.SpritesheetTexture?.Width ?? 0f);
+                            var maxY = (float)(sprite.SpritesheetTexture?.Height ?? 0f);
+
+                            var clipper = new ImGuiListClipperPtr(ImGuiNative.ImGuiListClipper_ImGuiListClipper());
+                            clipper.Begin(sprite.Frames.Count);
+                            while (clipper.Step())
+                            {
+                                for (var i = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
+                                {
+                                    var frame = sprite.Frames[i];
+
+                                    ImGui.TableNextRow();
+
+                                    ImGui.PushID(i);
+
+                                    ImGui.TableSetColumnIndex(0);
+                                    ImGui.BeginDisabled();
+                                    ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X);
+                                    var dummy = $"{i}";
+                                    ImGui.InputText($"##frame-id-{i}", ref dummy, 32, ImGuiInputTextFlags.ReadOnly);
+                                    ImGui.EndDisabled();
+
+                                    ImGui.TableSetColumnIndex(1);
+                                    ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X);
+                                    if (ImGui.DragFloat($"##frame-x-{i}", ref frame.Rectangle.X, 0.25f, 0f, maxX)) frame.Rectangle.X = Math.Clamp(frame.Rectangle.X, 0f, maxX);
+
+                                    ImGui.TableSetColumnIndex(2);
+                                    ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X);
+                                    if (ImGui.DragFloat($"##frame-y-{i}", ref frame.Rectangle.Y, 0.25f, 0f, maxY)) frame.Rectangle.Y = Math.Clamp(frame.Rectangle.Y, 0f, maxY);
+
+                                    ImGui.TableSetColumnIndex(3);
+                                    ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X);
+                                    if (ImGui.DragFloat($"##frame-width-{i}", ref frame.Rectangle.Width, 0.25f, 0f, maxX)) frame.Rectangle.Width = Math.Clamp(frame.Rectangle.Width, 0f, maxX);
+
+                                    ImGui.TableSetColumnIndex(4);
+                                    ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X);
+                                    if (ImGui.DragFloat($"##frame-height-{i}", ref frame.Rectangle.Height, 0.25f, 0f, maxY)) frame.Rectangle.Height = Math.Clamp(frame.Rectangle.Height, 0f, maxY);
+
+                                    ImGui.TableSetColumnIndex(5);
+                                    ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X);
+                                    if (ImGui.DragFloat($"##frame-duration-{i}", ref frame.Duration, 0.25f, 0f, 100f)) frame.Duration = Math.Clamp(frame.Duration, 0f, 100f);
+                                    /*
+                                    if (ImGui.IsAnyItemHovered())
+                                    {
+                                        if (ImGui.BeginPopupContextItem())
+                                        {
+                                            selectedFrame = i;
+                                            ImGui.Text($"Popup for frame {selectedFrame}!");
+                                            if (ImGui.Button("Close"))
+                                                ImGui.CloseCurrentPopup();
+                                            ImGui.EndPopup();
+                                        }
+                                    }*/
+
+                                    ImGui.PopID();
+                                }
+                            }
+                            clipper.Destroy();
+                        }
+                    }
+                }
+                ImGui.EndTable();
+            }
             ImGui.End();
         }
     }

@@ -46,8 +46,8 @@ namespace GameTest1
 
             MapRenderer = new(this);
 
-            //GameStates.Push(Globals.NormalStartup ? new Intro(this) : new Editor(this));
-            GameStates.Push(new Intro(this));
+            GameStates.Push(Globals.NormalStartup ? new Intro(this) : new Editor(this));
+            //GameStates.Push(new Intro(this));
         }
 
         protected override void Startup() { }

@@ -6,8 +6,10 @@ namespace GameTest1.Game.Sprites
     public record Frame
     {
         [JsonInclude]
-        public Subtexture Texture = default;
+        public Rect Rectangle = new();
         [JsonInclude]
         public float Duration = 0f;
+
+        public Subtexture? Texture;
     }
 }
