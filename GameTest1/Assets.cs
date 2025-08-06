@@ -29,11 +29,12 @@ namespace GameTest1
         public Assets(GraphicsDevice graphicsDevice)
         {
             Font = new(graphicsDevice, Path.Join(AssetsFolderName, FontsFolderName, "monogram-extended.ttf"), 16f);
-            PixelFont = SpriteFontHelper.GenerateFontFromImage(
+            PixelFont = SpriteFontHelper.GenerateFromImage(
                 graphicsDevice,
                 Path.Join(AssetsFolderName, FontsFolderName, "PixelFont.png"),
-                highlightType: SpriteFontHighlightType.Outline,
-                highlightColor: Color.Black);
+                new(10, 10),
+                SpriteFontHighlightType.Outline,
+                Color.Black);
 
             foreach (var tilesetFile in Directory.EnumerateFiles(Path.Join(AssetsFolderName, TilesetFolderName), "*.json", SearchOption.AllDirectories))
             {
@@ -51,6 +52,8 @@ namespace GameTest1
 
                 Maps.Add(Path.GetFileNameWithoutExtension(mapFile), map);
             }
+
+            //
         }
     }
 }
