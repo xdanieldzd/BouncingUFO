@@ -60,6 +60,7 @@ namespace GameTest1.GameStates
 
             manager.Batcher.Text(manager.Assets.PixelFont, $"Intro stuffs goes here!\nGoing to InGame state in {waitDuration - mainStateTimer:0.00} sec.... OR press an Action button!", Vector2.Zero, Color.White);
             manager.Batcher.Text(manager.Assets.PixelFont, "Now that I can see it 'in-game', this font might be a biiiiiit too small, huh? Well, the idea's there, it just needs refinement! (= redrawing in PSP7) Something for another day I guess, because it's almost midnight over here... ... and no by that I don't just mean 'after midnight', I do mean I'll do that during daytime and actually get to bed soon. Maybe. Guess we'll see how THAT goes...", manager.Screen.Width, new(0f, 32f), Color.White);
+            manager.Batcher.Text(manager.Assets.PixelFont, ".... Aug 6 2025, 2:56 am. Yeaaaaahhh, so much for 'going to bed' eh? Welp, at least this looks better now, I think. What do you think?", manager.Screen.Width, new(0f, 100f), Color.White);
 
             screenFader.Render();
         }
