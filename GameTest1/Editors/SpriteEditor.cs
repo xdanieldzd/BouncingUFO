@@ -248,8 +248,9 @@ namespace GameTest1.Editors
                 if (sprite.Animations.Count != 0)
                 {
                     var animation = sprite.Animations[selectedAnim];
-                    if (animation.Duration == 0f)
+                    if (animDirty || animation.Duration == 0f)
                     {
+                        animation.Duration = 0f;
                         for (var i = animation.FirstFrame; i < animation.FirstFrame + animation.FrameCount; i++)
                             animation.Duration += sprite.Frames[i].Duration;
                     }
@@ -296,6 +297,9 @@ namespace GameTest1.Editors
 
                     if (sprite.SpritesheetTexture != null)
                     {
+                        foreach (var frameNoTexture in sprite.Frames.Where(x => x.Texture == null))
+                            frameNoTexture.Texture = new(sprite.SpritesheetTexture, frameNoTexture.SourceRectangle);
+
                         if (animDirty)
                         {
                             animTimer = 0f;

@@ -1,0 +1,47 @@
+{
+  "Name": "PlayerUFO",
+  "SpritesheetFile": "Assets\\Sprites\\PlayerUFO.png",
+  "Origin": {},
+  "Frames": [
+    {
+      "Location": {
+        "X": 0,
+        "Y": 0
+      },
+      "Size": {
+        "X": 32,
+        "Y": 32
+      },
+      "Duration": 0.25
+    },
+    {
+      "Location": {
+        "X": 32,
+        "Y": 0
+      },
+      "Size": {
+        "X": 32,
+        "Y": 32
+      },
+      "Duration": 0.25
+    },
+    {
+      "Location": {
+        "X": 64,
+        "Y": 0
+      },
+      "Size": {
+        "X": 32,
+        "Y": 32
+      },
+      "Duration": 0.25
+    }
+  ],
+  "Animations": [
+    {
+      "Name": "Idle",
+      "FirstFrame": 0,
+      "FrameCount": 3
+    }
+  ]
+}

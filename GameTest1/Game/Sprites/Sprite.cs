@@ -23,7 +23,8 @@ namespace GameTest1.Game.Sprites
 
         public void LoadTexture(GraphicsDevice graphicsDevice)
         {
-            SpritesheetTexture = new(graphicsDevice, new(SpritesheetFile), $"Sprite {Name}");
+            if (!string.IsNullOrWhiteSpace(SpritesheetFile))
+                SpritesheetTexture = new(graphicsDevice, new(SpritesheetFile), $"Sprite {Name}");
         }
 
         public void GenerateSubtextures(GraphicsDevice graphicsDevice)

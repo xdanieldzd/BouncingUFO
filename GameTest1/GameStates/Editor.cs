@@ -35,6 +35,12 @@ namespace GameTest1.GameStates
                     }
                     editor.Run();
                 }
+                ImGui.Separator();
+                if (ImGui.Button("Exit"))
+                {
+                    manager.GameStates.Pop();
+                    if (manager.GameStates.Count == 0) manager.GameStates.Push(new Intro(manager));
+                }
             }
             ImGui.End();
         }

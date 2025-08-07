@@ -9,7 +9,7 @@ namespace GameTest1.GameStates
     public class InGame(Manager manager) : GameStateBase(manager), IGameState
     {
         private const float screenFadeDuration = 0.75f;
-        private const string startOnMap = "TestMap";
+        private const string startOnMap = "Map1";
 
         private enum State { Initialize, FadeIn, GameStartCountdown, MainLogic }
 

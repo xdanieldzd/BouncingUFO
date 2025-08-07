@@ -44,8 +44,8 @@ namespace GameTest1
             MapRenderer = new(this);
 
             GameStates = [];
-            //GameStates.Push(Globals.NormalStartup ? new Intro(this) : new Editor(this));
-            GameStates.Push(new Intro(this));
+            GameStates.Push(Globals.NormalStartup ? new Intro(this) : new Editor(this));
+            //GameStates.Push(new Intro(this));
         }
 
         protected override void Startup() { }
@@ -75,8 +75,15 @@ namespace GameTest1
         protected override void Render()
         {
             ClearWindow();
-            if (GameStates.TryPeek(out IGameState? gameState)) gameState.Render();
-            else Batcher.Text(Assets.Font, "Error: GameState stack is empty!", Vector2.Zero, Color.Red);
+
+            if (GameStates.TryPeek(out IGameState? gameState))
+                gameState.Render();
+            else
+            {
+                Screen.Clear(Color.DarkGray);
+                Batcher.Text(Assets.Font, "Error: GameState stack is empty!", Vector2.Zero, Color.Red);
+            }
+
             Batcher.Render(Screen);
             Batcher.Clear();
 
