@@ -26,6 +26,14 @@ namespace GameTest1.Game.Sprites
             SpritesheetTexture = new(graphicsDevice, new(SpritesheetFile), $"Sprite {Name}");
         }
 
+        public void GenerateSubtextures(GraphicsDevice graphicsDevice)
+        {
+            if (SpritesheetTexture == null) LoadTexture(graphicsDevice);
+
+            foreach (var frame in Frames)
+                frame.Texture = new(SpritesheetTexture, frame.SourceRectangle);
+        }
+
         public Frame GetFrameAt(Animation animation, float time, bool loop)
         {
             if (time >= animation.Duration && !loop)

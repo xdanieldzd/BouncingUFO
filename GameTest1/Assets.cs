@@ -54,6 +54,8 @@ namespace GameTest1
                 var sprite = JsonSerializer.Deserialize<Sprite>(File.ReadAllText(spriteFile), SerializerOptions);
                 if (sprite == null) continue;
 
+                sprite.LoadTexture(graphicsDevice);
+                sprite.GenerateSubtextures(graphicsDevice);
                 Sprites.Add(Path.GetFileNameWithoutExtension(spriteFile), sprite);
             }
         }

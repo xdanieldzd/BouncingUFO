@@ -18,11 +18,10 @@ namespace GameTest1
         public readonly ImGuiRenderer ImGuiRenderer;
         public readonly Assets Assets;
         public readonly Controls Controls;
-        public readonly FrameCounter FrameCounter;
 
         public readonly MapRenderer MapRenderer;
 
-        public Stack<IGameState> GameStates = [];
+        public Stack<IGameState> GameStates;
 
         public Manager() : base(new AppConfig()
         {
@@ -30,7 +29,6 @@ namespace GameTest1
             WindowTitle = "Game Test #1 - Bouncing UFO (REWRITE)",
             Width = Globals.NormalStartup ? 480 * DefaultZoom : 1280,
             Height = Globals.NormalStartup ? 272 * DefaultZoom : 720,
-            UpdateMode = UpdateMode.UnlockedStep(),
             Resizable = !Globals.NormalStartup
         })
         {
@@ -42,12 +40,12 @@ namespace GameTest1
             ImGuiRenderer = new(this);
             Assets = new(GraphicsDevice);
             Controls = new(Input);
-            FrameCounter = new();
 
             MapRenderer = new(this);
 
-            GameStates.Push(Globals.NormalStartup ? new Intro(this) : new Editor(this));
-            //GameStates.Push(new Intro(this));
+            GameStates = [];
+            //GameStates.Push(Globals.NormalStartup ? new Intro(this) : new Editor(this));
+            GameStates.Push(new Intro(this));
         }
 
         protected override void Startup() { }
@@ -76,8 +74,6 @@ namespace GameTest1
 
         protected override void Render()
         {
-            FrameCounter.Update(Time.Delta);
-
             ClearWindow();
             if (GameStates.TryPeek(out IGameState? gameState)) gameState.Render();
             else Batcher.Text(Assets.Font, "Error: GameState stack is empty!", Vector2.Zero, Color.Red);
