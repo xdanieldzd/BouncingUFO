@@ -29,24 +29,24 @@ namespace GameTest1.Game.Sprites
         public Frame GetFrameAt(Animation animation, float time, bool loop)
         {
             if (time >= animation.Duration && !loop)
-                return Frames[animation.FrameStart + animation.FrameCount - 1];
+                return Frames[animation.FirstFrame + animation.FrameCount - 1];
 
             time %= animation.Duration;
-            for (var i = animation.FrameStart; i < animation.FrameStart + animation.FrameCount; i++)
+            for (var i = animation.FirstFrame; i < animation.FirstFrame + animation.FrameCount; i++)
             {
                 time -= Frames[i].Duration;
                 if (time <= 0f) return Frames[i];
             }
 
-            return Frames[animation.FrameStart];
+            return Frames[animation.FirstFrame];
         }
 
         public void AddAnimation(string name, int frameStart, int frameCount)
         {
             var duration = 0f;
-            for (var i = 0; i < frameStart + frameCount; i++)
+            for (var i = frameStart; i < frameStart + frameCount; i++)
                 duration += Frames[i].Duration;
-            Animations.Add(new() { Name = name, FrameStart = frameStart, FrameCount = frameCount, Duration = duration });
+            Animations.Add(new() { Name = name, FirstFrame = frameStart, FrameCount = frameCount, Duration = duration });
         }
     }
 }

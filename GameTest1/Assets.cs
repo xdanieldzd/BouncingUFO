@@ -14,8 +14,6 @@ namespace GameTest1
         public const string MapFolderName = "Maps";
         public const string SpriteFolderName = "Sprites";
 
-        //
-
         public readonly static JsonSerializerOptions SerializerOptions = new() { WriteIndented = true };
 
         public SpriteFont Font { get; private set; }
@@ -23,8 +21,6 @@ namespace GameTest1
         public Dictionary<string, Tileset> Tilesets { get; private set; } = [];
         public Dictionary<string, Map> Maps { get; private set; } = [];
         public Dictionary<string, Sprite> Sprites { get; private set; } = [];
-
-        //
 
         public Assets(GraphicsDevice graphicsDevice)
         {
@@ -53,7 +49,13 @@ namespace GameTest1
                 Maps.Add(Path.GetFileNameWithoutExtension(mapFile), map);
             }
 
-            //
+            foreach (var spriteFile in Directory.EnumerateFiles(Path.Join(AssetsFolderName, SpriteFolderName), "*.json", SearchOption.AllDirectories))
+            {
+                var sprite = JsonSerializer.Deserialize<Sprite>(File.ReadAllText(spriteFile), SerializerOptions);
+                if (sprite == null) continue;
+
+                Sprites.Add(Path.GetFileNameWithoutExtension(spriteFile), sprite);
+            }
         }
     }
 }
