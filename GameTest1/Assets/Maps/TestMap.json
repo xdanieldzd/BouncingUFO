@@ -1034,5 +1034,15 @@
         0
       ]
     }
+  ],
+  "Spawns": [
+    {
+      "ActorType": "Player",
+      "Position": {
+        "X": 4,
+        "Y": 7
+      },
+      "MapLayer": 0
+    }
   ]
 }

@@ -127,9 +127,11 @@ namespace GameTest1.Editors
 
                     ImGui.Separator();
 
+                    ImGui.BeginGroup();
                     if (ImGui.Button(frameEditorName)) { isFrameEditorOpen = true; ImGui.SetWindowFocus(frameEditorName); }
                     ImGui.SameLine();
                     if (ImGui.Button(animEditorName)) { isAnimEditorOpen = true; ImGui.SetWindowFocus(animEditorName); }
+                    ImGui.EndGroup();
 
                     RunFrameEditor();
                     RunAnimEditor();

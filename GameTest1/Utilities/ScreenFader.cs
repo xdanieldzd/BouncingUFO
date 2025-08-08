@@ -18,6 +18,12 @@ namespace GameTest1.Utilities
 
         public void Reset() => progress = 0f;
 
+        public void Cancel()
+        {
+            progress = 1f;
+            color.A = 0;
+        }
+
         public bool Update()
         {
             progress = Calc.Approach(progress, Duration, manager.Time.Delta);

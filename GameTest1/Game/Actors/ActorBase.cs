@@ -21,11 +21,12 @@ namespace GameTest1.Game.Actors
                 if (sprite != value)
                 {
                     sprite = value;
-                    animation = value?.Animations.FirstOrDefault();
+                    animation = null;
                     animTimer = 0f;
                 }
             }
         }
+        public int MapLayer = 0;
         public float Rotation = 0f;
         public float Timer = 0f;
         public bool IsVisible = true;
@@ -46,6 +47,24 @@ namespace GameTest1.Game.Actors
 
             Timer += manager.Time.Delta;
             animTimer += manager.Time.Delta;
+        }
+
+        public Point2[] GetCells(Point2 mapSize, Point2 cellSize)
+        {
+            var localHitbox = (Position + Hitbox.Rectangle) / (Vector2)cellSize;
+            var topLeftFloor = localHitbox.TopLeft.FloorToPoint2();
+            var bottomRightCeil = localHitbox.BottomRight.CeilingToPoint2();
+
+            var cellList = new List<Point2>();
+            for (var y = topLeftFloor.Y; y < bottomRightCeil.Y; y++)
+            {
+                for (var x = topLeftFloor.X; x < bottomRightCeil.X; x++)
+                {
+                    if (x < 0 || x >= mapSize.X || y < 0 || y >= mapSize.Y) continue;
+                    cellList.Add(new(x, y));
+                }
+            }
+            return [.. cellList];
         }
 
         public void Stop() => Velocity = veloRemainder = Vector2.Zero;

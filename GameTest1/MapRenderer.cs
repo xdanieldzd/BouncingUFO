@@ -6,6 +6,8 @@ namespace GameTest1
 {
     public class MapRenderer(Manager manager)
     {
+        private readonly Color gridColor = Color.FromHexStringRGBA("0x0000003F");
+
         private void DrawErrorMessage(string text)
         {
             manager.Batcher.Text(manager.Assets.Font, text, 1024f, new(0f, manager.Screen.Height), new(0f, 1.5f), Color.Red);
@@ -31,7 +33,7 @@ namespace GameTest1
             Render(map, tileset);
         }
 
-        public void Render(Map? map, Tileset? tileset)
+        public void Render(Map? map, Tileset? tileset, bool grid = false)
         {
             if (map == null)
             {
@@ -60,6 +62,9 @@ namespace GameTest1
                             var cellValue = map.Layers[i].Tiles[cellOffset];
                             manager.Batcher.Image(tileset.CellTextures[cellValue], cellPos, Color.White);
                         }
+
+                        if (grid)
+                            manager.Batcher.RectLine(new(cellPos, tileset.CellSize), 1f, gridColor);
                     }
                 }
             }

@@ -14,9 +14,9 @@ namespace GameTest1.Game.Actors
 
         public Player(Manager manager) : base(manager)
         {
-            Position = (manager.Screen.Bounds.Center - Hitbox.Rectangle.Size / 2f).FloorToPoint2();
             Sprite = manager.Assets.Sprites["PlayerUFO"];
-            Hitbox = new(new(16, 16));
+            Hitbox = new(new(0, 16, 32, 16));
+            MapLayer = 0;
             PlayAnimation("Idle");
 
             CurrentState = State.InputDisabled;

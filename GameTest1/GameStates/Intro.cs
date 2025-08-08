@@ -26,6 +26,12 @@ namespace GameTest1.GameStates
                     screenFader.Color = Color.Black;
                     screenFader.Reset();
                     currentState = State.FadeIn;
+
+                    if (Globals.QuickStart)
+                    {
+                        manager.GameStates.Pop();
+                        manager.GameStates.Push(new InGame(manager));
+                    }
                     break;
 
                 case State.FadeIn:

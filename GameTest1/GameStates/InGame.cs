@@ -2,7 +2,9 @@
 using GameTest1.Game.Actors;
 using GameTest1.Game.Levels;
 using GameTest1.Utilities;
+using System;
 using System.Numerics;
+using static Foster.Framework.Aseprite;
 
 namespace GameTest1.GameStates
 {
@@ -16,7 +18,7 @@ namespace GameTest1.GameStates
         private readonly ScreenFader screenFader = new(manager);
 
         private readonly List<ActorBase> actors = [];
-        private readonly Player playerActor = new(manager);
+        private Player? player;
 
         private Map? currentMap;
         private Tileset? currentTileset;
@@ -39,6 +41,14 @@ namespace GameTest1.GameStates
                     screenFader.Reset();
                     currentState = State.FadeIn;
                     gameStartCountdown = 5f;
+
+                    if (Globals.QuickStart)
+                    {
+                        screenFader.Cancel();
+                        currentState = State.MainLogic;
+                        gameStartCountdown = 0f;
+                        if (player != null) player.CurrentState = Player.State.Normal;
+                    }
                     break;
 
                 case State.FadeIn:
@@ -50,7 +60,7 @@ namespace GameTest1.GameStates
                     if (gameStartCountdown <= 0f)
                     {
                         currentState = State.MainLogic;
-                        playerActor.CurrentState = Player.State.Normal;
+                        if (player != null) player.CurrentState = Player.State.Normal;
                     }
                     break;
 
@@ -65,7 +75,21 @@ namespace GameTest1.GameStates
             currentMap = manager.Assets.Maps[startOnMap];
             currentTileset = manager.Assets.Tilesets[currentMap.Tileset];
 
-            actors.Add(playerActor);
+            foreach (var spawn in currentMap.Spawns)
+            {
+                switch (spawn.ActorType)
+                {
+                    case "Player": SpawnPlayerActor(spawn); break;
+                }
+            }
+        }
+
+        private void SpawnPlayerActor(Spawn spawn)
+        {
+            player = new Player(manager);
+            player.Position = (spawn.Position * currentTileset?.CellSize ?? Point2.Zero) - player.Hitbox.Rectangle.Position;
+
+            actors.Add(player);
         }
 
         private void PerformMainLogic()
@@ -91,8 +115,23 @@ namespace GameTest1.GameStates
                     break;
 
                 case State.MainLogic:
-                    manager.Batcher.Text(manager.Assets.Font, $"{manager.Controls.Move.Name}:{manager.Controls.Move.IntValue} {manager.Controls.Action1.Name}:{manager.Controls.Action1.Down} {manager.Controls.Action2.Name}:{manager.Controls.Action2.Down}", Vector2.Zero, Color.White);
                     break;
+            }
+
+            if (Globals.ShowDebugInfo)
+            {
+                if (player != null)
+                {
+                    manager.Batcher.Text(manager.Assets.PixelFont, $"Current hitbox == {player.Position + player.Hitbox.Rectangle}", Vector2.Zero, Color.White);
+                    manager.Batcher.Text(manager.Assets.PixelFont, $"{manager.Controls.Move.Name}:{manager.Controls.Move.IntValue} {manager.Controls.Action1.Name}:{manager.Controls.Action1.Down} {manager.Controls.Action2.Name}:{manager.Controls.Action2.Down}", new Vector2(0f, manager.Screen.Height - manager.Assets.Font.LineHeight), Color.White);
+
+                    if (currentMap != null && currentTileset != null)
+                    {
+                        var cells = player.GetCells(currentMap.Size, currentTileset.CellSize);
+                        for (var i = 0; i < cells.Length; i++)
+                            manager.Batcher.Text(manager.Assets.PixelFont, cells[i].ToString(), new(0f, 40f + i * manager.Assets.Font.LineHeight), Color.CornflowerBlue);
+                    }
+                }
             }
 
             screenFader.Render();
@@ -100,9 +139,22 @@ namespace GameTest1.GameStates
 
         private void RenderMapAndActors()
         {
-            manager.MapRenderer.Render(currentMap, currentTileset);
+            manager.MapRenderer.Render(currentMap, currentTileset, Globals.ShowDebugInfo);
             foreach (var actor in actors.Where(x => x.IsVisible))
+            {
                 actor.Render();
+                if (Globals.ShowDebugInfo)
+                    actor.Hitbox.Render(manager.Batcher, actor.Position, Color.Red);
+            }
+
+            if (Globals.ShowDebugInfo && currentMap != null && currentTileset != null && player != null)
+            {
+                foreach (var hit in player.GetCells(currentMap.Size, currentTileset.CellSize))
+                {
+                    var cellPos = new Vector2(hit.X, hit.Y) * currentTileset.CellSize;
+                    manager.Batcher.Rect(cellPos, currentTileset.CellSize, Color.FromHexStringRGBA("00003F3F"));
+                }
+            }
         }
     }
 }

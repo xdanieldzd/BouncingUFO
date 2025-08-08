@@ -14,7 +14,7 @@ namespace GameTest1.Game
         public void Render(Batcher batcher, Point2 offset, Color color)
         {
             batcher.PushMatrix(offset);
-            batcher.RectLine(Rectangle + offset, 1f, color);
+            batcher.RectLine(Rectangle, 1f, color);
             batcher.PopMatrix();
         }
     }

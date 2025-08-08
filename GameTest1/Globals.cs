@@ -9,6 +9,6 @@
 #endif
         public static bool FixedSeed => true;
         public static bool QuickStart => true;
-        public static bool ShowDebugInfo => false;
+        public static bool ShowDebugInfo => true;
     }
 }

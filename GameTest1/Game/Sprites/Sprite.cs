@@ -1,4 +1,5 @@
 ﻿using Foster.Framework;
+using System.Net;
 using System.Numerics;
 using System.Text.Json.Serialization;
 
@@ -35,8 +36,17 @@ namespace GameTest1.Game.Sprites
                 frame.Texture = new(SpritesheetTexture, frame.SourceRectangle);
         }
 
+        private void CalculateAnimationDuration(Animation animation)
+        {
+            animation.Duration = 0f;
+            for (var i = animation.FirstFrame; i < animation.FirstFrame + animation.FrameCount; i++)
+                animation.Duration += Frames[i].Duration;
+        }
+
         public Frame GetFrameAt(Animation animation, float time, bool loop)
         {
+            if (animation.Duration == 0f) CalculateAnimationDuration(animation);
+
             if (time >= animation.Duration && !loop)
                 return Frames[animation.FirstFrame + animation.FrameCount - 1];
 

@@ -1,5 +1,6 @@
 ﻿using Foster.Framework;
 using GameTest1.Game.Levels;
+using GameTest1.Game.Sprites;
 using GameTest1.Utilities;
 using ImGuiNET;
 using System.Numerics;
@@ -18,9 +19,12 @@ namespace GameTest1.Editors
 
         private string currentMapPath = string.Empty;
         private int hoveredMapCell = -1, hoveredTilemapCell = -1, selectedTilemapCell = 0;
-        private Color gridColor, inactiveLayerColor, hoveredHighlightColor, selectedHighlightColor, hoveredBorderColor, selectedBorderColor;
+        private Color gridColor, inactiveLayerColor, hoveredHighlightColor, selectedHighlightColor, hoveredBorderColor, selectedBorderColor, inactiveSpawnColor;
         private bool drawMapCellGrid = true, drawTilesetCellGrid = true, dimInactiveLayers = true;
         private int activeLayer = 0;
+        private readonly string spawnEditorName = "Spawn Editor";
+        private bool isSpawnEditorOpen = false, isSpawnEditorFocused = false;
+        private int selectedSpawn = 0;
 
         public (Map? Map, Tileset? Tileset) CurrentMapAndTileset => (map, tileset);
 
@@ -32,6 +36,7 @@ namespace GameTest1.Editors
             if (selectedBorderColor.RGBA == 0) selectedBorderColor = Color.FromHexStringRGBA("0xFF00007F");
             if (hoveredHighlightColor.RGBA == 0) hoveredHighlightColor = ImGuiUtilities.GetFosterColor(ImGuiCol.Border, 0x7F);
             if (selectedHighlightColor.RGBA == 0) selectedHighlightColor = ImGuiUtilities.GetFosterColor(ImGuiCol.TextSelectedBg, 0x7F);
+            if (inactiveSpawnColor.RGBA == 0) inactiveSpawnColor = Color.FromHexStringRGBA("0x3F1F0003F");
         }
 
         public override void Run()
@@ -40,7 +45,7 @@ namespace GameTest1.Editors
 
             if (ImGui.Begin(Name, ref isOpen, ImGuiWindowFlags.AlwaysAutoResize))
             {
-                isFocused = ImGui.IsWindowFocused(ImGuiFocusedFlags.RootAndChildWindows);
+                isFocused = ImGui.IsWindowFocused(ImGuiFocusedFlags.RootAndChildWindows) || isSpawnEditorFocused;
 
                 var style = ImGui.GetStyle();
 
@@ -73,6 +78,7 @@ namespace GameTest1.Editors
                         {
                             currentMapPath = s[0];
                             map = JsonSerializer.Deserialize<Map>(File.ReadAllText(currentMapPath), Assets.SerializerOptions);
+                            tileset = null;
                         }
                     }), [new("JSON files (*.json)", "json")], currentMapPath);
                 }
@@ -135,6 +141,7 @@ namespace GameTest1.Editors
                         layersDirty = true;
                     }
                     if (currentLayerCount <= 0) ImGui.EndDisabled();
+                    if (ImGui.Button("Spawn editor")) { isSpawnEditorOpen = true; ImGui.SetWindowFocus(spawnEditorName); }
                     ImGui.EndGroup();
                     ImGui.SameLine();
 
@@ -194,6 +201,20 @@ namespace GameTest1.Editors
                                             var cellRect = new Rect(cellPos, tileset.CellSize * mapZoom);
                                             if (drawMapCellGrid)
                                                 batcher.RectLine(cellRect, 1f, gridColor);
+
+                                            foreach (var spawn in map.Spawns)
+                                            {
+                                                if (spawn.Position == (x, y))
+                                                {
+                                                    if ((i == spawn.MapLayer && i == activeLayer) || !dimInactiveLayers)
+                                                    {
+                                                        batcher.Rect(cellRect, Color.Yellow);
+                                                        break;
+                                                    }
+                                                    else
+                                                        batcher.Rect(cellRect, inactiveSpawnColor);
+                                                }
+                                            }
 
                                             if (hoveredMapCell != -1 && hoveredMapCell == cellOffset)
                                             {
@@ -293,10 +314,58 @@ namespace GameTest1.Editors
                         ImGui.EndChild();
                         ImGui.EndGroup();
                     }
+
+                    RunSpawnEditor();
                 }
                 ImGui.EndGroup();
             }
             isCollapsed = ImGui.IsWindowCollapsed();
+            ImGui.End();
+        }
+
+        private void RunSpawnEditor()
+        {
+            if (!isSpawnEditorOpen || map == null) return;
+
+            if (ImGui.Begin(spawnEditorName, ref isSpawnEditorOpen, ImGuiWindowFlags.AlwaysAutoResize))
+            {
+                isSpawnEditorFocused = ImGui.IsWindowFocused(ImGuiFocusedFlags.RootAndChildWindows);
+
+                ImGui.BeginGroup();
+                var currentSpawnCount = map.Spawns.Count;
+                if (currentSpawnCount == 0) ImGui.BeginDisabled();
+                ImGui.SliderInt("Selected spawn", ref selectedSpawn, 0, map.Spawns.Count == 0 ? 0 : map.Spawns.Count - 1);
+                if (currentSpawnCount == 0) ImGui.EndDisabled();
+                ImGui.SameLine();
+                ImGui.Dummy(new(10f, 0f));
+                ImGui.SameLine();
+                if (ImGui.Button("Add new spawn")) map.Spawns.Add(new());
+                if (currentSpawnCount <= 0) ImGui.BeginDisabled();
+                ImGui.SameLine();
+                if (ImGui.Button("Remove selected spawn"))
+                {
+                    map.Spawns.RemoveAt(selectedSpawn);
+                    selectedSpawn = Math.Clamp(selectedSpawn - 1, 0, map.Spawns.Count);
+                }
+                if (currentSpawnCount <= 0) ImGui.EndDisabled();
+                ImGui.EndGroup();
+
+                if (map.Spawns.Count != 0)
+                {
+                    var spawn = map.Spawns[selectedSpawn];
+
+                    ImGui.Separator();
+
+                    ImGui.BeginGroup();
+                    ImGui.InputText("Actor type", ref spawn.ActorType, 64);
+                    ImGui.SameLine();
+                    ImGui.SliderInt("Position X", ref spawn.Position.X, 0, map.Size.X - 1);
+                    ImGui.SliderInt("Map layer", ref spawn.MapLayer, 0, map.Layers.Count - 1);
+                    ImGui.SameLine();
+                    ImGui.SliderInt("Position Y", ref spawn.Position.Y, 0, map.Size.Y - 1);
+                    ImGui.EndGroup();
+                }
+            }
             ImGui.End();
         }
     }

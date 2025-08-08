@@ -13,6 +13,8 @@ namespace GameTest1.Game.Levels
         public string Tileset = string.Empty;
         [JsonInclude]
         public List<MapLayer> Layers = [];
+        [JsonInclude]
+        public List<Spawn> Spawns = [];
 
         public void ResizeLayers()
         {
