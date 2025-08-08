@@ -2,9 +2,7 @@
 using GameTest1.Game.Actors;
 using GameTest1.Game.Levels;
 using GameTest1.Utilities;
-using System;
 using System.Numerics;
-using static Foster.Framework.Aseprite;
 
 namespace GameTest1.GameStates
 {
@@ -86,8 +84,10 @@ namespace GameTest1.GameStates
 
         private void SpawnPlayerActor(Spawn spawn)
         {
-            player = new Player(manager);
-            player.Position = (spawn.Position * currentTileset?.CellSize ?? Point2.Zero) - player.Hitbox.Rectangle.Position;
+            if (currentMap == null || currentTileset == null) return;
+
+            player = new Player(manager, currentMap, currentTileset);
+            player.Position = (spawn.Position * currentTileset?.CellSize ?? Point2.Zero) - player.Hitbox.Rectangle.Center;
 
             actors.Add(player);
         }
@@ -96,6 +96,9 @@ namespace GameTest1.GameStates
         {
             foreach (var actor in actors)
                 actor.Update();
+
+            if (manager.Controls.Menu.ConsumePress())
+                manager.GameStates.Push(new Editor(manager));
         }
 
         public override void Render()
@@ -123,14 +126,16 @@ namespace GameTest1.GameStates
                 if (player != null)
                 {
                     manager.Batcher.Text(manager.Assets.PixelFont, $"Current hitbox == {player.Position + player.Hitbox.Rectangle}", Vector2.Zero, Color.White);
-                    manager.Batcher.Text(manager.Assets.PixelFont, $"{manager.Controls.Move.Name}:{manager.Controls.Move.IntValue} {manager.Controls.Action1.Name}:{manager.Controls.Action1.Down} {manager.Controls.Action2.Name}:{manager.Controls.Action2.Down}", new Vector2(0f, manager.Screen.Height - manager.Assets.Font.LineHeight), Color.White);
+                    manager.Batcher.Text(manager.Assets.PixelFont, $"{manager.Controls.Move.Name}:{manager.Controls.Move.IntValue} {manager.Controls.Action1.Name}:{manager.Controls.Action1.Down} {manager.Controls.Action2.Name}:{manager.Controls.Action2.Down} {manager.Controls.Menu.Name}:{manager.Controls.Menu.Down} {manager.Controls.Debug.Name}:{manager.Controls.Debug.Down}", new Vector2(0f, manager.Screen.Height - manager.Assets.Font.LineHeight), Color.White);
 
                     if (currentMap != null && currentTileset != null)
                     {
-                        var cells = player.GetCells(currentMap.Size, currentTileset.CellSize);
+                        var cells = player.GetMapCells();
                         for (var i = 0; i < cells.Length; i++)
-                            manager.Batcher.Text(manager.Assets.PixelFont, cells[i].ToString(), new(0f, 40f + i * manager.Assets.Font.LineHeight), Color.CornflowerBlue);
+                            manager.Batcher.Text(manager.Assets.PixelFont, cells[i].ToString(), new(0f, 60f + i * manager.Assets.Font.LineHeight), Color.CornflowerBlue);
                     }
+
+                    manager.Batcher.Text(manager.Assets.PixelFont, $"Bob {player.Elevation:0.0000}\nCooldown {player.BounceCooldown}", new(0f, 25f), Color.Yellow);
                 }
             }
 
@@ -149,7 +154,7 @@ namespace GameTest1.GameStates
 
             if (Globals.ShowDebugInfo && currentMap != null && currentTileset != null && player != null)
             {
-                foreach (var hit in player.GetCells(currentMap.Size, currentTileset.CellSize))
+                foreach (var hit in player.GetMapCells())
                 {
                     var cellPos = new Vector2(hit.X, hit.Y) * currentTileset.CellSize;
                     manager.Batcher.Rect(cellPos, currentTileset.CellSize, Color.FromHexStringRGBA("00003F3F"));

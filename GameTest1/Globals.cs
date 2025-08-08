@@ -3,12 +3,12 @@
     public static class Globals
     {
 #if !DEBUG
-        public static bool NormalStartup => true;
+        public static bool NormalStartup { get; set; } = true;
 #else
-        public static bool NormalStartup => false;
+        public static bool NormalStartup { get; set; } = false;
 #endif
-        public static bool FixedSeed => true;
-        public static bool QuickStart => true;
-        public static bool ShowDebugInfo => true;
+        public static bool FixedSeed { get; set; } = true;
+        public static bool QuickStart { get; set; } = true;
+        public static bool ShowDebugInfo { get; set; } = false;
     }
 }
