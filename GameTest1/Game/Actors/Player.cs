@@ -1,5 +1,6 @@
 ﻿using Foster.Framework;
 using GameTest1.Game.Levels;
+using GameTest1.Utilities;
 using System.Numerics;
 
 namespace GameTest1.Game.Actors
@@ -8,7 +9,7 @@ namespace GameTest1.Game.Actors
     {
         private const float acceleration = 1500f, friction = 100f, maxSpeed = 200f;
         private const float spriteRotation = 10f;
-        private const float bobExtents = 2f, bobSpeed = 20f;
+        private const float bobSpeed = 5f;
         private const float bounceCooldown = 25f;
 
         public enum State { Normal, InputDisabled }
@@ -24,9 +25,12 @@ namespace GameTest1.Game.Actors
             Sprite = manager.Assets.Sprites["PlayerUFO"];
             Hitbox = new(new(0, 20, 32, 12));
             MapLayer = 0;
+            Shadow.Enabled = true;
             PlayAnimation("Idle");
 
             CurrentState = State.InputDisabled;
+
+            bobDirection = 1f;
         }
 
         public override void OnCollisionX()
@@ -57,8 +61,9 @@ namespace GameTest1.Game.Actors
                     break;
             }
 
-            CalcPlayerBobbing();
-            CalcPlayerBounceCooldown();
+            CalcBobbing();
+            CalcBounceCooldown();
+            CalcShadow();
         }
 
         private void CalcPlayerVelocityAndRotation(Point2 direction, bool action1, bool action2)
@@ -90,20 +95,26 @@ namespace GameTest1.Game.Actors
                 Velocity.Y = Calc.Approach(Velocity.Y, 0f, fric);
         }
 
-        private void CalcPlayerBobbing()
+        private void CalcBobbing()
         {
-            if (bobDirection == 0f) bobDirection = 1f;
-
-            Elevation = Calc.Approach(Elevation, bobExtents * bobDirection, bobSpeed * manager.Time.Delta);
-
-            if (Elevation >= bobExtents || Elevation <= -bobExtents)
-                bobDirection = -bobDirection;
+            if (bobDirection == 0f) return;
+            Elevation = Calc.Approach(Elevation, bobDirection, bobSpeed * manager.Time.Delta);
+            if (Elevation >= 1f || Elevation <= -1f) bobDirection = -bobDirection;
         }
 
-        private void CalcPlayerBounceCooldown()
+        private void CalcBounceCooldown()
         {
             currentBounceCooldown.X = MathF.Floor(Calc.Approach(currentBounceCooldown.X, 0f, manager.Time.Delta));
             currentBounceCooldown.Y = MathF.Floor(Calc.Approach(currentBounceCooldown.Y, 0f, manager.Time.Delta));
+        }
+
+        private void CalcShadow()
+        {
+            if (sprite == null || animation == null) return;
+
+            var frame = sprite.GetFrameAt(animation, animTimer, isLoopingAnim);
+            Shadow.Offset = new(0f, frame.Size.Y * 0.35f);
+            Shadow.Scale = new Vector2(0.75f, 0.425f) * Calc.ClampedMap(Elevation, -1f, 1f, 0.9f, 1f);
         }
     }
 }

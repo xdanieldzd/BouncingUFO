@@ -1,6 +1,7 @@
 ﻿using Foster.Framework;
 using GameTest1.Game.Levels;
 using GameTest1.Game.Sprites;
+using GameTest1.Utilities;
 using System.Numerics;
 
 namespace GameTest1.Game.Actors
@@ -31,18 +32,16 @@ namespace GameTest1.Game.Actors
         }
         public int MapLayer = 0;
         public float Rotation = 0f;
+        public Shadow Shadow = new(manager);
         public float Elevation = 0f;
         public float Timer = 0f;
         public bool IsVisible = true;
-        public bool HasShadow = true;
 
         protected Vector2 veloRemainder;
         protected Sprite? sprite;
         protected Animation? animation;
         protected float animTimer = 0f;
         protected bool isLoopingAnim = false;
-
-        private readonly Color shadowColor = new(0, 0, 0, 128);
 
         public virtual void OnCollisionX() => StopX();
         public virtual void OnCollisionY() => StopY();
@@ -183,24 +182,14 @@ namespace GameTest1.Game.Actors
                 var frame = sprite.GetFrameAt(animation, animTimer, isLoopingAnim);
                 if (frame.Texture != null && frame.Texture is Subtexture texture)
                 {
-                    if (HasShadow)
-                    {
-                        // TODO  kinda ugly so make nicer, refactor, less magic numbers!
-                        var scale = new Vector2(0.8f, 0.5f) * Calc.ClampedMap(Elevation, -10f, 10f, 0f, 1f);
-                        manager.Batcher.PushMatrix(
-                            Matrix3x2.CreateTranslation(-frame.Size / 2f) *
-                            Matrix3x2.CreateScale(scale) *
-                            Matrix3x2.CreateTranslation(frame.Size / 2f) *
-                            Matrix3x2.CreateTranslation(Position + new Vector2(0f, frame.Size.Y * 0.35f)));
-                        manager.Batcher.Image(texture, Vector2.Zero, sprite.Origin, Vector2.One, 0f, shadowColor);
-                        manager.Batcher.PopMatrix();
-                    }
+                    if (Shadow.Enabled)
+                        Shadow.Render(sprite, frame, Position);
 
                     manager.Batcher.PushMatrix(
                         Matrix3x2.CreateTranslation(-frame.Size / 2f) *
                         Matrix3x2.CreateRotation(Calc.DegToRad * Rotation) *
                         Matrix3x2.CreateTranslation(frame.Size / 2f) *
-                        Matrix3x2.CreateTranslation(new Vector2(Position.X, Position.Y) + new Vector2(0f, Elevation)));
+                        Matrix3x2.CreateTranslation(new Vector2(Position.X, Position.Y + Elevation)));
                     manager.Batcher.Image(texture, Vector2.Zero, sprite.Origin, Vector2.One, 0f, Color.White);
                     manager.Batcher.PopMatrix();
                 }

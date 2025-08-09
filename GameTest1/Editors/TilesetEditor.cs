@@ -95,7 +95,7 @@ namespace GameTest1.Editors
                         {
                             tileset.TilesheetFile = relativeTilesheetFilePath;
                             File.WriteAllText(Path.Join(s[0], jsonFilename), JsonSerializer.Serialize(tileset, Assets.SerializerOptions));
-                            File.Copy(tilesheetFullPath, Path.Join(s[0], Path.GetFileName(tilesheetFullPath)));
+                            File.Copy(tilesheetFullPath, Path.Join(s[0], Path.GetFileName(tilesheetFullPath)), true);
                             tileset.TilesheetFile = tilesheetFullPath;
                         }
                     }), null);
@@ -117,7 +117,12 @@ namespace GameTest1.Editors
                     ImGuiUtilities.InputFileBrowser("Tilesheet File", ref tileset.TilesheetFile, manager.FileSystem, [new("Image files (*.png;*.bmp;*.jpg)", "png;bmp;jpg")], new FileSystem.DialogCallback((s, r) =>
                     {
                         if (r == FileSystem.DialogResult.Success)
+                        {
                             tileset.TilesheetFile = s.Length > 0 && s[0] != null ? s[0] : string.Empty;
+                            tileset.TilesheetTexture?.Dispose();
+                            tileset.TilesheetTexture = null;
+                            tileset.GenerateSubtextures(manager.GraphicsDevice);
+                        }
                     }));
                     ImGui.EndGroup();
 

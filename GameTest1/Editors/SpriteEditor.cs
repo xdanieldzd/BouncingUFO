@@ -96,7 +96,7 @@ namespace GameTest1.Editors
                         {
                             sprite.SpritesheetFile = relativeSpritesheetFilePath;
                             File.WriteAllText(Path.Join(s[0], jsonFilename), JsonSerializer.Serialize(sprite, Assets.SerializerOptions));
-                            File.Copy(spritesheetFullPath, Path.Join(s[0], Path.GetFileName(spritesheetFullPath)));
+                            File.Copy(spritesheetFullPath, Path.Join(s[0], Path.GetFileName(spritesheetFullPath)), true);
                             sprite.SpritesheetFile = spritesheetFullPath;
                         }
                     }), null);
@@ -120,7 +120,13 @@ namespace GameTest1.Editors
                     ImGuiUtilities.InputFileBrowser("Spritesheet File", ref sprite.SpritesheetFile, manager.FileSystem, [new("Image files (*.png;*.bmp;*.jpg)", "png;bmp;jpg")], new FileSystem.DialogCallback((s, r) =>
                     {
                         if (r == FileSystem.DialogResult.Success)
+                        {
                             sprite.SpritesheetFile = s.Length > 0 && s[0] != null ? s[0] : string.Empty;
+                            sprite.SpritesheetTexture?.Dispose();
+                            sprite.SpritesheetTexture = null;
+                            foreach (var frame in sprite.Frames) frame.Texture = null;
+                            animDirty = frameDirty = true;
+                        }
                     }));
                     ImGui.SliderFloat2("Origin", ref sprite.Origin, 0f, 1f);
                     ImGui.EndGroup();
@@ -182,7 +188,7 @@ namespace GameTest1.Editors
                     if (ImGui.SliderInt("Y", ref frame.Location.Y, 0, maxY, null, ImGuiSliderFlags.AlwaysClamp)) frameDirty = true;
                     if (ImGui.SliderInt("Width", ref frame.Size.X, 0, maxX, null, ImGuiSliderFlags.AlwaysClamp)) frameDirty = true;
                     if (ImGui.SliderInt("Height", ref frame.Size.Y, 0, maxY, null, ImGuiSliderFlags.AlwaysClamp)) frameDirty = true;
-                    if (ImGui.SliderFloat("Duration", ref frame.Duration, 0.1f, 15f, null, ImGuiSliderFlags.AlwaysClamp)) frameDirty = true;
+                    if (ImGui.SliderFloat("Duration", ref frame.Duration, 0.05f, 15f, null, ImGuiSliderFlags.AlwaysClamp)) frameDirty = true;
                     ImGui.EndGroup();
 
                     ImGui.SameLine();

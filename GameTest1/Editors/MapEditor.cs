@@ -13,6 +13,7 @@ namespace GameTest1.Editors
         public override string Name => "Map Editor";
 
         const float mapZoom = 2f, tilesetZoom = 3f;
+        const int tileSelectorWidth = 3;
 
         private Map? map;
         private Tileset? tileset;
@@ -176,7 +177,7 @@ namespace GameTest1.Editors
                         ImGui.Separator();
 
                         var mapScrollHeight = 0f;
-                        var tileScrollWidth = tileset.CellSize.X * 2 * tilesetZoom + style.ScrollbarSize;
+                        var tileScrollWidth = tileset.CellSize.X * tileSelectorWidth * tilesetZoom + style.ScrollbarSize;
 
                         ImGui.BeginGroup();
                         if (ImGui.BeginChild("mapscroll", new(850f - tileScrollWidth, 0f), ImGuiChildFlags.AlwaysAutoResize | ImGuiChildFlags.AutoResizeY, ImGuiWindowFlags.AlwaysHorizontalScrollbar))
@@ -266,7 +267,7 @@ namespace GameTest1.Editors
                         {
                             ImGui.BeginGroup();
 
-                            var tilesetViewSize = new Vector2(tileset.CellSize.X * 2, tileset.CellFlags.Length / 2 * tileset.CellSize.Y);
+                            var tilesetViewSize = new Vector2(tileset.CellSize.X * tileSelectorWidth, tileset.CellFlags.Length / tileSelectorWidth * tileset.CellSize.Y);
 
                             var imagePos = ImGui.GetCursorScreenPos();
                             if (manager.ImGuiRenderer.BeginBatch(tilesetViewSize * tilesetZoom, out var batcher, out var bounds))
@@ -274,7 +275,7 @@ namespace GameTest1.Editors
                                 batcher.CheckeredPattern(bounds, 8, 8, Color.DarkGray, Color.Gray);
                                 for (var i = 0; i < tileset.TilesheetSizeInCells.X * tileset.TilesheetSizeInCells.Y; i++)
                                 {
-                                    var cellPos = new Vector2(i % 2, i / 2) * tilesetZoom * tileset.CellSize;
+                                    var cellPos = new Vector2(i % tileSelectorWidth, i / tileSelectorWidth) * tilesetZoom * tileset.CellSize;
                                     batcher.Image(tileset.CellTextures[i], cellPos, Vector2.Zero, new(tilesetZoom), 0f, Color.White);
 
                                     var cellRect = new Rect(cellPos, tileset.CellSize * tilesetZoom);
@@ -300,7 +301,7 @@ namespace GameTest1.Editors
 
                             for (var i = 0; i < tileset.TilesheetSizeInCells.X * tileset.TilesheetSizeInCells.Y; i++)
                             {
-                                var cellPos = imagePos + new Vector2(i % 2, i / 2) * tilesetZoom * tileset.CellSize;
+                                var cellPos = imagePos + new Vector2(i % tileSelectorWidth, i / tileSelectorWidth) * tilesetZoom * tileset.CellSize;
                                 var isHovering = ImGui.IsMouseHoveringRect(cellPos, cellPos + tileset.CellSize * tilesetZoom);
                                 if (ImGui.IsWindowFocused(ImGuiFocusedFlags.RootAndChildWindows) && isHovering)
                                 {
