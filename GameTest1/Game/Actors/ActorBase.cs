@@ -139,10 +139,11 @@ namespace GameTest1.Game.Actors
                 foreach (var match in matches)
                 {
                     var destMatch = match + sign;
-                    if (destMatch.X < 0 || destMatch.X >= map.Size.X || destMatch.Y < 0 || destMatch.Y >= map.Size.Y) return false;
+                    if (destMatch.X < -1 || destMatch.X > map.Size.X || destMatch.Y < -1 || destMatch.Y > map.Size.Y) return false;
                     foreach (var layer in layers)
                     {
                         var nextCellRect = new RectInt(destMatch * tileset.CellSize, tileset.CellSize);
+                        if (nextCellRect.Left < 0 || nextCellRect.Top < 0 || nextCellRect.Right >= map.Size.X * tileset.CellSize.X || nextCellRect.Bottom >= map.Size.Y * tileset.CellSize.Y) continue;
                         var nextCellType = layer.Tiles[destMatch.Y * map.Size.X + destMatch.X];
                         var nextCellFlags = tileset.CellFlags[nextCellType];
                         if (nextCellRect.Overlaps(destRect) && nextCellFlags != CellFlag.Empty && (!nextCellFlags.Has(CellFlag.Ground) || nextCellFlags.Has(CellFlag.Wall))) return false;
