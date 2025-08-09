@@ -31,10 +31,9 @@ namespace GameTest1.Game.Actors
             }
         }
         public Frame? Frame => currentFrame;
-        public int MapLayer = 0;
-        public float Rotation = 0f;
+        public int MapLayer = 0, DrawPriority = 0;
+        public float Rotation = 0f, Elevation = 0f;
         public Shadow Shadow = new(manager);
-        public float Elevation = 0f;
         public float Timer = 0f;
         public bool IsVisible = true;
 
@@ -203,5 +202,7 @@ namespace GameTest1.Game.Actors
                 }
             }
         }
+
+        public virtual void Destroyed() { }
     }
 }

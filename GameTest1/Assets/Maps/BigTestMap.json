@@ -3223,6 +3223,38 @@
         "Y": 18
       },
       "MapLayer": 0
+    },
+    {
+      "ActorType": "Capsule",
+      "Position": {
+        "X": 5,
+        "Y": 9
+      },
+      "MapLayer": 0
+    },
+    {
+      "ActorType": "Capsule",
+      "Position": {
+        "X": 11,
+        "Y": 9
+      },
+      "MapLayer": 0
+    },
+    {
+      "ActorType": "Capsule",
+      "Position": {
+        "X": 17,
+        "Y": 9
+      },
+      "MapLayer": 0
+    },
+    {
+      "ActorType": "Capsule",
+      "Position": {
+        "X": 23,
+        "Y": 9
+      },
+      "MapLayer": 0
     }
   ]
 }

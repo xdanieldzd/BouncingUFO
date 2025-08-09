@@ -25,8 +25,11 @@ namespace GameTest1.Game.Levels
         [JsonInclude]
         public CellFlag[] CellFlags = [];
 
+        [JsonIgnore]
         public Texture? TilesheetTexture;
+        [JsonIgnore]
         public Point2 TilesheetSizeInCells;
+        [JsonIgnore]
         public Subtexture[]? CellTextures;
 
         public void CreateTextures(GraphicsDevice graphicsDevice)

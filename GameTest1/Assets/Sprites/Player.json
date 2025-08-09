@@ -1,7 +1,10 @@
 {
-  "Name": "PlayerUFO",
-  "SpritesheetFile": "Assets\\Sprites\\PlayerUFO.png",
-  "Origin": {},
+  "Name": "Player",
+  "SpritesheetFile": "Assets\\Sprites\\Player.png",
+  "Origin": {
+    "X": 0,
+    "Y": 0
+  },
   "Frames": [
     {
       "Location": {

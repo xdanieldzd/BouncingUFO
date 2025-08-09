@@ -18,6 +18,7 @@ namespace GameTest1.GameStates
         private readonly Camera camera = new(manager);
 
         private readonly List<ActorBase> actors = [];
+        private readonly List<ActorBase> actorsToDestroy = [];
         private Player? player;
 
         private Map? currentMap;
@@ -77,11 +78,14 @@ namespace GameTest1.GameStates
             currentMap = manager.Assets.Maps[startOnMap];
             currentTileset = manager.Assets.Tilesets[currentMap.Tileset];
 
+            // TODO: make actor spawning less janky?
+
             foreach (var spawn in currentMap.Spawns)
             {
                 switch (spawn.ActorType)
                 {
                     case "Player": SpawnPlayerActor(spawn); break;
+                    case "Capsule": SpawnCapsuleActor(spawn); break;
                 }
             }
         }
@@ -98,10 +102,49 @@ namespace GameTest1.GameStates
             actors.Add(player);
         }
 
+        private void SpawnCapsuleActor(Spawn spawn)
+        {
+            if (currentMap == null || currentTileset == null) return;
+
+            var capsule = new Capsule(manager, currentMap, currentTileset)
+            {
+                Position = spawn.Position * currentTileset?.CellSize ?? Point2.Zero
+            };
+            actors.Add(capsule);
+        }
+
         private void PerformMainLogic()
         {
+            for (var i = 0; i < actorsToDestroy.Count; i++)
+            {
+                actorsToDestroy[i].Destroyed();
+                actors.Remove(actorsToDestroy[i]);
+            }
+            actorsToDestroy.Clear();
+
             foreach (var actor in actors)
                 actor.Update();
+
+
+
+
+            //TEMP TESTING
+            if (player != null)
+            {
+                foreach (var other in actors.Where(x => x != player))
+                {
+                    if ((player.Hitbox.Rectangle + player.Position).Overlaps(other.Hitbox.Rectangle + other.Position))
+                    {
+                        player.OnCollisionX();
+                        player.OnCollisionY();
+                        actorsToDestroy.Add(other);
+                    }
+                }
+            }
+
+
+
+
 
             if (manager.Controls.Menu.ConsumePress())
                 manager.GameStates.Push(new Editor(manager));
@@ -153,7 +196,7 @@ namespace GameTest1.GameStates
             manager.Batcher.PushMatrix(camera.Matrix);
 
             manager.MapRenderer.Render(currentMap, currentTileset, Globals.ShowDebugInfo);
-            foreach (var actor in actors.Where(x => x.IsVisible))
+            foreach (var actor in actors.Where(x => x.IsVisible).OrderBy(x => x.DrawPriority))
             {
                 actor.Render();
                 if (Globals.ShowDebugInfo)

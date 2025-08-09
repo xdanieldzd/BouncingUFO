@@ -12,6 +12,7 @@ namespace GameTest1.Game.Sprites
         [JsonInclude]
         public float Duration = 0.05f;
 
+        [JsonIgnore]
         public Subtexture? Texture;
 
         [JsonIgnore]

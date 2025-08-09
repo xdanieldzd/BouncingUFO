@@ -22,9 +22,10 @@ namespace GameTest1.Game.Actors
 
         public Player(Manager manager, Map map, Tileset tileset) : base(manager, map, tileset)
         {
-            Sprite = manager.Assets.Sprites["PlayerUFO"];
+            Sprite = manager.Assets.Sprites["Player"];
             Hitbox = new(new(2, 20, 28, 12));
             MapLayer = 0;
+            DrawPriority = 100;
             Shadow.Enabled = true;
             PlayAnimation("Idle");
 

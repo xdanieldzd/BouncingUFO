@@ -19,6 +19,7 @@ namespace GameTest1.Game.Sprites
         [JsonInclude]
         public List<Animation> Animations = [];
 
+        [JsonIgnore]
         public Texture? SpritesheetTexture;
 
         public void CreateTextures(GraphicsDevice graphicsDevice)

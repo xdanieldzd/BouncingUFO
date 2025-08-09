@@ -14,7 +14,7 @@ namespace GameTest1
         public const string MapFolderName = "Maps";
         public const string SpriteFolderName = "Sprites";
 
-        public readonly static JsonSerializerOptions SerializerOptions = new() { WriteIndented = true };
+        public readonly static JsonSerializerOptions SerializerOptions = new() { WriteIndented = true, IncludeFields = true };
 
         public SpriteFont Font { get; private set; }
         public SpriteFont PixelFont { get; private set; }

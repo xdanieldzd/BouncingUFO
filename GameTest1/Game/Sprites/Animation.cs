@@ -11,6 +11,7 @@ namespace GameTest1.Game.Sprites
         [JsonInclude]
         public int FrameCount = 0;
 
+        [JsonIgnore]
         public float Duration = 0f;
     }
 }

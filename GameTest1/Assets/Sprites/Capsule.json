@@ -1,0 +1,61 @@
+{
+  "Name": "Capsule",
+  "SpritesheetFile": "Assets\\Sprites\\Capsule.png",
+  "Origin": {
+    "X": 0,
+    "Y": 0
+  },
+  "Frames": [
+    {
+      "Location": {
+        "X": 0,
+        "Y": 0
+      },
+      "Size": {
+        "X": 16,
+        "Y": 32
+      },
+      "Duration": 0.15
+    },
+    {
+      "Location": {
+        "X": 16,
+        "Y": 0
+      },
+      "Size": {
+        "X": 16,
+        "Y": 32
+      },
+      "Duration": 0.15
+    },
+    {
+      "Location": {
+        "X": 32,
+        "Y": 0
+      },
+      "Size": {
+        "X": 16,
+        "Y": 32
+      },
+      "Duration": 0.15
+    },
+    {
+      "Location": {
+        "X": 48,
+        "Y": 0
+      },
+      "Size": {
+        "X": 16,
+        "Y": 32
+      },
+      "Duration": 0.15
+    }
+  ],
+  "Animations": [
+    {
+      "Name": "Idle",
+      "FirstFrame": 0,
+      "FrameCount": 4
+    }
+  ]
+}

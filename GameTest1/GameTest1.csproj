@@ -28,22 +28,16 @@
 		<None Update="Assets\Maps\BigTestMap.json">
 		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
-		<None Update="Assets\Maps\Map1.json">
+		<None Update="Assets\Sprites\Capsule.json">
 		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
-		<None Update="Assets\Maps\Map2.json">
+		<None Update="Assets\Sprites\Capsule.png">
 		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
-		<None Update="Assets\Sprites\PlayerUFO.json">
+		<None Update="Assets\Sprites\Player.json">
 		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
-		<None Update="Assets\Sprites\PlayerUFO.png">
-		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="Assets\Tilesets\Grass.json">
-		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="Assets\Tilesets\Grass.png">
+		<None Update="Assets\Sprites\Player.png">
 		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 		<None Update="Assets\Tilesets\Grass2.json">
