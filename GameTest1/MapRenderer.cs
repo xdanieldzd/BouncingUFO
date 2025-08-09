@@ -28,7 +28,7 @@ namespace GameTest1
             }
 
             if (tileset.CellTextures == null)
-                tileset.GenerateSubtextures(manager.GraphicsDevice);
+                tileset.CreateTextures(manager.GraphicsDevice);
 
             Render(map, tileset);
         }

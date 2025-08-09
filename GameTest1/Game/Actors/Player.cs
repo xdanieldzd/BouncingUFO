@@ -23,7 +23,7 @@ namespace GameTest1.Game.Actors
         public Player(Manager manager, Map map, Tileset tileset) : base(manager, map, tileset)
         {
             Sprite = manager.Assets.Sprites["PlayerUFO"];
-            Hitbox = new(new(0, 20, 32, 12));
+            Hitbox = new(new(2, 20, 28, 12));
             MapLayer = 0;
             Shadow.Enabled = true;
             PlayAnimation("Idle");

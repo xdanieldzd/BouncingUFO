@@ -10,11 +10,13 @@ namespace GameTest1.Game.Sprites
         [JsonInclude]
         public Point2 Size = Point2.Zero;
         [JsonInclude]
-        public float Duration = 0f;
+        public float Duration = 0.05f;
 
         public Subtexture? Texture;
 
         [JsonIgnore]
         public Rect SourceRectangle => new(Location, Size);
+
+        public void CreateTexture(Texture spritesheetTexture) => Texture = new(spritesheetTexture, SourceRectangle);
     }
 }

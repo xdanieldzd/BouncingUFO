@@ -27,7 +27,7 @@ namespace GameTest1.GameStates
             {
                 foreach (var editor in editors)
                 {
-                    if (ImGui.Button(editor.Name))
+                    if (ImGui.Button(editor.Name, new(150f, 0f)))
                     {
                         editor.IsOpen = true;
                         ImGui.SetWindowFocus(editor.Name);
@@ -36,7 +36,7 @@ namespace GameTest1.GameStates
                     editor.Run();
                 }
                 ImGui.Separator();
-                if (ImGui.Button("Exit"))
+                if (ImGui.Button("Exit", new(150f, 0f)))
                 {
                     manager.GameStates.Pop();
                     if (manager.GameStates.Count == 0) manager.GameStates.Push(new Intro(manager));

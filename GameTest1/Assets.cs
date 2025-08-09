@@ -37,7 +37,7 @@ namespace GameTest1
                 var tileset = JsonSerializer.Deserialize<Tileset>(File.ReadAllText(tilesetFile), SerializerOptions);
                 if (tileset == null) continue;
 
-                tileset.GenerateSubtextures(graphicsDevice);
+                tileset.CreateTextures(graphicsDevice);
                 Tilesets.Add(Path.GetFileNameWithoutExtension(tilesetFile), tileset);
             }
 
@@ -54,8 +54,7 @@ namespace GameTest1
                 var sprite = JsonSerializer.Deserialize<Sprite>(File.ReadAllText(spriteFile), SerializerOptions);
                 if (sprite == null) continue;
 
-                sprite.LoadTexture(graphicsDevice);
-                sprite.GenerateSubtextures(graphicsDevice);
+                sprite.CreateTextures(graphicsDevice);
                 Sprites.Add(Path.GetFileNameWithoutExtension(spriteFile), sprite);
             }
         }

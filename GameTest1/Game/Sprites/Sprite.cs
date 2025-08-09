@@ -1,5 +1,4 @@
 ﻿using Foster.Framework;
-using System.Net;
 using System.Numerics;
 using System.Text.Json.Serialization;
 
@@ -22,21 +21,17 @@ namespace GameTest1.Game.Sprites
 
         public Texture? SpritesheetTexture;
 
-        public void LoadTexture(GraphicsDevice graphicsDevice)
+        public void CreateTextures(GraphicsDevice graphicsDevice)
         {
             if (!string.IsNullOrWhiteSpace(SpritesheetFile))
+            {
                 SpritesheetTexture = new(graphicsDevice, new(SpritesheetFile), $"Sprite {Name}");
+                foreach (var frame in Frames)
+                    frame.CreateTexture(SpritesheetTexture);
+            }
         }
 
-        public void GenerateSubtextures(GraphicsDevice graphicsDevice)
-        {
-            if (SpritesheetTexture == null) LoadTexture(graphicsDevice);
-
-            foreach (var frame in Frames)
-                frame.Texture = new(SpritesheetTexture, frame.SourceRectangle);
-        }
-
-        private void CalculateAnimationDuration(Animation animation)
+        public void CalculateAnimationDuration(Animation animation)
         {
             animation.Duration = 0f;
             for (var i = animation.FirstFrame; i < animation.FirstFrame + animation.FrameCount; i++)
@@ -57,15 +52,7 @@ namespace GameTest1.Game.Sprites
                 if (time <= 0f) return Frames[i];
             }
 
-            return Frames[animation.FirstFrame];
-        }
-
-        public void AddAnimation(string name, int frameStart, int frameCount)
-        {
-            var duration = 0f;
-            for (var i = frameStart; i < frameStart + frameCount; i++)
-                duration += Frames[i].Duration;
-            Animations.Add(new() { Name = name, FirstFrame = frameStart, FrameCount = frameCount, Duration = duration });
+            return animation.FirstFrame < Frames.Count ? Frames[animation.FirstFrame] : new();
         }
     }
 }

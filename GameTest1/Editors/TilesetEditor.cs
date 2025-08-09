@@ -119,9 +119,7 @@ namespace GameTest1.Editors
                         if (r == FileSystem.DialogResult.Success)
                         {
                             tileset.TilesheetFile = s.Length > 0 && s[0] != null ? s[0] : string.Empty;
-                            tileset.TilesheetTexture?.Dispose();
-                            tileset.TilesheetTexture = null;
-                            tileset.GenerateSubtextures(manager.GraphicsDevice);
+                            tileset.CreateTextures(manager.GraphicsDevice);
                         }
                     }));
                     ImGui.EndGroup();
@@ -192,7 +190,7 @@ namespace GameTest1.Editors
 
                     if (needSubtexAndFlags)
                     {
-                        tileset.GenerateSubtextures(manager.GraphicsDevice);
+                        tileset.CreateTextures(manager.GraphicsDevice);
                         if ((tileset.CellFlags.Length == 0 || tileset.CellFlags.Length != tileset.TilesheetSizeInCells.Y * tileset.TilesheetSizeInCells.X) && tileset.CellTextures != null)
                             tileset.CellFlags = new CellFlag[tileset.CellTextures.Length];
                         selectedCell = 0;

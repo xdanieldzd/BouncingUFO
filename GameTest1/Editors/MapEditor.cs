@@ -41,10 +41,10 @@ namespace GameTest1.Editors
 
 
 
-            isOpen = true;
-            currentMapPath = @"D:\Programming\UFO\Maps\BigTestMap.json";
-            map = JsonSerializer.Deserialize<Map>(File.ReadAllText(currentMapPath), Assets.SerializerOptions);
-            tileset = null;
+            //isOpen = true;
+            //currentMapPath = @"D:\Programming\UFO\Maps\BigTestMap.json";
+            //map = JsonSerializer.Deserialize<Map>(File.ReadAllText(currentMapPath), Assets.SerializerOptions);
+            //tileset = null;
         }
 
         public override void Run()
