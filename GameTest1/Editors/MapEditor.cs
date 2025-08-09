@@ -38,6 +38,13 @@ namespace GameTest1.Editors
             if (hoveredHighlightColor.RGBA == 0) hoveredHighlightColor = ImGuiUtilities.GetFosterColor(ImGuiCol.Border, 0x7F);
             if (selectedHighlightColor.RGBA == 0) selectedHighlightColor = ImGuiUtilities.GetFosterColor(ImGuiCol.TextSelectedBg, 0x7F);
             if (inactiveSpawnColor.RGBA == 0) inactiveSpawnColor = Color.FromHexStringRGBA("0x3F1F0003F");
+
+
+
+            isOpen = true;
+            currentMapPath = @"D:\Programming\UFO\Maps\BigTestMap.json";
+            map = JsonSerializer.Deserialize<Map>(File.ReadAllText(currentMapPath), Assets.SerializerOptions);
+            tileset = null;
         }
 
         public override void Run()
@@ -176,11 +183,11 @@ namespace GameTest1.Editors
                     {
                         ImGui.Separator();
 
-                        var mapScrollHeight = 0f;
+                        var mapScrollHeight = tileset.CellSize.Y * 10 * tilesetZoom;
                         var tileScrollWidth = tileset.CellSize.X * tileSelectorWidth * tilesetZoom + style.ScrollbarSize;
 
                         ImGui.BeginGroup();
-                        if (ImGui.BeginChild("mapscroll", new(850f - tileScrollWidth, 0f), ImGuiChildFlags.AlwaysAutoResize | ImGuiChildFlags.AutoResizeY, ImGuiWindowFlags.AlwaysHorizontalScrollbar))
+                        if (ImGui.BeginChild("mapscroll", new(850f - tileScrollWidth, mapScrollHeight + style.ScrollbarSize), ImGuiChildFlags.AlwaysAutoResize | ImGuiChildFlags.AutoResizeY, ImGuiWindowFlags.AlwaysHorizontalScrollbar))
                         {
                             ImGui.BeginGroup();
 
@@ -254,8 +261,6 @@ namespace GameTest1.Editors
                                 }
                             }
                             ImGui.EndGroup();
-
-                            mapScrollHeight = Math.Max(ImGui.GetWindowHeight(), tileset.CellSize.Y * 4 * tilesetZoom + style.ScrollbarSize);
                         }
                         ImGui.EndChild();
                         ImGui.EndGroup();
@@ -313,6 +318,22 @@ namespace GameTest1.Editors
                             ImGui.EndGroup();
                         }
                         ImGui.EndChild();
+                        ImGui.EndGroup();
+
+                        ImGui.BeginGroup();
+                        if (ImGui.Button("Fill active layer")) ImGui.OpenPopup("Fill");
+
+                        ImGui.SetNextWindowPos(center, ImGuiCond.Appearing, new(0.5f));
+                        if (map != null && ImGui.BeginPopupModal("Fill", ImGuiWindowFlags.AlwaysAutoResize))
+                        {
+                            ImGui.Text("Really fill layer? This is destructive!");
+                            ImGui.Separator();
+                            if (ImGui.Button("Yes")) { Array.Fill(map.Layers[activeLayer].Tiles, selectedTilemapCell); ImGui.CloseCurrentPopup(); }
+                            ImGui.SameLine();
+                            ImGui.SetItemDefaultFocus();
+                            if (ImGui.Button("No")) ImGui.CloseCurrentPopup();
+                            ImGui.EndPopup();
+                        }
                         ImGui.EndGroup();
                     }
 

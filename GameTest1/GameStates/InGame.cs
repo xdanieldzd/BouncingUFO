@@ -1,4 +1,5 @@
 ﻿using Foster.Framework;
+using GameTest1.Game;
 using GameTest1.Game.Actors;
 using GameTest1.Game.Levels;
 using GameTest1.Utilities;
@@ -9,11 +10,12 @@ namespace GameTest1.GameStates
     public class InGame(Manager manager) : GameStateBase(manager), IGameState
     {
         private const float screenFadeDuration = 0.75f;
-        private const string startOnMap = "Map2";
+        private const string startOnMap = "BigTestMap";
 
         private enum State { Initialize, FadeIn, GameStartCountdown, MainLogic }
 
         private readonly ScreenFader screenFader = new(manager);
+        private readonly Camera camera = new(manager);
 
         private readonly List<ActorBase> actors = [];
         private Player? player;
@@ -66,6 +68,8 @@ namespace GameTest1.GameStates
                     PerformMainLogic();
                     break;
             }
+
+            camera.Update(Globals.ShowDebugInfo ? null : currentMap?.Size * currentTileset?.CellSize);
         }
 
         private void InitializeGame()
@@ -87,7 +91,9 @@ namespace GameTest1.GameStates
             if (currentMap == null || currentTileset == null) return;
 
             player = new Player(manager, currentMap, currentTileset);
-            player.Position = (spawn.Position * currentTileset?.CellSize ?? Point2.Zero) - player.Hitbox.Rectangle.Center;
+            player.Position = (spawn.Position * currentTileset?.CellSize ?? Point2.Zero) - player.Hitbox.Rectangle.Center / 2;
+
+            camera.FollowActor(player);
 
             actors.Add(player);
         }
@@ -135,7 +141,7 @@ namespace GameTest1.GameStates
                             manager.Batcher.Text(manager.Assets.PixelFont, cells[i].ToString(), new(0f, 60f + i * manager.Assets.Font.LineHeight), Color.CornflowerBlue);
                     }
 
-                    manager.Batcher.Text(manager.Assets.PixelFont, $"Bob {player.Elevation:0.0000}\nCooldown {player.BounceCooldown}", new(0f, 25f), Color.Yellow);
+                    manager.Batcher.Text(manager.Assets.PixelFont, $"Camera {camera.Matrix.Translation:0.0000}", new(0f, 25f), Color.Yellow);
                 }
             }
 
@@ -144,6 +150,8 @@ namespace GameTest1.GameStates
 
         private void RenderMapAndActors()
         {
+            manager.Batcher.PushMatrix(camera.Matrix);
+
             manager.MapRenderer.Render(currentMap, currentTileset, Globals.ShowDebugInfo);
             foreach (var actor in actors.Where(x => x.IsVisible))
             {
@@ -160,6 +168,8 @@ namespace GameTest1.GameStates
                     manager.Batcher.Rect(cellPos, currentTileset.CellSize, Color.FromHexStringRGBA("00003F3F"));
                 }
             }
+
+            manager.Batcher.PopMatrix();
         }
     }
 }

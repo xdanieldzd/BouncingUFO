@@ -30,6 +30,7 @@ namespace GameTest1.Game.Actors
                 }
             }
         }
+        public Frame? Frame => currentFrame;
         public int MapLayer = 0;
         public float Rotation = 0f;
         public Shadow Shadow = new(manager);
@@ -40,6 +41,7 @@ namespace GameTest1.Game.Actors
         protected Vector2 veloRemainder;
         protected Sprite? sprite;
         protected Animation? animation;
+        protected Frame? currentFrame;
         protected float animTimer = 0f;
         protected bool isLoopingAnim = false;
 
@@ -53,6 +55,9 @@ namespace GameTest1.Game.Actors
 
             Timer += manager.Time.Delta;
             animTimer += manager.Time.Delta;
+
+            if (sprite != null && animation != null)
+                currentFrame = sprite.GetFrameAt(animation, animTimer, isLoopingAnim);
         }
 
         public Point2[] GetMapCells()
@@ -179,16 +184,15 @@ namespace GameTest1.Game.Actors
         {
             if (sprite != null && animation != null)
             {
-                var frame = sprite.GetFrameAt(animation, animTimer, isLoopingAnim);
-                if (frame.Texture != null && frame.Texture is Subtexture texture)
+                if (currentFrame != null && currentFrame.Texture != null && currentFrame.Texture is Subtexture texture)
                 {
                     if (Shadow.Enabled)
-                        Shadow.Render(sprite, frame, Position);
+                        Shadow.Render(sprite, currentFrame, Position);
 
                     manager.Batcher.PushMatrix(
-                        Matrix3x2.CreateTranslation(-frame.Size / 2f) *
+                        Matrix3x2.CreateTranslation(-currentFrame.Size / 2f) *
                         Matrix3x2.CreateRotation(Calc.DegToRad * Rotation) *
-                        Matrix3x2.CreateTranslation(frame.Size / 2f) *
+                        Matrix3x2.CreateTranslation(currentFrame.Size / 2f) *
                         Matrix3x2.CreateTranslation(new Vector2(Position.X, Position.Y + Elevation)));
                     manager.Batcher.Image(texture, Vector2.Zero, sprite.Origin, Vector2.One, 0f, Color.White);
                     manager.Batcher.PopMatrix();
