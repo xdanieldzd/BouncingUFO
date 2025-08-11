@@ -19,9 +19,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<None Update="Assets\Fonts\monogram-extended.ttf">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
 		<None Update="Assets\Fonts\PixelFont.png">
 		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>

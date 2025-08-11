@@ -162,7 +162,7 @@ namespace GameTest1.GameStates
                     {
                         var timer = Math.Floor(gameStartCountdown);
                         var secondText = timer < 1f ? "GO!!" : (timer < 4f ? $"{timer}..." : "Get Ready!");
-                        manager.Batcher.Text(manager.Assets.PixelFont, secondText, manager.Screen.Bounds.Center, Color.White);
+                        manager.Batcher.Text(manager.Assets.Font, secondText, manager.Screen.Bounds.Center, Color.White);
                     }
                     break;
 
@@ -174,17 +174,17 @@ namespace GameTest1.GameStates
             {
                 if (player != null)
                 {
-                    manager.Batcher.Text(manager.Assets.PixelFont, $"Current hitbox == {player.Position + player.Hitbox.Rectangle}", Vector2.Zero, Color.White);
-                    manager.Batcher.Text(manager.Assets.PixelFont, $"{manager.Controls.Move.Name}:{manager.Controls.Move.IntValue} {manager.Controls.Action1.Name}:{manager.Controls.Action1.Down} {manager.Controls.Action2.Name}:{manager.Controls.Action2.Down} {manager.Controls.Menu.Name}:{manager.Controls.Menu.Down} {manager.Controls.Debug.Name}:{manager.Controls.Debug.Down}", new Vector2(0f, manager.Screen.Height - manager.Assets.Font.LineHeight), Color.White);
+                    manager.Batcher.Text(manager.Assets.Font, $"Current hitbox == {player.Position + player.Hitbox.Rectangle}", Vector2.Zero, Color.White);
+                    manager.Batcher.Text(manager.Assets.Font, $"{manager.Controls.Move.Name}:{manager.Controls.Move.IntValue} {manager.Controls.Action1.Name}:{manager.Controls.Action1.Down} {manager.Controls.Action2.Name}:{manager.Controls.Action2.Down} {manager.Controls.Menu.Name}:{manager.Controls.Menu.Down} {manager.Controls.Debug.Name}:{manager.Controls.Debug.Down}", new Vector2(0f, manager.Screen.Height - manager.Assets.Font.LineHeight), Color.White);
 
                     if (currentMap != null && currentTileset != null)
                     {
                         var cells = player.GetMapCells();
                         for (var i = 0; i < cells.Length; i++)
-                            manager.Batcher.Text(manager.Assets.PixelFont, cells[i].ToString(), new(0f, 60f + i * manager.Assets.Font.LineHeight), Color.CornflowerBlue);
+                            manager.Batcher.Text(manager.Assets.Font, cells[i].ToString(), new(0f, 60f + i * manager.Assets.Font.LineHeight), Color.CornflowerBlue);
                     }
 
-                    manager.Batcher.Text(manager.Assets.PixelFont, $"Camera {camera.Matrix.Translation:0.0000}", new(0f, 25f), Color.Yellow);
+                    manager.Batcher.Text(manager.Assets.Font, $"Camera {camera.Matrix.Translation:0.0000}", new(0f, 25f), Color.Yellow);
                 }
             }
 

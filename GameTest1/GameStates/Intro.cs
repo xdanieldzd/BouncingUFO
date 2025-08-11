@@ -69,10 +69,11 @@ namespace GameTest1.GameStates
             testStringBuilder.AppendLine();
 
             var fontTest = string.Empty;
-            for (var i = ' '; i < 0x80; i++)
+            for (var i = ' '; i <= 0xFF; i++)
             {
                 fontTest += i;
-                if (((i + 1) % 16) == 0) fontTest += '\n';
+                if (((i + 1) % 16) == 0) fontTest += ' ';
+                if (((i + 1) % 32) == 0) fontTest += '\n';
             }
 
             testStringBuilder.AppendLine(fontTest.TrimEnd('\n'));
@@ -82,7 +83,7 @@ namespace GameTest1.GameStates
             testStringBuilder.AppendLine();
             testStringBuilder.AppendLine("Donec efficitur, elit et hendrerit luctus, elit metus condimentum arcu, in auctor leo nibh vel ligula. Integer suscipit tortor vestibulum, tincidunt ex vitae, suscipit lorem. Proin vestibulum nec sapien vel fermentum. Quisque ac dictum nunc, at maximus ipsum. Nullam in auctor eros. Donec at ipsum consequat, eleifend justo at, malesuada metus. Ut eget libero quam. Donec feugiat mollis metus, in laoreet neque elementum sit amet. Quisque bibendum hendrerit massa, a scelerisque turpis vulputate vel. Aenean venenatis dolor et finibus tincidunt. Etiam at eleifend mi, eu dapibus purus.");
 
-            manager.Batcher.Text(manager.Assets.PixelFont, testStringBuilder.ToString(), manager.Screen.Width, Vector2.Zero, Color.White);
+            manager.Batcher.Text(manager.Assets.Font, testStringBuilder.ToString(), manager.Screen.Width, Vector2.Zero, Color.White);
 
             screenFader.Render();
         }

@@ -17,18 +17,17 @@ namespace GameTest1
         public readonly static JsonSerializerOptions SerializerOptions = new() { WriteIndented = true, IncludeFields = true };
 
         public SpriteFont Font { get; private set; }
-        public SpriteFont PixelFont { get; private set; }
         public Dictionary<string, Tileset> Tilesets { get; private set; } = [];
         public Dictionary<string, Map> Maps { get; private set; } = [];
         public Dictionary<string, Sprite> Sprites { get; private set; } = [];
 
         public Assets(GraphicsDevice graphicsDevice)
         {
-            Font = new(graphicsDevice, Path.Join(AssetsFolderName, FontsFolderName, "monogram-extended.ttf"), 16f);
-            PixelFont = SpriteFontHelper.GenerateFromImage(
+            Font = SpriteFontHelper.GenerateFromImage(
                 graphicsDevice,
+                "PixelFont",
                 Path.Join(AssetsFolderName, FontsFolderName, "PixelFont.png"),
-                new(10, 10),
+                new(8, 8),
                 SpriteFontHighlightType.Outline,
                 Color.Black);
 
