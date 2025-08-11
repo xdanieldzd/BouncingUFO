@@ -68,22 +68,9 @@ namespace GameTest1.GameStates
             testStringBuilder.AppendLine($"Intro stuffs goes here! Currently just a font test tho, I guess.\nGoing to InGame state in {waitDuration - mainStateTimer:0.00} sec.... OR press an Action button!");
             testStringBuilder.AppendLine();
 
-            var fontTest = string.Empty;
-            for (var i = ' '; i <= 0xFF; i++)
-            {
-                fontTest += i;
-                if (((i + 1) % 16) == 0) fontTest += ' ';
-                if (((i + 1) % 32) == 0) fontTest += '\n';
-            }
-
-            testStringBuilder.AppendLine(fontTest.TrimEnd('\n'));
-            testStringBuilder.AppendLine();
-
-            testStringBuilder.AppendLine("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent at felis vitae quam posuere venenatis sed vel lacus. Quisque venenatis nisi ut nibh accumsan, non volutpat sapien venenatis. Suspendisse sem erat, venenatis eu eros porttitor, vulputate fermentum arcu. Donec et lectus vitae ex interdum tempor. Nunc ipsum erat, fringilla id euismod eu, rutrum maximus quam. Suspendisse sit amet odio ut libero feugiat tristique nec et justo. Sed hendrerit dolor a tellus blandit, sit amet efficitur leo accumsan. Ut porta velit nisl, ac gravida sem mattis pulvinar. Maecenas ornare consequat porttitor. Fusce ac volutpat nibh, id ultrices magna.");
-            testStringBuilder.AppendLine();
-            testStringBuilder.AppendLine("Donec efficitur, elit et hendrerit luctus, elit metus condimentum arcu, in auctor leo nibh vel ligula. Integer suscipit tortor vestibulum, tincidunt ex vitae, suscipit lorem. Proin vestibulum nec sapien vel fermentum. Quisque ac dictum nunc, at maximus ipsum. Nullam in auctor eros. Donec at ipsum consequat, eleifend justo at, malesuada metus. Ut eget libero quam. Donec feugiat mollis metus, in laoreet neque elementum sit amet. Quisque bibendum hendrerit massa, a scelerisque turpis vulputate vel. Aenean venenatis dolor et finibus tincidunt. Etiam at eleifend mi, eu dapibus purus.");
-
             manager.Batcher.Text(manager.Assets.Font, testStringBuilder.ToString(), manager.Screen.Width, Vector2.Zero, Color.White);
+
+            manager.Batcher.Text(manager.Assets.BigFont, "0123456789\nTIME 01:23:45\nENERGY 67\nLEFT 89", new(0f, 50f), Color.CornflowerBlue);
 
             screenFader.Render();
         }

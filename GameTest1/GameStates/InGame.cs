@@ -27,6 +27,9 @@ namespace GameTest1.GameStates
         private State currentState = State.Initialize;
         private float gameStartCountdown;
 
+        private DateTime gameStartTime, gameEndTime;
+        private int capsuleCount;
+
         //
 
         public override void UpdateApp()
@@ -48,6 +51,7 @@ namespace GameTest1.GameStates
                         screenFader.Cancel();
                         currentState = State.MainLogic;
                         gameStartCountdown = 0f;
+                        gameStartTime = DateTime.Now;
                         if (player != null) player.CurrentState = Player.State.Normal;
                     }
                     break;
@@ -62,6 +66,7 @@ namespace GameTest1.GameStates
                     {
                         currentState = State.MainLogic;
                         if (player != null) player.CurrentState = Player.State.Normal;
+                        gameStartTime = DateTime.Now;
                     }
                     break;
 
@@ -125,8 +130,8 @@ namespace GameTest1.GameStates
             foreach (var actor in actors)
                 actor.Update();
 
-
-
+            capsuleCount = actors.Count(x => x is Capsule);
+            gameEndTime = DateTime.Now;
 
             //TEMP TESTING
             if (player != null)
@@ -167,6 +172,9 @@ namespace GameTest1.GameStates
                     break;
 
                 case State.MainLogic:
+                    manager.Batcher.Text(manager.Assets.BigFont, $"TIME {gameEndTime - gameStartTime:mm\\:ss\\:ff}", new(8f), Color.White);
+                    manager.Batcher.Text(manager.Assets.BigFont, $"LEFT {capsuleCount:00}", new Vector2(manager.Screen.Bounds.Right - 8f, 8f), new Vector2(1f, 0f), Color.White);
+                    manager.Batcher.Text(manager.Assets.BigFont, $"ENERGY {player?.energy:00}", new Vector2(manager.Screen.Bounds.Right - 8f, manager.Screen.Bounds.Bottom - 8f - manager.Assets.BigFont.Size), new Vector2(1f, 1f), Color.White);
                     break;
             }
 

@@ -11,6 +11,7 @@ namespace GameTest1.Game.Actors
         private const float spriteRotation = 10f;
         private const float bobSpeed = 5f;
         private const float bounceCooldown = 25f;
+        private const int maxEnergy = 99;
 
         public enum State { Normal, InputDisabled }
         public State CurrentState;
@@ -19,6 +20,8 @@ namespace GameTest1.Game.Actors
         private Vector2 currentBounceCooldown = Vector2.Zero;
 
         public Vector2 BounceCooldown => currentBounceCooldown;
+
+        public int energy = 0;
 
         public Player(Manager manager, Map map, Tileset tileset) : base(manager, map, tileset)
         {
@@ -32,6 +35,7 @@ namespace GameTest1.Game.Actors
             CurrentState = State.InputDisabled;
 
             bobDirection = 1f;
+            energy = maxEnergy;
         }
 
         public override void OnCollisionX()
@@ -39,6 +43,7 @@ namespace GameTest1.Game.Actors
             Velocity.X = -Velocity.X;
             veloRemainder.X = -veloRemainder.X;
             currentBounceCooldown.X = bounceCooldown;
+            energy--;
         }
 
         public override void OnCollisionY()
@@ -46,11 +51,14 @@ namespace GameTest1.Game.Actors
             Velocity.Y = -Velocity.Y;
             veloRemainder.Y = -veloRemainder.Y;
             currentBounceCooldown.Y = bounceCooldown;
+            energy--;
         }
 
         public override void Update()
         {
             base.Update();
+
+            energy = Math.Clamp(energy, 0, maxEnergy);
 
             switch (CurrentState)
             {

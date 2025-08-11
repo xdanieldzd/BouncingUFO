@@ -17,6 +17,7 @@ namespace GameTest1
         public readonly static JsonSerializerOptions SerializerOptions = new() { WriteIndented = true, IncludeFields = true };
 
         public SpriteFont Font { get; private set; }
+        public SpriteFont BigFont { get; private set; }
         public Dictionary<string, Tileset> Tilesets { get; private set; } = [];
         public Dictionary<string, Map> Maps { get; private set; } = [];
         public Dictionary<string, Sprite> Sprites { get; private set; } = [];
@@ -25,10 +26,22 @@ namespace GameTest1
         {
             Font = SpriteFontHelper.GenerateFromImage(
                 graphicsDevice,
-                "PixelFont",
-                Path.Join(AssetsFolderName, FontsFolderName, "PixelFont.png"),
+                "Font",
+                Path.Join(AssetsFolderName, FontsFolderName, "Font.png"),
                 new(8, 8),
+                SpriteFontSetting.None,
                 SpriteFontHighlightType.Outline,
+                Color.Black);
+
+            BigFont = SpriteFontHelper.GenerateFromImage(
+                graphicsDevice,
+                "BigFont",
+                Path.Join(AssetsFolderName, FontsFolderName, "BigFont.png"),
+                new(16, 16),
+                SpriteFontSetting.Gradient | SpriteFontSetting.FixedWidth,
+                0x20,
+                16,
+                SpriteFontHighlightType.DropShadowThick,
                 Color.Black);
 
             foreach (var tilesetFile in Directory.EnumerateFiles(Path.Join(AssetsFolderName, TilesetFolderName), "*.json", SearchOption.AllDirectories))
