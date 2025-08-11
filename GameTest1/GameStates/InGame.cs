@@ -12,7 +12,7 @@ namespace GameTest1.GameStates
         private const float screenFadeDuration = 0.75f;
         private const string startOnMap = "BigTestMap";
 
-        private enum State { Initialize, FadeIn, GameStartCountdown, MainLogic }
+        private enum State { Initialize, FadeIn, GameStartCountdown, MainLogic, GameOver }
 
         private readonly ScreenFader screenFader = new(manager);
         private readonly Camera camera = new(manager);
@@ -73,7 +73,26 @@ namespace GameTest1.GameStates
                 case State.MainLogic:
                     PerformMainLogic();
                     break;
+
+                case State.GameOver:
+                    if (player != null) player.CurrentState = Player.State.InputDisabled;
+                    break;
             }
+
+            if (manager.Controls.Menu.ConsumePress())
+                manager.GameStates.Push(new Editor(manager));
+
+            for (var i = 0; i < actorsToDestroy.Count; i++)
+            {
+                actorsToDestroy[i].Destroyed();
+                actors.Remove(actorsToDestroy[i]);
+            }
+            actorsToDestroy.Clear();
+
+            foreach (var actor in actors)
+                actor.Update();
+
+            capsuleCount = actors.Count(x => x is Capsule);
 
             camera.Update(Globals.ShowDebugInfo ? null : currentMap?.Size * currentTileset?.CellSize);
         }
@@ -120,18 +139,15 @@ namespace GameTest1.GameStates
 
         private void PerformMainLogic()
         {
-            for (var i = 0; i < actorsToDestroy.Count; i++)
-            {
-                actorsToDestroy[i].Destroyed();
-                actors.Remove(actorsToDestroy[i]);
-            }
-            actorsToDestroy.Clear();
-
-            foreach (var actor in actors)
-                actor.Update();
-
-            capsuleCount = actors.Count(x => x is Capsule);
             gameEndTime = DateTime.Now;
+
+            if (capsuleCount <= 0 || player?.energy <= 0)
+            {
+                currentState = State.GameOver;
+                player?.Stop();
+            }
+
+
 
             //TEMP TESTING
             if (player != null)
@@ -146,13 +162,6 @@ namespace GameTest1.GameStates
                     }
                 }
             }
-
-
-
-
-
-            if (manager.Controls.Menu.ConsumePress())
-                manager.GameStates.Push(new Editor(manager));
         }
 
         public override void Render()
@@ -161,22 +170,7 @@ namespace GameTest1.GameStates
 
             RenderMapAndActors();
 
-            switch (currentState)
-            {
-                case State.GameStartCountdown:
-                    {
-                        var timer = Math.Floor(gameStartCountdown);
-                        var secondText = timer < 1f ? "GO!!" : (timer < 4f ? $"{timer}..." : "Get Ready!");
-                        manager.Batcher.Text(manager.Assets.Font, secondText, manager.Screen.Bounds.Center, Color.White);
-                    }
-                    break;
-
-                case State.MainLogic:
-                    manager.Batcher.Text(manager.Assets.BigFont, $"TIME {gameEndTime - gameStartTime:mm\\:ss\\:ff}", new(8f), Color.White);
-                    manager.Batcher.Text(manager.Assets.BigFont, $"LEFT {capsuleCount:00}", new Vector2(manager.Screen.Bounds.Right - 8f, 8f), new Vector2(1f, 0f), Color.White);
-                    manager.Batcher.Text(manager.Assets.BigFont, $"ENERGY {player?.energy:00}", new Vector2(manager.Screen.Bounds.Right - 8f, manager.Screen.Bounds.Bottom - 8f - manager.Assets.BigFont.Size), new Vector2(1f, 1f), Color.White);
-                    break;
-            }
+            RenderHUD();
 
             if (Globals.ShowDebugInfo)
             {
@@ -221,6 +215,35 @@ namespace GameTest1.GameStates
             }
 
             manager.Batcher.PopMatrix();
+        }
+
+        private void RenderHUD()
+        {
+            switch (currentState)
+            {
+                case State.GameStartCountdown:
+                    {
+                        var startTimer = Math.Floor(gameStartCountdown);
+                        var startText = startTimer < 1f ? "GO!!" : (startTimer < 4f ? $"{startTimer}" : "GET READY...");
+                        manager.Batcher.Text(manager.Assets.BigFont, startText, manager.Screen.Bounds.Center - manager.Assets.BigFont.SizeOf(startText) / 2f, Color.White);
+                    }
+                    break;
+
+                case State.GameOver:
+                    var gameOverText = "GAME OVER";
+                    manager.Batcher.Text(manager.Assets.BigFont, gameOverText, manager.Screen.Bounds.Center - manager.Assets.BigFont.SizeOf(gameOverText) / 2f - new Vector2(0f, manager.Assets.BigFont.Size / 2f), Color.White);
+                    if (capsuleCount <= 0)
+                    {
+                        var yourTimeText = $"\nYOUR TIME: {gameEndTime - gameStartTime:mm\\:ss\\:ff}";
+                        manager.Batcher.Text(manager.Assets.BigFont, yourTimeText, manager.Screen.Bounds.Center - manager.Assets.BigFont.SizeOf(yourTimeText) / 2f + new Vector2(0f, manager.Assets.BigFont.Size / 2f), Color.White);
+                    }
+                    break;
+            }
+
+            manager.Batcher.Text(manager.Assets.BigFont, $"TIME {gameEndTime - gameStartTime:mm\\:ss\\:ff}", new(8f), Color.White);
+            manager.Batcher.Text(manager.Assets.BigFont, $"LEFT {capsuleCount:00}", new Vector2(manager.Screen.Bounds.Right - 8f, 8f), new Vector2(1f, 0f), Color.White);
+            if (currentState != State.GameOver)
+                manager.Batcher.Text(manager.Assets.BigFont, $"ENERGY {player?.energy:00}", new Vector2(manager.Screen.Bounds.Right - 8f, manager.Screen.Bounds.Bottom - 8f - manager.Assets.BigFont.Size), new Vector2(1f, 1f), player?.energy < 50 && manager.Time.BetweenInterval(0.5) ? Color.Red : Color.White);
         }
     }
 }

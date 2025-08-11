@@ -8,7 +8,7 @@
         public static bool NormalStartup { get; set; } = false;
 #endif
         public static bool FixedSeed { get; set; } = true;
-        public static bool QuickStart { get; set; } = true;
+        public static bool QuickStart { get; set; } = false;
         public static bool ShowDebugInfo { get; set; } = false;
     }
 }

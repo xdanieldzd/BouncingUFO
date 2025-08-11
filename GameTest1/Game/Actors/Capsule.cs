@@ -21,6 +21,8 @@ namespace GameTest1.Game.Actors
 
             Elevation = Random.Shared.NextSingle() * 2f - 1f;
             bobDirection = Elevation < 0f ? -1f : 1f;
+
+            IsRunning = true;
         }
 
         public override void Update()

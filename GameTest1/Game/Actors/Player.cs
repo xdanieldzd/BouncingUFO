@@ -36,6 +36,8 @@ namespace GameTest1.Game.Actors
 
             bobDirection = 1f;
             energy = maxEnergy;
+
+            IsRunning = true;
         }
 
         public override void OnCollisionX()

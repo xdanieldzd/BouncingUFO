@@ -36,6 +36,7 @@ namespace GameTest1.Game.Actors
         public Shadow Shadow = new(manager);
         public float Timer = 0f;
         public bool IsVisible = true;
+        public bool IsRunning = false;
 
         protected Vector2 veloRemainder;
         protected Sprite? sprite;
