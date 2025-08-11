@@ -55,7 +55,7 @@ namespace GameTest1.Utilities
 
             var fontImage = new Image(path);
             var characterData = GenerateCharaDictionary(fontImage, charSize, firstChar, spaceWidth, charSpacing);
-            if (highlightOffsets?.Length >= 0) PerformFontHighlighting(fontImage, highlightOffsets, highlightColor);
+            if (highlightOffsets.Length > 0) PerformFontHighlighting(fontImage, highlightOffsets, highlightColor);
 
             var spriteFont = new SpriteFont(graphicsDevice) { LineGap = charSize.Y };
             AddCharactersToFont(graphicsDevice, spriteFont, fontImage, Path.GetFileNameWithoutExtension(path), characterData);
