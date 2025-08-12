@@ -10,15 +10,16 @@ namespace GameTest1.GameStates
 
         private readonly string[] dialogText =
         [
-            "This is a test! Hello world, I'm a dialog box! This is a looooong line! Yeah, it's very, very long, so all this text needs to somehow fit in our box, you know? It's text wrapping time!",
-            "Yeah, still testing stuff, this is yet ANOTHER dialog box! Tho this one's a bit shorter, less wordy!"
+            "This is a test! Hello world, I'm a dialog box! This is a looooong line! Yeah, it's very long, so all this text needs to somehow fit in our box, right? It's text wrapping time! And we should be getting a box break roundabout here. Ah, see, there it was!",
+            "Yeah, still testing stuff, this is yet ANOTHER dialog box! Tho this one's a bit shorter, less wordy!",
+            "... ...\n... ...\n... ...\n... you're still here? No need to be, I'm done. Here, I'll kick you over to the main game state! See you later!"
         ];
 
         private int dialogIndex = 0;
 
         public override void UpdateApp()
         {
-            dialogBox.Size = new((int)(manager.Screen.Width / 1.5f), 46);
+            dialogBox.Size = new((int)(manager.Screen.Width / 1.5f), 60);
             dialogBox.Position = new(manager.Screen.Bounds.Center.X - dialogBox.Size.X / 2, manager.Screen.Bounds.Bottom - dialogBox.Size.Y - 16);
         }
 
@@ -28,7 +29,7 @@ namespace GameTest1.GameStates
 
             manager.Batcher.Text(manager.Assets.Font, "Hello, I am the Test GameState!", Vector2.Zero, Color.White);
 
-            if (dialogBox.Print(dialogText[dialogIndex]) == DialogBoxResult.Closed)
+            if (dialogBox.Print(dialogText[dialogIndex], "Char Racter") == DialogBoxResult.Closed)
             {
                 dialogIndex++;
                 if (dialogIndex == dialogText.Length)

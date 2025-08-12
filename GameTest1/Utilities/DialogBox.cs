@@ -15,9 +15,10 @@ namespace GameTest1.Utilities
         public RectInt FramePadding = new(8, 8, 8, 8);
         public int LinePadding = 6;
 
-        public RectInt PrintableArea => new(Position + FramePadding.TopLeft, Size - FramePadding.BottomRight);
+        public RectInt MainPrintableArea => new(Position + FramePadding.TopLeft, Size - FramePadding.BottomRight);
 
         private string currentText = string.Empty;
+        private string? currentSpeaker = string.Empty;
         private readonly Queue<(int start, int length)> textWrapPositions = [];
         private (int start, int totalLength, int currentLength)[] currentTextWrapPositions = [];
         private int currentMaxLine = 0, linesPerBox = 0;
@@ -27,7 +28,7 @@ namespace GameTest1.Utilities
         private DialogBoxState currentState = DialogBoxState.Opening;
         private float charTimer = 0f;
 
-        public DialogBoxResult Print(string text)
+        public DialogBoxResult Print(string text, string? speaker = null)
         {
             if (Font == null) return DialogBoxResult.InvalidFont;
 
@@ -38,6 +39,7 @@ namespace GameTest1.Utilities
             {
                 case DialogBoxState.Opening:
                     textWrapPositions.Clear();
+                    currentSpeaker = speaker;
                     foreach (var wrapPos in Font.WrapText(currentText = text, Size.X - FramePadding.Right))
                         textWrapPositions.Enqueue(wrapPos);
                     currentMaxLine = 0;
@@ -86,7 +88,7 @@ namespace GameTest1.Utilities
                     break;
 
                 case DialogBoxState.Closing:
-                    if (currentText != text)
+                    if (currentText != text || currentSpeaker != speaker)
                         currentState = DialogBoxState.Opening;
                     else
                         result = DialogBoxResult.Closed;
@@ -101,24 +103,27 @@ namespace GameTest1.Utilities
 
                 if (currentState == DialogBoxState.WaitingForInput && manager.Time.BetweenInterval(0.5f))
                 {
+                    var iconRect = new RectInt((MainPrintableArea.BottomRight - boxEndIconSize / 2f).FloorToPoint2(), boxEndIconSize);
                     if (textWrapPositions.Count > 0)
-                    {
-                        var basePos = PrintableArea.BottomRight - boxEndIconSize / 2f;
-                        manager.Batcher.Triangle(
-                            basePos + new Vector2(0f, 0f),
-                            basePos + new Vector2(boxEndIconSize.X, 0f),
-                            basePos + new Vector2(boxEndIconSize.X / 2f, boxEndIconSize.Y),
-                            Color.White);
-                    }
+                        manager.Batcher.Rect(iconRect, Color.Green);
                     else
-                        manager.Batcher.Rect(PrintableArea.BottomRight - boxEndIconSize / 2f, boxEndIconSize, Color.White);
+                        manager.Batcher.Rect(iconRect, Color.White);
+                    manager.Batcher.RectLine(iconRect, 1f, Color.Black);
                 }
             }
             manager.Batcher.RectLine(new Rect(Position, Size), 1f, Color.Black);
 
+            if (currentSpeaker != null)
+            {
+                var speakerRect = new RectInt(Position - new Point2(0, (int)Font.LineHeight - 1) - new Point2(0, FramePadding.Bottom / 2), new Point2((int)Font.WidthOf(currentSpeaker), (int)Font.LineHeight) + FramePadding.BottomRight / 2);
+                manager.Batcher.Rect(speakerRect, new(0x87, 0xCE, 0xEB, 0xFF));
+                manager.Batcher.Text(Font, currentSpeaker, speakerRect.TopLeft + FramePadding.TopLeft / 2, Color.White);
+                manager.Batcher.RectLine(speakerRect, 1f, Color.Black);
+            }
+
             if (false)
             {
-                manager.Batcher.RectLine(PrintableArea, 2f, Color.Red);
+                manager.Batcher.RectLine(MainPrintableArea, 2f, Color.Red);
                 manager.Batcher.Text(manager.Assets.Font, $"{currentState}, {currentMaxLine}", new(0f, manager.Assets.Font.LineHeight), Color.White);
                 for (var i = 0; i < currentTextWrapPositions.Length; i++)
                 {
