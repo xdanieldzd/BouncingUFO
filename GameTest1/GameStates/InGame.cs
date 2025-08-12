@@ -12,7 +12,7 @@ namespace GameTest1.GameStates
         private const float screenFadeDuration = 0.75f;
         private const string startOnMap = "BigTestMap";
 
-        private enum State { Initialize, FadeIn, GameStartCountdown, MainLogic, GameOver }
+        private enum State { Initialize, FadeIn, GameStartCountdown, MainLogic, GameOver, Restart }
 
         private readonly ScreenFader screenFader = new(manager);
         private readonly Camera camera = new(manager);
@@ -43,12 +43,14 @@ namespace GameTest1.GameStates
                     screenFader.Duration = screenFadeDuration;
                     screenFader.Color = ScreenFader.PreviousColor;
                     screenFader.Reset();
+                    screenFader.IsRunning = true;
                     currentState = State.FadeIn;
                     gameStartCountdown = 5f;
 
                     if (Globals.QuickStart)
                     {
                         screenFader.Cancel();
+                        screenFader.IsRunning = false;
                         currentState = State.MainLogic;
                         gameStartCountdown = 0f;
                         gameStartTime = DateTime.Now;
@@ -57,7 +59,11 @@ namespace GameTest1.GameStates
                     break;
 
                 case State.FadeIn:
-                    if (screenFader.Update()) currentState = State.GameStartCountdown;
+                    if (screenFader.Update())
+                    {
+                        screenFader.IsRunning = false;
+                        currentState = State.GameStartCountdown;
+                    }
                     break;
 
                 case State.GameStartCountdown:
@@ -76,6 +82,23 @@ namespace GameTest1.GameStates
 
                 case State.GameOver:
                     if (player != null) player.CurrentState = Player.State.InputDisabled;
+                    if (manager.Controls.Action1.ConsumePress() || manager.Controls.Action2.ConsumePress())
+                    {
+                        screenFader.FadeType = ScreenFadeType.FadeOut;
+                        screenFader.Duration = screenFadeDuration;
+                        screenFader.Color = Color.White;
+                        screenFader.Reset();
+                        screenFader.IsRunning = true;
+                        currentState = State.Restart;
+                    }
+                    break;
+
+                case State.Restart:
+                    if (screenFader.Update())
+                    {
+                        screenFader.IsRunning = false;
+                        currentState = State.Initialize;
+                    }
                     break;
             }
 
@@ -112,6 +135,8 @@ namespace GameTest1.GameStates
                     case "Capsule": SpawnCapsuleActor(spawn); break;
                 }
             }
+
+            gameStartTime = gameEndTime = DateTime.MinValue;
         }
 
         private void SpawnPlayerActor(Spawn spawn)
@@ -141,10 +166,11 @@ namespace GameTest1.GameStates
         {
             gameEndTime = DateTime.Now;
 
-            if (capsuleCount <= 0 || player?.energy <= 0)
+            if (player != null && (capsuleCount <= 0 || player.energy <= 0))
             {
                 currentState = State.GameOver;
-                player?.Stop();
+                player.Stop();
+                player.PlayAnimation("WarpOut", false);
             }
 
 
@@ -231,12 +257,14 @@ namespace GameTest1.GameStates
 
                 case State.GameOver:
                     var gameOverText = "GAME OVER";
-                    manager.Batcher.Text(manager.Assets.BigFont, gameOverText, manager.Screen.Bounds.Center - manager.Assets.BigFont.SizeOf(gameOverText) / 2f - new Vector2(0f, manager.Assets.BigFont.Size / 2f), Color.White);
+                    manager.Batcher.Text(manager.Assets.BigFont, gameOverText, manager.Screen.Bounds.Center - manager.Assets.BigFont.SizeOf(gameOverText) / 2f - new Vector2(0f, manager.Assets.BigFont.Size / 3f), Color.White);
                     if (capsuleCount <= 0)
                     {
                         var yourTimeText = $"\nYOUR TIME: {gameEndTime - gameStartTime:mm\\:ss\\:ff}";
-                        manager.Batcher.Text(manager.Assets.BigFont, yourTimeText, manager.Screen.Bounds.Center - manager.Assets.BigFont.SizeOf(yourTimeText) / 2f + new Vector2(0f, manager.Assets.BigFont.Size / 2f), Color.White);
+                        manager.Batcher.Text(manager.Assets.BigFont, yourTimeText, manager.Screen.Bounds.Center - manager.Assets.BigFont.SizeOf(yourTimeText) / 2f + new Vector2(0f, manager.Assets.BigFont.Size / 3f), Color.White);
                     }
+                    var tryAgainText = "PRESS ACTION TO TRY AGAIN";
+                    manager.Batcher.Text(manager.Assets.BigFont, tryAgainText, manager.Screen.Bounds.Center - manager.Assets.BigFont.SizeOf(tryAgainText) / 2f + new Vector2(0f, manager.Assets.BigFont.Size * 3f), Color.White);
                     break;
             }
 

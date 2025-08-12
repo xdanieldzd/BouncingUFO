@@ -38,6 +38,94 @@
         "Y": 32
       },
       "Duration": 0.05
+    },
+    {
+      "Location": {
+        "X": 96,
+        "Y": 0
+      },
+      "Size": {
+        "X": 32,
+        "Y": 32
+      },
+      "Duration": 0.1
+    },
+    {
+      "Location": {
+        "X": 0,
+        "Y": 32
+      },
+      "Size": {
+        "X": 32,
+        "Y": 32
+      },
+      "Duration": 0.1
+    },
+    {
+      "Location": {
+        "X": 32,
+        "Y": 32
+      },
+      "Size": {
+        "X": 32,
+        "Y": 32
+      },
+      "Duration": 0.05
+    },
+    {
+      "Location": {
+        "X": 64,
+        "Y": 32
+      },
+      "Size": {
+        "X": 32,
+        "Y": 32
+      },
+      "Duration": 0.05
+    },
+    {
+      "Location": {
+        "X": 96,
+        "Y": 32
+      },
+      "Size": {
+        "X": 32,
+        "Y": 32
+      },
+      "Duration": 0.05
+    },
+    {
+      "Location": {
+        "X": 0,
+        "Y": 64
+      },
+      "Size": {
+        "X": 32,
+        "Y": 32
+      },
+      "Duration": 0.05
+    },
+    {
+      "Location": {
+        "X": 32,
+        "Y": 64
+      },
+      "Size": {
+        "X": 32,
+        "Y": 32
+      },
+      "Duration": 0.05
+    },
+    {
+      "Location": {
+        "X": 64,
+        "Y": 64
+      },
+      "Size": {
+        "X": 32,
+        "Y": 32
+      },
+      "Duration": 0.05
     }
   ],
   "Animations": [
@@ -45,6 +133,11 @@
       "Name": "Idle",
       "FirstFrame": 0,
       "FrameCount": 3
+    },
+    {
+      "Name": "WarpOut",
+      "FirstFrame": 3,
+      "FrameCount": 8
     }
   ]
 }

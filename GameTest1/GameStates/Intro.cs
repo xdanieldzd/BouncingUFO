@@ -7,7 +7,7 @@ namespace GameTest1.GameStates
     public class Intro(Manager manager) : GameStateBase(manager), IGameState
     {
         private const float screenFadeDuration = 0.75f;
-        private const float waitDuration = 10f;
+        private const float waitDuration = 5f;
 
         private enum State { Initialize, FadeIn, WaitForTimeoutOrInput, FadeOut }
 
@@ -25,6 +25,7 @@ namespace GameTest1.GameStates
                     screenFader.Duration = screenFadeDuration;
                     screenFader.Color = Color.Black;
                     screenFader.Reset();
+                    screenFader.IsRunning = true;
                     currentState = State.FadeIn;
 
                     if (Globals.QuickStart)
@@ -35,7 +36,11 @@ namespace GameTest1.GameStates
                     break;
 
                 case State.FadeIn:
-                    if (screenFader.Update()) currentState = State.WaitForTimeoutOrInput;
+                    if (screenFader.Update())
+                    {
+                        screenFader.IsRunning = false;
+                        currentState = State.WaitForTimeoutOrInput;
+                    }
                     break;
 
                 case State.WaitForTimeoutOrInput:
@@ -46,6 +51,7 @@ namespace GameTest1.GameStates
                         screenFader.Duration = screenFadeDuration;
                         screenFader.Color = ScreenFader.PreviousColor;
                         screenFader.Reset();
+                        screenFader.IsRunning = true;
                         currentState = State.FadeOut;
                     }
                     break;
@@ -53,6 +59,7 @@ namespace GameTest1.GameStates
                 case State.FadeOut:
                     if (screenFader.Update())
                     {
+                        screenFader.IsRunning = false;
                         manager.GameStates.Pop();
                         manager.GameStates.Push(new InGame(manager));
                     }
@@ -64,13 +71,23 @@ namespace GameTest1.GameStates
         {
             manager.Screen.Clear(Color.DarkGray);
 
-            var testStringBuilder = new System.Text.StringBuilder();
-            testStringBuilder.AppendLine($"Intro stuffs goes here! Currently just a font test tho, I guess.\nGoing to InGame state in {waitDuration - mainStateTimer:0.00} sec.... OR press an Action button!");
-            testStringBuilder.AppendLine();
+            var titleText =
+                "GAME TEST PROJECT #1\n" +
+                " -- BOUNCING UFO -- \n" +
+                "\n" +
+                "PROTOTYPE  VERSION 2";
+            manager.Batcher.Text(
+                manager.Assets.BigFont,
+                titleText,
+                manager.Screen.Bounds.Center - manager.Assets.BigFont.SizeOf(titleText) / 2f - new Vector2(0f, manager.Assets.BigFont.Size * 4f),
+                Color.White);
 
-            manager.Batcher.Text(manager.Assets.Font, testStringBuilder.ToString(), manager.Screen.Width, Vector2.Zero, Color.White);
-
-            manager.Batcher.Text(manager.Assets.BigFont, "0123456789\nTIME 01:23:45\nENERGY 67\nLEFT 89", new(0f, 50f), Color.CornflowerBlue);
+            var bottomText = "August 2025 by xdaniel -- xdaniel.neocities.org";
+            manager.Batcher.Text(
+                manager.Assets.Font,
+                bottomText,
+                manager.Screen.Bounds.BottomCenter - manager.Assets.Font.SizeOf(bottomText) / 2f - new Vector2(0f, manager.Assets.Font.Size * 2f),
+                Color.White);
 
             screenFader.Render();
         }
