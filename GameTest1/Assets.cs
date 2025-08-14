@@ -17,6 +17,7 @@ namespace GameTest1
         public readonly static JsonSerializerOptions SerializerOptions = new() { WriteIndented = true, IncludeFields = true };
 
         public SpriteFont Font { get; private set; }
+        public SpriteFont Font2 { get; private set; }
         public SpriteFont BigFont { get; private set; }
         public Dictionary<string, Tileset> Tilesets { get; private set; } = [];
         public Dictionary<string, Map> Maps { get; private set; } = [];
@@ -31,6 +32,15 @@ namespace GameTest1
                 new(8, 8),
                 SpriteFontSetting.None,
                 SpriteFontHighlightType.Outline,
+                Color.Black);
+
+            Font2 = SpriteFontHelper.GenerateFromImage(
+                graphicsDevice,
+                "Font2",
+                Path.Join(AssetsFolderName, FontsFolderName, "Font2.png"),
+                new(8, 16),
+                SpriteFontSetting.None,
+                SpriteFontHighlightType.DropShadowThin,
                 Color.Black);
 
             BigFont = SpriteFontHelper.GenerateFromImage(

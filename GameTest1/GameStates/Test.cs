@@ -6,13 +6,12 @@ namespace GameTest1.GameStates
 {
     public class Test(Manager manager) : GameStateBase(manager), IGameState
     {
-        private readonly DialogBox dialogBox = new(manager) { Font = manager.Assets.Font };
+        private readonly DialogBox dialogBox = new(manager) { Font = manager.Assets.Font2 };
 
         private readonly string[] dialogText =
         [
             "This is a test! Hello world, I'm a dialog box! This is a looooong line! Yeah, it's very long, so all this text needs to somehow fit in our box, right? It's text wrapping time! And we should be getting a box break roundabout here. Ah, see, there it was!",
-            "Yeah, still testing stuff, this is yet ANOTHER dialog box! Tho this one's a bit shorter, less wordy!",
-            "... ...\n... ...\n... ...\n... you're still here? No need to be, I'm done. Here, I'll kick you over to the main game state! See you later!"
+            "... ...\n... ...\n... ... you're still here? No need to be, I'm done. Here, I'll kick you over to the main game state!\nSee you later!"
         ];
 
         private int dialogIndex = 0;
