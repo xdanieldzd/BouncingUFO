@@ -19,13 +19,13 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<None Update="Assets\Fonts\BigFont.png">
+		<None Update="Assets\Fonts\FutureFont.png">
 		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
-		<None Update="Assets\Fonts\Font.png">
+		<None Update="Assets\Fonts\SmallFont.png">
 		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
-		<None Update="Assets\Fonts\Font2.png">
+		<None Update="Assets\Fonts\LargeFont.png">
 		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 		<None Update="Assets\Maps\BigTestMap.json">

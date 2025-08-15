@@ -124,11 +124,11 @@ namespace GameTest1.Utilities
             if (false)
             {
                 manager.Batcher.RectLine(MainPrintableArea, 2f, Color.Red);
-                manager.Batcher.Text(manager.Assets.Font, $"{currentState}, {currentMaxLine}", new(0f, manager.Assets.Font.LineHeight), Color.White);
+                manager.Batcher.Text(manager.Assets.SmallFont, $"{currentState}, {currentMaxLine}", new(0f, manager.Assets.SmallFont.LineHeight), Color.White);
                 for (var i = 0; i < currentTextWrapPositions.Length; i++)
                 {
                     var (start, totalLength, currentLength) = currentTextWrapPositions[i];
-                    manager.Batcher.Text(manager.Assets.Font, $"{start}, {totalLength}, {currentLength}", new(0f, (i + 2) * manager.Assets.Font.LineHeight), Color.White);
+                    manager.Batcher.Text(manager.Assets.SmallFont, $"{start}, {totalLength}, {currentLength}", new(0f, (i + 2) * manager.Assets.SmallFont.LineHeight), Color.White);
                 }
             }
 

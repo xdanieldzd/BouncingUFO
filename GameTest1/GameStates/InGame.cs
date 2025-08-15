@@ -202,17 +202,17 @@ namespace GameTest1.GameStates
             {
                 if (player != null)
                 {
-                    manager.Batcher.Text(manager.Assets.Font, $"Current hitbox == {player.Position + player.Hitbox.Rectangle}", Vector2.Zero, Color.White);
-                    manager.Batcher.Text(manager.Assets.Font, $"{manager.Controls.Move.Name}:{manager.Controls.Move.IntValue} {manager.Controls.Action1.Name}:{manager.Controls.Action1.Down} {manager.Controls.Action2.Name}:{manager.Controls.Action2.Down} {manager.Controls.Menu.Name}:{manager.Controls.Menu.Down} {manager.Controls.Debug.Name}:{manager.Controls.Debug.Down}", new Vector2(0f, manager.Screen.Height - manager.Assets.Font.LineHeight), Color.White);
+                    manager.Batcher.Text(manager.Assets.SmallFont, $"Current hitbox == {player.Position + player.Hitbox.Rectangle}", Vector2.Zero, Color.White);
+                    manager.Batcher.Text(manager.Assets.SmallFont, $"{manager.Controls.Move.Name}:{manager.Controls.Move.IntValue} {manager.Controls.Action1.Name}:{manager.Controls.Action1.Down} {manager.Controls.Action2.Name}:{manager.Controls.Action2.Down} {manager.Controls.Menu.Name}:{manager.Controls.Menu.Down} {manager.Controls.Debug.Name}:{manager.Controls.Debug.Down}", new Vector2(0f, manager.Screen.Height - manager.Assets.SmallFont.LineHeight), Color.White);
 
                     if (currentMap != null && currentTileset != null)
                     {
                         var cells = player.GetMapCells();
                         for (var i = 0; i < cells.Length; i++)
-                            manager.Batcher.Text(manager.Assets.Font, cells[i].ToString(), new(0f, 60f + i * manager.Assets.Font.LineHeight), Color.CornflowerBlue);
+                            manager.Batcher.Text(manager.Assets.SmallFont, cells[i].ToString(), new(0f, 60f + i * manager.Assets.SmallFont.LineHeight), Color.CornflowerBlue);
                     }
 
-                    manager.Batcher.Text(manager.Assets.Font, $"Camera {camera.Matrix.Translation:0.0000}", new(0f, 25f), Color.Yellow);
+                    manager.Batcher.Text(manager.Assets.SmallFont, $"Camera {camera.Matrix.Translation:0.0000}", new(0f, 25f), Color.Yellow);
                 }
             }
 
@@ -251,27 +251,27 @@ namespace GameTest1.GameStates
                     {
                         var startTimer = Math.Floor(gameStartCountdown);
                         var startText = startTimer < 1f ? "GO!!" : (startTimer < 4f ? $"{startTimer}" : "GET READY...");
-                        manager.Batcher.Text(manager.Assets.BigFont, startText, manager.Screen.Bounds.Center - manager.Assets.BigFont.SizeOf(startText) / 2f, Color.White);
+                        manager.Batcher.Text(manager.Assets.FutureFont, startText, manager.Screen.Bounds.Center - manager.Assets.FutureFont.SizeOf(startText) / 2f, Color.White);
                     }
                     break;
 
                 case State.GameOver:
                     var gameOverText = "GAME OVER";
-                    manager.Batcher.Text(manager.Assets.BigFont, gameOverText, manager.Screen.Bounds.Center - manager.Assets.BigFont.SizeOf(gameOverText) / 2f - new Vector2(0f, manager.Assets.BigFont.Size / 3f), Color.White);
+                    manager.Batcher.Text(manager.Assets.FutureFont, gameOverText, manager.Screen.Bounds.Center - manager.Assets.FutureFont.SizeOf(gameOverText) / 2f - new Vector2(0f, manager.Assets.FutureFont.Size / 3f), Color.White);
                     if (capsuleCount <= 0)
                     {
                         var yourTimeText = $"\nYOUR TIME: {gameEndTime - gameStartTime:mm\\:ss\\:ff}";
-                        manager.Batcher.Text(manager.Assets.BigFont, yourTimeText, manager.Screen.Bounds.Center - manager.Assets.BigFont.SizeOf(yourTimeText) / 2f + new Vector2(0f, manager.Assets.BigFont.Size / 3f), Color.White);
+                        manager.Batcher.Text(manager.Assets.FutureFont, yourTimeText, manager.Screen.Bounds.Center - manager.Assets.FutureFont.SizeOf(yourTimeText) / 2f + new Vector2(0f, manager.Assets.FutureFont.Size / 3f), Color.White);
                     }
                     var tryAgainText = "PRESS ACTION TO TRY AGAIN";
-                    manager.Batcher.Text(manager.Assets.BigFont, tryAgainText, manager.Screen.Bounds.Center - manager.Assets.BigFont.SizeOf(tryAgainText) / 2f + new Vector2(0f, manager.Assets.BigFont.Size * 3f), Color.White);
+                    manager.Batcher.Text(manager.Assets.FutureFont, tryAgainText, manager.Screen.Bounds.Center - manager.Assets.FutureFont.SizeOf(tryAgainText) / 2f + new Vector2(0f, manager.Assets.FutureFont.Size * 3f), Color.White);
                     break;
             }
 
-            manager.Batcher.Text(manager.Assets.BigFont, $"TIME {gameEndTime - gameStartTime:mm\\:ss\\:ff}", new(8f), Color.White);
-            manager.Batcher.Text(manager.Assets.BigFont, $"LEFT {capsuleCount:00}", new Vector2(manager.Screen.Bounds.Right - 8f, 8f), new Vector2(1f, 0f), Color.White);
+            manager.Batcher.Text(manager.Assets.FutureFont, $"TIME {gameEndTime - gameStartTime:mm\\:ss\\:ff}", new(8f), Color.White);
+            manager.Batcher.Text(manager.Assets.FutureFont, $"LEFT {capsuleCount:00}", new Vector2(manager.Screen.Bounds.Right - 8f, 8f), new Vector2(1f, 0f), Color.White);
             if (currentState != State.GameOver)
-                manager.Batcher.Text(manager.Assets.BigFont, $"ENERGY {player?.energy:00}", new Vector2(manager.Screen.Bounds.Right - 8f, manager.Screen.Bounds.Bottom - 8f - manager.Assets.BigFont.Size), new Vector2(1f, 1f), player?.energy < 50 && manager.Time.BetweenInterval(0.5) ? Color.Red : Color.White);
+                manager.Batcher.Text(manager.Assets.FutureFont, $"ENERGY {player?.energy:00}", new Vector2(manager.Screen.Bounds.Right - 8f, manager.Screen.Bounds.Bottom - 8f - manager.Assets.FutureFont.Size), new Vector2(1f, 1f), player?.energy < 50 && manager.Time.BetweenInterval(0.5) ? Color.Red : Color.White);
         }
     }
 }

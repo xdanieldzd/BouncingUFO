@@ -6,10 +6,11 @@ namespace GameTest1.GameStates
 {
     public class Test(Manager manager) : GameStateBase(manager), IGameState
     {
-        private readonly DialogBox dialogBox = new(manager) { Font = manager.Assets.Font2 };
+        private readonly DialogBox dialogBox = new(manager) { Font = manager.Assets.LargeFont };
 
         private readonly string[] dialogText =
         [
+            "The Quick Brown Fox Jumps Over The Lazy Dog 0123456789!?.,:;+-*/=\\\nTHE QUICK BROWN FOX JUMPS OVER THE LAZY DOG 0123456789!?.,:;+-*/=\\\nthe quick brown fox jumps over the lazy dog 0123456789!?.,:;+-*/=\\",
             "This is a test! Hello world, I'm a dialog box! This is a looooong line! Yeah, it's very long, so all this text needs to somehow fit in our box, right? It's text wrapping time! And we should be getting a box break roundabout here. Ah, see, there it was!",
             "... ...\n... ...\n... ... you're still here? No need to be, I'm done. Here, I'll kick you over to the main game state!\nSee you later!"
         ];
@@ -26,9 +27,9 @@ namespace GameTest1.GameStates
         {
             manager.Screen.Clear(Color.DarkGray);
 
-            manager.Batcher.Text(manager.Assets.Font, "Hello, I am the Test GameState!", Vector2.Zero, Color.White);
+            manager.Batcher.Text(manager.Assets.SmallFont, "Hello, I am the Test GameState!", Vector2.Zero, Color.White);
 
-            if (dialogBox.Print(dialogText[dialogIndex], "Char Racter") == DialogBoxResult.Closed)
+            if (dialogBox.Print(dialogText[dialogIndex], "Char Acter") == DialogBoxResult.Closed)
             {
                 dialogIndex++;
                 if (dialogIndex == dialogText.Length)

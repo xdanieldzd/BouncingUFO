@@ -10,7 +10,7 @@ namespace GameTest1
 
         private void DrawErrorMessage(string text)
         {
-            manager.Batcher.Text(manager.Assets.Font, text, 1024f, new(0f, manager.Screen.Height), new(0f, 1.5f), Color.Red);
+            manager.Batcher.Text(manager.Assets.SmallFont, text, 1024f, new(0f, manager.Screen.Height), new(0f, 1.5f), Color.Red);
         }
 
         public void Render(string mapName)

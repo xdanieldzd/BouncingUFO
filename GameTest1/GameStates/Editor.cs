@@ -52,7 +52,7 @@ namespace GameTest1.GameStates
             var focusedEditor = editors?.FirstOrDefault(x => x.IsFocused) ?? null;
             if (focusedEditor == tilesetEditor)
             {
-                manager.Batcher.Text(manager.Assets.Font, "Tileset editor preview here", Vector2.Zero, Color.White);
+                manager.Batcher.Text(manager.Assets.SmallFont, "Tileset editor preview here", Vector2.Zero, Color.White);
             }
             else if (focusedEditor == mapEditor)
             {
@@ -60,10 +60,10 @@ namespace GameTest1.GameStates
             }
             else if (focusedEditor == spriteEditor)
             {
-                manager.Batcher.Text(manager.Assets.Font, "Sprite editor preview here", Vector2.Zero, Color.White);
+                manager.Batcher.Text(manager.Assets.SmallFont, "Sprite editor preview here", Vector2.Zero, Color.White);
             }
             else
-                manager.Batcher.Text(manager.Assets.Font, "No editor selected.", 1024f, new(0f, manager.Screen.Height), new(0f, 1.5f), Color.White);
+                manager.Batcher.Text(manager.Assets.SmallFont, "No editor selected.", 1024f, new(0f, manager.Screen.Height), new(0f, 1.5f), Color.White);
         }
     }
 }

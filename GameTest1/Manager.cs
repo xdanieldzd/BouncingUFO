@@ -86,7 +86,7 @@ namespace GameTest1
             else
             {
                 Screen.Clear(Color.DarkGray);
-                Batcher.Text(Assets.Font, "Error: GameState stack is empty!", Vector2.Zero, Color.Red);
+                Batcher.Text(Assets.SmallFont, "Error: GameState stack is empty!", Vector2.Zero, Color.Red);
             }
 
             Batcher.Render(Screen);

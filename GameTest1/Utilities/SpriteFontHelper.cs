@@ -17,6 +17,7 @@ namespace GameTest1.Utilities
     {
         private const int defaultFirstCharacter = 0x00;
         private const int defaultSpaceCharaWidth = 3;
+        private const int defaultCharaSpacing = 0;
 
         private readonly static (int, Point2[]) fontHighlightOffsetsOutline =
         (
@@ -53,14 +54,7 @@ namespace GameTest1.Utilities
 
         /* Developed using font image with 16 lines of 16 characters in Windows-1252 encoding, total 256 characters, from 0x00 (space character) to 0xFF (ÿ, lowercase y with diaeresis) */
 
-        public static SpriteFont GenerateFromImage(GraphicsDevice graphicsDevice, string name, string path, Point2 charSize) =>
-            GenerateFromImage(graphicsDevice, name, path, charSize, SpriteFontSetting.None, defaultFirstCharacter, defaultSpaceCharaWidth, SpriteFontHighlightType.None, Color.Transparent);
-        public static SpriteFont GenerateFromImage(GraphicsDevice graphicsDevice, string name, string path, Point2 charSize, SpriteFontSetting settings, int firstChar, int spaceWidth) =>
-            GenerateFromImage(graphicsDevice, name, path, charSize, settings, firstChar, spaceWidth, SpriteFontHighlightType.None, Color.Transparent);
-        public static SpriteFont GenerateFromImage(GraphicsDevice graphicsDevice, string name, string path, Point2 charSize, SpriteFontSetting settings, SpriteFontHighlightType highlightType, Color highlightColor) =>
-            GenerateFromImage(graphicsDevice, name, path, charSize, settings, defaultFirstCharacter, defaultSpaceCharaWidth, highlightType, highlightColor);
-
-        public static SpriteFont GenerateFromImage(GraphicsDevice graphicsDevice, string name, string path, Point2 charSize, SpriteFontSetting settings, int firstChar, int spaceWidth, SpriteFontHighlightType highlightType, Color highlightColor)
+        public static SpriteFont GenerateFromImage(GraphicsDevice graphicsDevice, string name, string path, Point2 charaSize, SpriteFontSetting settings, SpriteFontHighlightType highlightType = SpriteFontHighlightType.None, Color highlightColor = default, int firstChara = defaultFirstCharacter, int charaSpacing = defaultCharaSpacing, int spaceWidth = defaultSpaceCharaWidth)
         {
             var (charaGap, highlightOffsets) = highlightType switch
             {
@@ -73,19 +67,17 @@ namespace GameTest1.Utilities
             var fontImage = new Image(path);
 
             if (settings.Has(SpriteFontSetting.Gradient))
-                ApplyGradient(fontImage, charSize);
+                ApplyGradient(fontImage, charaSize);
 
             if (highlightOffsets.Length > 0)
             {
-                ResizeImageForHighlighting(fontImage, charSize, highlightOffsets, out fontImage, out charSize);
+                ResizeImageForHighlighting(fontImage, charaSize, highlightOffsets, out fontImage, out charaSize);
                 PerformFontHighlighting(fontImage, highlightOffsets, highlightColor);
             }
 
-            var spriteFont = new SpriteFont(graphicsDevice) { Name = name, LineGap = charSize.Y };
-            var characterData = GenerateCharaDictionary(fontImage, charSize, firstChar, spaceWidth, settings.Has(SpriteFontSetting.FixedWidth));
-            AddCharactersToFont(graphicsDevice, spriteFont, fontImage, charaGap, characterData);
-
-            //fontImage.WritePng($@"D:\Programming\UFO\{name}-{highlightType}.png");
+            var spriteFont = new SpriteFont(graphicsDevice) { Name = name, LineGap = charaSize.Y };
+            var characterData = GenerateCharaDictionary(fontImage, charaSize, firstChara, spaceWidth, settings.Has(SpriteFontSetting.FixedWidth));
+            AddCharactersToFont(graphicsDevice, spriteFont, fontImage, charaGap + charaSpacing, characterData);
 
             return spriteFont;
         }

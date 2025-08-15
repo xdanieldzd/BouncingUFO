@@ -77,16 +77,16 @@ namespace GameTest1.GameStates
                 "\n" +
                 "PROTOTYPE  VERSION 2";
             manager.Batcher.Text(
-                manager.Assets.BigFont,
+                manager.Assets.FutureFont,
                 titleText,
-                manager.Screen.Bounds.Center - manager.Assets.BigFont.SizeOf(titleText) / 2f - new Vector2(0f, manager.Assets.BigFont.Size * 4f),
+                manager.Screen.Bounds.Center - manager.Assets.FutureFont.SizeOf(titleText) / 2f - new Vector2(0f, manager.Assets.FutureFont.Size * 4f),
                 Color.White);
 
             var bottomText = "August 2025 by xdaniel -- xdaniel.neocities.org";
             manager.Batcher.Text(
-                manager.Assets.Font,
+                manager.Assets.SmallFont,
                 bottomText,
-                manager.Screen.Bounds.BottomCenter - manager.Assets.Font.SizeOf(bottomText) / 2f - new Vector2(0f, manager.Assets.Font.Size * 2f),
+                manager.Screen.Bounds.BottomCenter - manager.Assets.SmallFont.SizeOf(bottomText) / 2f - new Vector2(0f, manager.Assets.SmallFont.Size * 2f),
                 Color.White);
 
             screenFader.Render();

@@ -16,43 +16,44 @@ namespace GameTest1
 
         public readonly static JsonSerializerOptions SerializerOptions = new() { WriteIndented = true, IncludeFields = true };
 
-        public SpriteFont Font { get; private set; }
-        public SpriteFont Font2 { get; private set; }
-        public SpriteFont BigFont { get; private set; }
+        public SpriteFont SmallFont { get; private set; }
+        public SpriteFont LargeFont { get; private set; }
+        public SpriteFont FutureFont { get; private set; }
         public Dictionary<string, Tileset> Tilesets { get; private set; } = [];
         public Dictionary<string, Map> Maps { get; private set; } = [];
         public Dictionary<string, Sprite> Sprites { get; private set; } = [];
 
         public Assets(GraphicsDevice graphicsDevice)
         {
-            Font = SpriteFontHelper.GenerateFromImage(
+            SmallFont = SpriteFontHelper.GenerateFromImage(
                 graphicsDevice,
-                "Font",
-                Path.Join(AssetsFolderName, FontsFolderName, "Font.png"),
+                "SmallFont",
+                Path.Join(AssetsFolderName, FontsFolderName, "SmallFont.png"),
                 new(8, 8),
                 SpriteFontSetting.None,
                 SpriteFontHighlightType.Outline,
                 Color.Black);
 
-            Font2 = SpriteFontHelper.GenerateFromImage(
+            LargeFont = SpriteFontHelper.GenerateFromImage(
                 graphicsDevice,
-                "Font2",
-                Path.Join(AssetsFolderName, FontsFolderName, "Font2.png"),
-                new(8, 16),
+                "LargeFont",
+                Path.Join(AssetsFolderName, FontsFolderName, "LargeFont.png"),
+                new(16, 16),
                 SpriteFontSetting.None,
                 SpriteFontHighlightType.DropShadowThin,
-                Color.Black);
+                Color.Black,
+                charaSpacing: 1);
 
-            BigFont = SpriteFontHelper.GenerateFromImage(
+            FutureFont = SpriteFontHelper.GenerateFromImage(
                 graphicsDevice,
-                "BigFont",
-                Path.Join(AssetsFolderName, FontsFolderName, "BigFont.png"),
+                "FutureFont",
+                Path.Join(AssetsFolderName, FontsFolderName, "FutureFont.png"),
                 new(16, 16),
                 SpriteFontSetting.Gradient | SpriteFontSetting.FixedWidth,
-                0x20,
-                16,
                 SpriteFontHighlightType.DropShadowThick,
-                Color.Black);
+                Color.Black,
+                firstChara: 0x20,
+                spaceWidth: 16);
 
             foreach (var tilesetFile in Directory.EnumerateFiles(Path.Join(AssetsFolderName, TilesetFolderName), "*.json", SearchOption.AllDirectories))
             {
