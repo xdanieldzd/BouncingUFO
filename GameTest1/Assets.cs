@@ -92,35 +92,6 @@ namespace GameTest1
                 uiElements.CreateTextures(graphicsDevice);
                 UI.Add(Path.GetFileNameWithoutExtension(uiElementsFiles), uiElements);
             }
-
-
-
-            //TEMP TESTING
-
-            var testSheet = new GraphicsSheet { ImageFile = @"D:\Programming\UFO\UI\DialogBox.png", Name = "DialogBox" };
-            testSheet.Rectangles.Add("BorderTopLeft", new(0, 0, 8, 8));
-            testSheet.Rectangles.Add("BorderTopCenter", new(8, 0, 8, 8));
-            testSheet.Rectangles.Add("BorderTopRight", new(16, 0, 8, 8));
-
-            testSheet.Rectangles.Add("BorderMiddleLeft", new(0, 8, 8, 8));
-            testSheet.Rectangles.Add("BoxBackground", new(8, 8, 8, 8));
-            testSheet.Rectangles.Add("BorderMiddleRight", new(16, 8, 8, 8));
-
-            testSheet.Rectangles.Add("BorderBottomLeft", new(0, 16, 8, 8));
-            testSheet.Rectangles.Add("BorderBottomCenter", new(8, 16, 8, 8));
-            testSheet.Rectangles.Add("BorderBottomRight", new(16, 16, 8, 8));
-
-            testSheet.Rectangles.Add("InnerBottomRight", new(24, 0, 8, 8));
-            testSheet.Rectangles.Add("InnerBottomLeft", new(32, 0, 8, 8));
-            testSheet.Rectangles.Add("InnerTopRight", new(24, 8, 8, 8));
-            testSheet.Rectangles.Add("InnerTopLeft", new(32, 8, 8, 8));
-
-            testSheet.Rectangles.Add("MarkerNextPage", new(24, 16, 8, 8));
-            testSheet.Rectangles.Add("MarkerEndDialog", new(32, 16, 8, 8));
-
-            testSheet.CreateTextures(graphicsDevice);
-            var json = JsonSerializer.Serialize(testSheet, SerializerOptions);
-            File.WriteAllText(@"D:\Programming\UFO\UI\DialogBox.json", json);
         }
     }
 }

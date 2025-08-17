@@ -26,5 +26,8 @@ namespace GameTest1.Game.UI
                     Subtextures.Add(name, new(Texture, rectangle));
             }
         }
+
+        public Subtexture GetSubtexture(string name) =>
+            Subtextures.TryGetValue(name, out Subtexture? value) && value is Subtexture subtexture ? subtexture : Subtexture.Empty;
     }
 }
