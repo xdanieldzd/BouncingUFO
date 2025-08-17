@@ -10,6 +10,7 @@ namespace GameTest1.GameStates
         private readonly TilesetEditor tilesetEditor = new(manager);
         private readonly MapEditor mapEditor = new(manager);
         private readonly SpriteEditor spriteEditor = new(manager);
+        private readonly JsonEditor jsonEditor = new(manager);
 
         private IEditor[]? editors;
 
@@ -19,7 +20,7 @@ namespace GameTest1.GameStates
         {
             if (editors == null)
             {
-                editors = [tilesetEditor, mapEditor, spriteEditor];
+                editors = [tilesetEditor, mapEditor, spriteEditor, jsonEditor];
                 foreach (var editor in editors) editor.Setup();
             }
 
@@ -61,6 +62,10 @@ namespace GameTest1.GameStates
             else if (focusedEditor == spriteEditor)
             {
                 manager.Batcher.Text(manager.Assets.SmallFont, "Sprite editor preview here", Vector2.Zero, Color.White);
+            }
+            else if (focusedEditor == jsonEditor)
+            {
+                manager.Batcher.Text(manager.Assets.SmallFont, "No preview for JSON editor.", Vector2.Zero, Color.White);
             }
             else
                 manager.Batcher.Text(manager.Assets.SmallFont, "No editor selected.", 1024f, new(0f, manager.Screen.Height), new(0f, 1.5f), Color.White);

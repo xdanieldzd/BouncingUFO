@@ -1,6 +1,7 @@
 ﻿using Foster.Framework;
 using GameTest1.Game.Levels;
 using GameTest1.Game.Sprites;
+using GameTest1.Game.UI;
 using GameTest1.Utilities;
 using System.Text.Json;
 
@@ -13,6 +14,7 @@ namespace GameTest1
         public const string TilesetFolderName = "Tilesets";
         public const string MapFolderName = "Maps";
         public const string SpriteFolderName = "Sprites";
+        public const string UIFolderName = "UI";
 
         public readonly static JsonSerializerOptions SerializerOptions = new() { WriteIndented = true, IncludeFields = true };
 
@@ -22,6 +24,7 @@ namespace GameTest1
         public Dictionary<string, Tileset> Tilesets { get; private set; } = [];
         public Dictionary<string, Map> Maps { get; private set; } = [];
         public Dictionary<string, Sprite> Sprites { get; private set; } = [];
+        public Dictionary<string, GraphicsSheet> UI { get; private set; } = [];
 
         public Assets(GraphicsDevice graphicsDevice)
         {
@@ -80,6 +83,44 @@ namespace GameTest1
                 sprite.CreateTextures(graphicsDevice);
                 Sprites.Add(Path.GetFileNameWithoutExtension(spriteFile), sprite);
             }
+
+            foreach (var uiElementsFiles in Directory.EnumerateFiles(Path.Join(AssetsFolderName, UIFolderName), "*.json", SearchOption.AllDirectories))
+            {
+                var uiElements = JsonSerializer.Deserialize<GraphicsSheet>(File.ReadAllText(uiElementsFiles), SerializerOptions);
+                if (uiElements == null) continue;
+
+                uiElements.CreateTextures(graphicsDevice);
+                UI.Add(Path.GetFileNameWithoutExtension(uiElementsFiles), uiElements);
+            }
+
+
+
+            //TEMP TESTING
+
+            var testSheet = new GraphicsSheet { ImageFile = @"D:\Programming\UFO\UI\DialogBox.png", Name = "DialogBox" };
+            testSheet.Rectangles.Add("BorderTopLeft", new(0, 0, 8, 8));
+            testSheet.Rectangles.Add("BorderTopCenter", new(8, 0, 8, 8));
+            testSheet.Rectangles.Add("BorderTopRight", new(16, 0, 8, 8));
+
+            testSheet.Rectangles.Add("BorderMiddleLeft", new(0, 8, 8, 8));
+            testSheet.Rectangles.Add("BoxBackground", new(8, 8, 8, 8));
+            testSheet.Rectangles.Add("BorderMiddleRight", new(16, 8, 8, 8));
+
+            testSheet.Rectangles.Add("BorderBottomLeft", new(0, 16, 8, 8));
+            testSheet.Rectangles.Add("BorderBottomCenter", new(8, 16, 8, 8));
+            testSheet.Rectangles.Add("BorderBottomRight", new(16, 16, 8, 8));
+
+            testSheet.Rectangles.Add("InnerBottomRight", new(24, 0, 8, 8));
+            testSheet.Rectangles.Add("InnerBottomLeft", new(32, 0, 8, 8));
+            testSheet.Rectangles.Add("InnerTopRight", new(24, 8, 8, 8));
+            testSheet.Rectangles.Add("InnerTopLeft", new(32, 8, 8, 8));
+
+            testSheet.Rectangles.Add("MarkerNextPage", new(24, 16, 8, 8));
+            testSheet.Rectangles.Add("MarkerEndDialog", new(32, 16, 8, 8));
+
+            testSheet.CreateTextures(graphicsDevice);
+            var json = JsonSerializer.Serialize(testSheet, SerializerOptions);
+            File.WriteAllText(@"D:\Programming\UFO\UI\DialogBox.json", json);
         }
     }
 }
