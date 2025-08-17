@@ -22,11 +22,11 @@ namespace GameTest1.Editors
 
         public override void Setup()
         {
-            if (gridColor.RGBA == 0) gridColor = Color.FromHexStringRGBA("0x0000007F");
-            if (hoveredBorderColor.RGBA == 0) hoveredBorderColor = Color.FromHexStringRGBA("0x00FF007F");
-            if (selectedBorderColor.RGBA == 0) selectedBorderColor = Color.FromHexStringRGBA("0xFF00007F");
-            if (hoveredHighlightColor.RGBA == 0) hoveredHighlightColor = ImGuiUtilities.GetFosterColor(ImGuiCol.Border, 0x7F);
-            if (selectedHighlightColor.RGBA == 0) selectedHighlightColor = ImGuiUtilities.GetFosterColor(ImGuiCol.TextSelectedBg, 0x7F);
+            if (gridColor.RGBA == 0) gridColor = new(0, 0, 0, 128);
+            if (hoveredBorderColor.RGBA == 0) hoveredBorderColor = new(0, 255, 0, 128);
+            if (selectedBorderColor.RGBA == 0) selectedBorderColor = new(255, 0, 0, 128);
+            if (hoveredHighlightColor.RGBA == 0) hoveredHighlightColor = ImGuiUtilities.GetFosterColor(ImGuiCol.Border, 128);
+            if (selectedHighlightColor.RGBA == 0) selectedHighlightColor = ImGuiUtilities.GetFosterColor(ImGuiCol.TextSelectedBg, 128);
         }
 
         public override void Run()

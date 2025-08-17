@@ -1,6 +1,7 @@
 ﻿using Foster.Framework;
 using GameTest1.Game.Levels;
 using GameTest1.Game.Sprites;
+using GameTest1.GameStates;
 using GameTest1.Utilities;
 using System.Numerics;
 
@@ -8,12 +9,23 @@ namespace GameTest1.Game.Actors
 {
     /* Based on https://github.com/FosterFramework/Samples/blob/5b97ca5329e61768f85a45d655da5df7f882519d/TinyLink/Source/Actors/Actor.cs */
 
-    public abstract class ActorBase(Manager manager, Map map, Tileset tileset)
+    [Flags]
+    public enum ActorClass
+    {
+        None = 0,
+        Solid = 1 << 0,
+        Player = 1 << 1,
+        Collectible = 1 << 2
+    }
+
+    public abstract class ActorBase(Manager manager, InGame gameState, Map map, Tileset tileset)
     {
         protected Manager manager = manager;
+        protected InGame gameState = gameState;
         protected Map map = map;
         protected Tileset tileset = tileset;
 
+        public ActorClass Class = ActorClass.None;
         public Point2 Position = Point2.Zero;
         public Vector2 Velocity = Vector2.Zero;
         public Hitbox Hitbox = new();

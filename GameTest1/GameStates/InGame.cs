@@ -12,10 +12,29 @@ namespace GameTest1.GameStates
         private const float screenFadeDuration = 0.75f;
         private const string startOnMap = "BigTestMap";
 
-        private enum State { Initialize, FadeIn, GameStartCountdown, MainLogic, GameOver, Restart }
+        private enum State { Initialize, FadeIn, GameIntroduction, GameStartCountdown, MainLogic, GameOver, Restart }
 
         private readonly ScreenFader screenFader = new(manager);
         private readonly Camera camera = new(manager);
+        private readonly DialogBox dialogBox = new(manager)
+        {
+            Font = manager.Assets.LargeFont,
+            GraphicsSheet = manager.Assets.UI["DialogBox"],
+            FramePadding = new(12, 12),
+            BackgroundColor = new(0x3E4F65)
+        };
+
+        private bool hasSeenIntroDialog = false;
+        private int introDialogIndex = 0;
+        private readonly string[] introDialogText =
+        [
+            "Hello and welcome to \"Bouncing UFO\"!",
+            "In this game (if you want to call it that), you control a UFO on a mission on Earth, which has lost its cargo of, erm... \"biological material for research purposes\". Yes.",
+            "Your objective is to collect all the floating capsules of cargo around each stage. Not much of a difficult task, you think?",
+            "Well, velocity and inertia on Earth are a b*tch, and your fancy spacecraft wasn't built for that stuff! Nor for slamming into earthly geology and structures for that matter, so watch for your shield energy!",
+            "In short: Collect the capsules, be smart about accelerating and breaking. That's all there is to it! Which isn't much, I know, but eh, it's my first \"game\" that went anywhere near this far, so I hope you'll enjoy it a bit regardless.",
+            "Alright, that's about it, I'll leave you to the game, then! Have fun!"
+        ];
 
         private readonly List<ActorBase> actors = [];
         private readonly List<ActorBase> actorsToDestroy = [];
@@ -37,31 +56,36 @@ namespace GameTest1.GameStates
             switch (currentState)
             {
                 case State.Initialize:
+                    InitializeDialogBox();
                     InitializeGame();
+                    ResetTimer();
 
                     screenFader.FadeType = ScreenFadeType.FadeIn;
                     screenFader.Duration = screenFadeDuration;
                     screenFader.Color = ScreenFader.PreviousColor;
                     screenFader.Reset();
-                    screenFader.IsRunning = true;
                     currentState = State.FadeIn;
                     gameStartCountdown = 5f;
 
                     if (Globals.QuickStart)
                     {
                         screenFader.Cancel();
-                        screenFader.IsRunning = false;
                         currentState = State.MainLogic;
                         gameStartCountdown = 0f;
-                        gameStartTime = DateTime.Now;
+                        hasSeenIntroDialog = true;
                         if (player != null) player.CurrentState = Player.State.Normal;
                     }
                     break;
 
                 case State.FadeIn:
                     if (screenFader.Update())
+                        currentState = State.GameIntroduction;
+                    break;
+
+                case State.GameIntroduction:
+                    if (hasSeenIntroDialog || introDialogIndex == introDialogText.Length)
                     {
-                        screenFader.IsRunning = false;
+                        hasSeenIntroDialog = true;
                         currentState = State.GameStartCountdown;
                     }
                     break;
@@ -72,7 +96,7 @@ namespace GameTest1.GameStates
                     {
                         currentState = State.MainLogic;
                         if (player != null) player.CurrentState = Player.State.Normal;
-                        gameStartTime = DateTime.Now;
+                        ResetTimer();
                     }
                     break;
 
@@ -88,7 +112,6 @@ namespace GameTest1.GameStates
                         screenFader.Duration = screenFadeDuration;
                         screenFader.Color = Color.White;
                         screenFader.Reset();
-                        screenFader.IsRunning = true;
                         currentState = State.Restart;
                     }
                     break;
@@ -96,7 +119,7 @@ namespace GameTest1.GameStates
                 case State.Restart:
                     if (screenFader.Update())
                     {
-                        screenFader.IsRunning = false;
+                        actorsToDestroy.AddRange(actors);
                         currentState = State.Initialize;
                     }
                     break;
@@ -120,6 +143,12 @@ namespace GameTest1.GameStates
             camera.Update(Globals.ShowDebugInfo ? null : currentMap?.Size * currentTileset?.CellSize);
         }
 
+        private void InitializeDialogBox()
+        {
+            dialogBox.Size = new((int)(manager.Screen.Width / 1.25f), 64);
+            dialogBox.Position = new(manager.Screen.Bounds.Center.X - dialogBox.Size.X / 2, manager.Screen.Bounds.Bottom - dialogBox.Size.Y - 16);
+        }
+
         private void InitializeGame()
         {
             currentMap = manager.Assets.Maps[startOnMap];
@@ -135,15 +164,18 @@ namespace GameTest1.GameStates
                     case "Capsule": SpawnCapsuleActor(spawn); break;
                 }
             }
+        }
 
-            gameStartTime = gameEndTime = DateTime.MinValue;
+        private void ResetTimer()
+        {
+            gameStartTime = gameEndTime = DateTime.Now;
         }
 
         private void SpawnPlayerActor(Spawn spawn)
         {
             if (currentMap == null || currentTileset == null) return;
 
-            player = new Player(manager, currentMap, currentTileset);
+            player = new Player(manager, this, currentMap, currentTileset);
             player.Position = (spawn.Position * currentTileset?.CellSize ?? Point2.Zero) - player.Hitbox.Rectangle.Center / 2;
 
             camera.FollowActor(player);
@@ -155,7 +187,7 @@ namespace GameTest1.GameStates
         {
             if (currentMap == null || currentTileset == null) return;
 
-            var capsule = new Capsule(manager, currentMap, currentTileset)
+            var capsule = new Capsule(manager, this, currentMap, currentTileset)
             {
                 Position = spawn.Position * currentTileset?.CellSize ?? Point2.Zero
             };
@@ -172,22 +204,28 @@ namespace GameTest1.GameStates
                 player.Stop();
                 player.PlayAnimation("WarpOut", false);
             }
+        }
 
+        public void DestroyActor(ActorBase actor)
+        {
+            if (!actorsToDestroy.Contains(actor))
+                actorsToDestroy.Add(actor);
+        }
 
+        public IEnumerable<T> GetActors<T>() where T : ActorBase => actors.Where(x => x is T && !actorsToDestroy.Contains(x)).Cast<T>();
+        public IEnumerable<ActorBase> GetActors(ActorClass actorClass) => actors.Where(x => x.Class.Has(actorClass) && !actorsToDestroy.Contains(x));
 
-            //TEMP TESTING
-            if (player != null)
+        public T? GetFirstActor<T>() where T : ActorBase => actors.FirstOrDefault(x => x is T && !actorsToDestroy.Contains(x)) as T;
+        public ActorBase? GetFirstActor(ActorClass actorClass) => actors.FirstOrDefault(x => x.Class.Has(actorClass) && !actorsToDestroy.Contains(x));
+
+        public ActorBase? GetFirstOverlapActor(RectInt rect, ActorClass actorClass)
+        {
+            foreach (var actor in actors)
             {
-                foreach (var other in actors.Where(x => x != player))
-                {
-                    if ((player.Hitbox.Rectangle + player.Position).Overlaps(other.Hitbox.Rectangle + other.Position))
-                    {
-                        player.OnCollisionX();
-                        player.OnCollisionY();
-                        actorsToDestroy.Add(other);
-                    }
-                }
+                if (actor.Class.HasFlag(actorClass) && rect.Overlaps(actor.Hitbox.Rectangle + actor.Position))
+                    return actor;
             }
+            return null;
         }
 
         public override void Render()
@@ -216,6 +254,12 @@ namespace GameTest1.GameStates
                 }
             }
 
+            if (currentState == State.GameIntroduction && !hasSeenIntroDialog)
+            {
+                if (dialogBox.Print(introDialogText[introDialogIndex], "xdaniel"))
+                    introDialogIndex++;
+            }
+
             screenFader.Render();
         }
 
@@ -236,7 +280,7 @@ namespace GameTest1.GameStates
                 foreach (var hit in player.GetMapCells())
                 {
                     var cellPos = new Vector2(hit.X, hit.Y) * currentTileset.CellSize;
-                    manager.Batcher.Rect(cellPos, currentTileset.CellSize, Color.FromHexStringRGBA("00003F3F"));
+                    manager.Batcher.Rect(cellPos, currentTileset.CellSize, new Color(0, 0, 64, 64));
                 }
             }
 
@@ -256,21 +300,17 @@ namespace GameTest1.GameStates
                     break;
 
                 case State.GameOver:
-                    var gameOverText = "GAME OVER";
+                    var gameOverText = capsuleCount <= 0 ? "YOU WON!" : "GAME OVER";
                     manager.Batcher.Text(manager.Assets.FutureFont, gameOverText, manager.Screen.Bounds.Center - manager.Assets.FutureFont.SizeOf(gameOverText) / 2f - new Vector2(0f, manager.Assets.FutureFont.Size / 3f), Color.White);
-                    if (capsuleCount <= 0)
-                    {
-                        var yourTimeText = $"\nYOUR TIME: {gameEndTime - gameStartTime:mm\\:ss\\:ff}";
-                        manager.Batcher.Text(manager.Assets.FutureFont, yourTimeText, manager.Screen.Bounds.Center - manager.Assets.FutureFont.SizeOf(yourTimeText) / 2f + new Vector2(0f, manager.Assets.FutureFont.Size / 3f), Color.White);
-                    }
-                    var tryAgainText = "PRESS ACTION TO TRY AGAIN";
-                    manager.Batcher.Text(manager.Assets.FutureFont, tryAgainText, manager.Screen.Bounds.Center - manager.Assets.FutureFont.SizeOf(tryAgainText) / 2f + new Vector2(0f, manager.Assets.FutureFont.Size * 3f), Color.White);
+
+                    var tryAgainText = "\n\nPRESS ACTION TO TRY AGAIN";
+                    manager.Batcher.Text(manager.Assets.FutureFont, tryAgainText, manager.Screen.Bounds.Center - manager.Assets.FutureFont.SizeOf(tryAgainText) / 2f + new Vector2(0f, manager.Assets.FutureFont.Size / 3f), Color.White);
                     break;
             }
 
-            manager.Batcher.Text(manager.Assets.FutureFont, $"TIME {gameEndTime - gameStartTime:mm\\:ss\\:ff}", new(8f), Color.White);
+            manager.Batcher.Text(manager.Assets.FutureFont, $"TIME {gameEndTime - gameStartTime:mm\\:ss\\:ff}", new(8f), currentState == State.GameOver || currentState == State.Restart ? Color.Green : Color.White);
             manager.Batcher.Text(manager.Assets.FutureFont, $"LEFT {capsuleCount:00}", new Vector2(manager.Screen.Bounds.Right - 8f, 8f), new Vector2(1f, 0f), Color.White);
-            if (currentState != State.GameOver)
+            if (currentState != State.GameOver && currentState != State.Restart)
                 manager.Batcher.Text(manager.Assets.FutureFont, $"ENERGY {player?.energy:00}", new Vector2(manager.Screen.Bounds.Right - 8f, manager.Screen.Bounds.Bottom - 8f - manager.Assets.FutureFont.Size), new Vector2(1f, 1f), player?.energy < 50 && manager.Time.BetweenInterval(0.5) ? Color.Red : Color.White);
         }
     }

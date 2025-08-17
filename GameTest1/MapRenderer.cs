@@ -6,7 +6,7 @@ namespace GameTest1
 {
     public class MapRenderer(Manager manager)
     {
-        private readonly Color gridColor = Color.FromHexStringRGBA("0x0000003F");
+        private readonly Color gridColor = new(0, 0, 0, 64);
 
         private void DrawErrorMessage(string text)
         {

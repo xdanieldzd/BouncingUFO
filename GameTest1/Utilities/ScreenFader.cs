@@ -1,4 +1,5 @@
 ﻿using Foster.Framework;
+using System.Numerics;
 
 namespace GameTest1.Utilities
 {
@@ -17,12 +18,20 @@ namespace GameTest1.Utilities
 
         public static Color PreviousColor { get; private set; }
 
-        public void Reset() => progress = 0f;
+        public void Reset()
+        {
+            IsRunning = true;
+
+            progress = 0f;
+            color.A = (byte)(FadeType == ScreenFadeType.FadeIn ? 255 : 0);
+        }
 
         public void Cancel()
         {
-            progress = 1f;
-            color.A = 0;
+            IsRunning = false;
+
+            progress = Duration;
+            color.A = (byte)(FadeType == ScreenFadeType.FadeIn ? 0 : 255);
         }
 
         public bool Update()
@@ -34,16 +43,23 @@ namespace GameTest1.Utilities
                 color.A = (byte)(255f - (progress / Duration * 255f));
             else
                 color.A = (byte)(progress / Duration * 255f);
-            return progress >= Duration;
+
+            IsRunning = progress < Duration;
+            return !IsRunning;
         }
 
         public void Render()
         {
-            if (color.A > 0 && progress < Duration)
+            if (color.A != 0)
             {
                 manager.Batcher.PushBlend(BlendMode.NonPremultiplied);
                 manager.Batcher.Rect(manager.Screen.Bounds, color);
                 manager.Batcher.PopBlend();
+            }
+
+            if (Globals.ShowDebugInfo)
+            {
+                manager.Batcher.Text(manager.Assets.SmallFont, $"{FadeType}\nProgress:{progress:0.0000}\nAlpha:{color.A}", Vector2.Zero, Color.CornflowerBlue);
             }
         }
     }

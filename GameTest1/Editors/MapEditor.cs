@@ -31,20 +31,13 @@ namespace GameTest1.Editors
 
         public override void Setup()
         {
-            if (gridColor.RGBA == 0) gridColor = Color.FromHexStringRGBA("0x0000007F");
-            if (inactiveLayerColor.RGBA == 0) inactiveLayerColor = Color.FromHexStringRGBA("0x5F5F5F5F");
-            if (hoveredBorderColor.RGBA == 0) hoveredBorderColor = Color.FromHexStringRGBA("0x00FF007F");
-            if (selectedBorderColor.RGBA == 0) selectedBorderColor = Color.FromHexStringRGBA("0xFF00007F");
-            if (hoveredHighlightColor.RGBA == 0) hoveredHighlightColor = ImGuiUtilities.GetFosterColor(ImGuiCol.Border, 0x7F);
-            if (selectedHighlightColor.RGBA == 0) selectedHighlightColor = ImGuiUtilities.GetFosterColor(ImGuiCol.TextSelectedBg, 0x7F);
-            if (inactiveSpawnColor.RGBA == 0) inactiveSpawnColor = Color.FromHexStringRGBA("0x3F1F0003F");
-
-
-
-            //isOpen = true;
-            //currentMapPath = @"D:\Programming\UFO\Maps\BigTestMap.json";
-            //map = JsonSerializer.Deserialize<Map>(File.ReadAllText(currentMapPath), Assets.SerializerOptions);
-            //tileset = null;
+            if (gridColor.RGBA == 0) gridColor = new(0, 0, 0, 128);
+            if (inactiveLayerColor.RGBA == 0) inactiveLayerColor = new(96, 96, 96, 96);
+            if (hoveredBorderColor.RGBA == 0) hoveredBorderColor = new(0, 255, 0, 128);
+            if (selectedBorderColor.RGBA == 0) selectedBorderColor = new(255, 0, 0, 128);
+            if (hoveredHighlightColor.RGBA == 0) hoveredHighlightColor = ImGuiUtilities.GetFosterColor(ImGuiCol.Border, 128);
+            if (selectedHighlightColor.RGBA == 0) selectedHighlightColor = ImGuiUtilities.GetFosterColor(ImGuiCol.TextSelectedBg, 128);
+            if (inactiveSpawnColor.RGBA == 0) inactiveSpawnColor = new(64, 32, 0, 64);
         }
 
         public override void Run()

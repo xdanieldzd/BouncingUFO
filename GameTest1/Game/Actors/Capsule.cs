@@ -1,5 +1,6 @@
 ﻿using Foster.Framework;
 using GameTest1.Game.Levels;
+using GameTest1.GameStates;
 using System.Numerics;
 
 namespace GameTest1.Game.Actors
@@ -10,8 +11,9 @@ namespace GameTest1.Game.Actors
 
         private float bobDirection = 0f;
 
-        public Capsule(Manager manager, Map map, Tileset tileset) : base(manager, map, tileset)
+        public Capsule(Manager manager, InGame gameState, Map map, Tileset tileset) : base(manager, gameState, map, tileset)
         {
+            Class = ActorClass.Solid | ActorClass.Collectible;
             Sprite = manager.Assets.Sprites["Capsule"];
             Hitbox = new(new(0, 8, 16, 16));
             MapLayer = 0;

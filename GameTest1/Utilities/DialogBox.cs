@@ -12,6 +12,7 @@ namespace GameTest1.Utilities
         public Point2 FramePadding = new(8, 8);
         public int LinePadding = 6;
         public GraphicsSheet? GraphicsSheet = null;
+        public Color BackgroundColor = Color.CornflowerBlue;
 
         public int Width => Size.X;
         public int Height => Size.Y;
@@ -99,7 +100,7 @@ namespace GameTest1.Utilities
                     break;
             }
 
-            Render(Color.CornflowerBlue);
+            Render(BackgroundColor);
 
             if (Globals.ShowDebugInfo)
             {

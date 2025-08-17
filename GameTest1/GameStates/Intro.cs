@@ -25,7 +25,6 @@ namespace GameTest1.GameStates
                     screenFader.Duration = screenFadeDuration;
                     screenFader.Color = Color.Black;
                     screenFader.Reset();
-                    screenFader.IsRunning = true;
                     currentState = State.FadeIn;
 
                     if (Globals.QuickStart)
@@ -37,10 +36,7 @@ namespace GameTest1.GameStates
 
                 case State.FadeIn:
                     if (screenFader.Update())
-                    {
-                        screenFader.IsRunning = false;
                         currentState = State.WaitForTimeoutOrInput;
-                    }
                     break;
 
                 case State.WaitForTimeoutOrInput:
@@ -51,7 +47,6 @@ namespace GameTest1.GameStates
                         screenFader.Duration = screenFadeDuration;
                         screenFader.Color = ScreenFader.PreviousColor;
                         screenFader.Reset();
-                        screenFader.IsRunning = true;
                         currentState = State.FadeOut;
                     }
                     break;
@@ -59,7 +54,6 @@ namespace GameTest1.GameStates
                 case State.FadeOut:
                     if (screenFader.Update())
                     {
-                        screenFader.IsRunning = false;
                         manager.GameStates.Pop();
                         manager.GameStates.Push(new InGame(manager));
                     }
