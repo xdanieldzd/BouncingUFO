@@ -38,7 +38,6 @@ namespace GameTest1.GameStates
 
         private readonly List<ActorBase> actors = [];
         private readonly List<ActorBase> actorsToDestroy = [];
-        private Player? player;
 
         private Map? currentMap;
         private Tileset? currentTileset;
@@ -51,8 +50,45 @@ namespace GameTest1.GameStates
 
         //
 
+        public ActorBase CreateActor(Type type, Point2? position = null)
+        {
+            var actor = Activator.CreateInstance(type, manager, this, currentMap, currentTileset) as ActorBase ??
+                throw new Exception($"Failed to create actor of type {type.Name}");
+
+            actor.Position = position * currentTileset?.CellSize ?? Point2.Zero;
+            actor.Created();
+
+            return actor;
+        }
+
+        public void DestroyActor(ActorBase actor)
+        {
+            if (!actorsToDestroy.Contains(actor))
+                actorsToDestroy.Add(actor);
+        }
+
+        public IEnumerable<T> GetActors<T>() where T : ActorBase => actors.Where(x => x is T && !actorsToDestroy.Contains(x)).Cast<T>();
+        public IEnumerable<ActorBase> GetActors(ActorClass actorClass) => actors.Where(x => x.Class.Has(actorClass) && !actorsToDestroy.Contains(x));
+
+        public T? GetFirstActor<T>() where T : ActorBase => actors.FirstOrDefault(x => x is T && !actorsToDestroy.Contains(x)) as T;
+        public ActorBase? GetFirstActor(ActorClass actorClass) => actors.FirstOrDefault(x => x.Class.Has(actorClass) && !actorsToDestroy.Contains(x));
+
+        public ActorBase? GetFirstOverlapActor(RectInt rect, ActorClass actorClass)
+        {
+            foreach (var actor in actors)
+            {
+                if (actor.Class.HasFlag(actorClass) && rect.Overlaps(actor.Hitbox.Rectangle + actor.Position))
+                    return actor;
+            }
+            return null;
+        }
+
+        public void SetCameraFollowActor(ActorBase actor) => camera.FollowActor(actor);
+
         public override void UpdateApp()
         {
+            var player = GetFirstActor<Player>();
+
             switch (currentState)
             {
                 case State.Initialize:
@@ -73,7 +109,7 @@ namespace GameTest1.GameStates
                         currentState = State.MainLogic;
                         gameStartCountdown = 0f;
                         hasSeenIntroDialog = true;
-                        if (player != null) player.CurrentState = Player.State.Normal;
+                        if (GetFirstActor<Player>() is Player p) p.CurrentState = Player.State.Normal;
                     }
                     break;
 
@@ -154,15 +190,14 @@ namespace GameTest1.GameStates
             currentMap = manager.Assets.Maps[startOnMap];
             currentTileset = manager.Assets.Tilesets[currentMap.Tileset];
 
-            // TODO: make actor spawning less janky?
-
             foreach (var spawn in currentMap.Spawns)
             {
-                switch (spawn.ActorType)
+                actors.Add(spawn.ActorType switch
                 {
-                    case "Player": SpawnPlayerActor(spawn); break;
-                    case "Capsule": SpawnCapsuleActor(spawn); break;
-                }
+                    "Player" => CreateActor(typeof(Player), spawn.Position),
+                    "Capsule" => CreateActor(typeof(Capsule), spawn.Position),
+                    _ => throw new Exception($"Cannot spawn unknown actor type '{spawn.ActorType}'"),
+                });
             }
         }
 
@@ -171,61 +206,16 @@ namespace GameTest1.GameStates
             gameStartTime = gameEndTime = DateTime.Now;
         }
 
-        private void SpawnPlayerActor(Spawn spawn)
-        {
-            if (currentMap == null || currentTileset == null) return;
-
-            player = new Player(manager, this, currentMap, currentTileset);
-            player.Position = (spawn.Position * currentTileset?.CellSize ?? Point2.Zero) - player.Hitbox.Rectangle.Center / 2;
-
-            camera.FollowActor(player);
-
-            actors.Add(player);
-        }
-
-        private void SpawnCapsuleActor(Spawn spawn)
-        {
-            if (currentMap == null || currentTileset == null) return;
-
-            var capsule = new Capsule(manager, this, currentMap, currentTileset)
-            {
-                Position = spawn.Position * currentTileset?.CellSize ?? Point2.Zero
-            };
-            actors.Add(capsule);
-        }
-
         private void PerformMainLogic()
         {
             gameEndTime = DateTime.Now;
 
-            if (player != null && (capsuleCount <= 0 || player.energy <= 0))
+            if (GetFirstActor<Player>() is Player player && (capsuleCount <= 0 || player.energy <= 0))
             {
                 currentState = State.GameOver;
                 player.Stop();
                 player.PlayAnimation("WarpOut", false);
             }
-        }
-
-        public void DestroyActor(ActorBase actor)
-        {
-            if (!actorsToDestroy.Contains(actor))
-                actorsToDestroy.Add(actor);
-        }
-
-        public IEnumerable<T> GetActors<T>() where T : ActorBase => actors.Where(x => x is T && !actorsToDestroy.Contains(x)).Cast<T>();
-        public IEnumerable<ActorBase> GetActors(ActorClass actorClass) => actors.Where(x => x.Class.Has(actorClass) && !actorsToDestroy.Contains(x));
-
-        public T? GetFirstActor<T>() where T : ActorBase => actors.FirstOrDefault(x => x is T && !actorsToDestroy.Contains(x)) as T;
-        public ActorBase? GetFirstActor(ActorClass actorClass) => actors.FirstOrDefault(x => x.Class.Has(actorClass) && !actorsToDestroy.Contains(x));
-
-        public ActorBase? GetFirstOverlapActor(RectInt rect, ActorClass actorClass)
-        {
-            foreach (var actor in actors)
-            {
-                if (actor.Class.HasFlag(actorClass) && rect.Overlaps(actor.Hitbox.Rectangle + actor.Position))
-                    return actor;
-            }
-            return null;
         }
 
         public override void Render()
@@ -238,7 +228,7 @@ namespace GameTest1.GameStates
 
             if (Globals.ShowDebugInfo)
             {
-                if (player != null)
+                if (GetFirstActor<Player>() is Player player)
                 {
                     manager.Batcher.Text(manager.Assets.SmallFont, $"Current hitbox == {player.Position + player.Hitbox.Rectangle}", Vector2.Zero, Color.White);
                     manager.Batcher.Text(manager.Assets.SmallFont, $"{manager.Controls.Move.Name}:{manager.Controls.Move.IntValue} {manager.Controls.Action1.Name}:{manager.Controls.Action1.Down} {manager.Controls.Action2.Name}:{manager.Controls.Action2.Down} {manager.Controls.Menu.Name}:{manager.Controls.Menu.Down} {manager.Controls.Debug.Name}:{manager.Controls.Debug.Down}", new Vector2(0f, manager.Screen.Height - manager.Assets.SmallFont.LineHeight), Color.White);
@@ -275,12 +265,22 @@ namespace GameTest1.GameStates
                     actor.Hitbox.Render(manager.Batcher, actor.Position, Color.Red);
             }
 
-            if (Globals.ShowDebugInfo && currentMap != null && currentTileset != null && player != null)
+            if (Globals.ShowDebugInfo && currentMap != null && currentTileset != null)
             {
-                foreach (var hit in player.GetMapCells())
+                foreach (var spawn in currentMap.Spawns)
                 {
-                    var cellPos = new Vector2(hit.X, hit.Y) * currentTileset.CellSize;
-                    manager.Batcher.Rect(cellPos, currentTileset.CellSize, new Color(0, 0, 64, 64));
+                    var spawnPos = new Vector2(spawn.Position.X, spawn.Position.Y) * currentTileset.CellSize;
+                    manager.Batcher.Rect(spawnPos, currentTileset.CellSize, new Color(128, 64, 0, 64));
+                    manager.Batcher.RectLine(new(spawnPos, currentTileset.CellSize), 2f, new Color(255, 128, 0, 128));
+                }
+
+                if (GetFirstActor<Player>() is Player player)
+                {
+                    foreach (var hit in player.GetMapCells())
+                    {
+                        var cellPos = new Vector2(hit.X, hit.Y) * currentTileset.CellSize;
+                        manager.Batcher.Rect(cellPos, currentTileset.CellSize, new Color(0, 0, 64, 64));
+                    }
                 }
             }
 
@@ -310,7 +310,7 @@ namespace GameTest1.GameStates
 
             manager.Batcher.Text(manager.Assets.FutureFont, $"TIME {gameEndTime - gameStartTime:mm\\:ss\\:ff}", new(8f), currentState == State.GameOver || currentState == State.Restart ? Color.Green : Color.White);
             manager.Batcher.Text(manager.Assets.FutureFont, $"LEFT {capsuleCount:00}", new Vector2(manager.Screen.Bounds.Right - 8f, 8f), new Vector2(1f, 0f), Color.White);
-            if (currentState != State.GameOver && currentState != State.Restart)
+            if (currentState != State.GameOver && currentState != State.Restart && GetFirstActor<Player>() is Player player)
                 manager.Batcher.Text(manager.Assets.FutureFont, $"ENERGY {player?.energy:00}", new Vector2(manager.Screen.Bounds.Right - 8f, manager.Screen.Bounds.Bottom - 8f - manager.Assets.FutureFont.Size), new Vector2(1f, 1f), player?.energy < 50 && manager.Time.BetweenInterval(0.5) ? Color.Red : Color.White);
         }
     }

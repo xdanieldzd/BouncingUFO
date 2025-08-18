@@ -42,6 +42,12 @@ namespace GameTest1.Game.Actors
             IsRunning = true;
         }
 
+        public override void Created()
+        {
+            Position -= Hitbox.Rectangle.Center / 2;
+            gameState.SetCameraFollowActor(this);
+        }
+
         public override void OnCollisionX()
         {
             Velocity.X = -Velocity.X;

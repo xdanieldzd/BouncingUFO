@@ -60,6 +60,8 @@ namespace GameTest1.Game.Actors
         public virtual void OnCollisionX() => StopX();
         public virtual void OnCollisionY() => StopY();
 
+        public virtual void Created() { }
+
         public virtual void Update()
         {
             if (Velocity != Vector2.Zero)
