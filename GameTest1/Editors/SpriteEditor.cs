@@ -137,7 +137,7 @@ namespace GameTest1.Editors
                                 animDirty = frameDirty = true;
                             }
                         }));
-                        ImGui.SliderFloat2("Origin", ref sprite.Origin, 0f, 1f);
+                        ImGui.SliderFloat2("Origin", ref sprite.Origin, -32f, 32f);
                     }
                     ImGui.EndGroup();
                     ImGui.Separator();

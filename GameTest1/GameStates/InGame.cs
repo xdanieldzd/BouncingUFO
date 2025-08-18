@@ -55,7 +55,7 @@ namespace GameTest1.GameStates
             var actor = Activator.CreateInstance(type, manager, this, currentMap, currentTileset) as ActorBase ??
                 throw new Exception($"Failed to create actor of type {type.Name}");
 
-            actor.Position = position * currentTileset?.CellSize ?? Point2.Zero;
+            actor.Position = position * currentTileset?.CellSize ?? Point2.One;
             actor.Created();
 
             return actor;
@@ -73,12 +73,14 @@ namespace GameTest1.GameStates
         public T? GetFirstActor<T>() where T : ActorBase => actors.FirstOrDefault(x => x is T && !actorsToDestroy.Contains(x)) as T;
         public ActorBase? GetFirstActor(ActorClass actorClass) => actors.FirstOrDefault(x => x.Class.Has(actorClass) && !actorsToDestroy.Contains(x));
 
-        public ActorBase? GetFirstOverlapActor(RectInt rect, ActorClass actorClass)
+        public ActorBase? GetFirstOverlapActor(ActorBase actor, ActorClass actorClass)
         {
-            foreach (var actor in actors)
+            foreach (var other in actors)
             {
-                if (actor.Class.HasFlag(actorClass) && rect.Overlaps(actor.Hitbox.Rectangle + actor.Position))
-                    return actor;
+                if (other != actor &&
+                    other.Class.HasFlag(actorClass) &&
+                    (actor.Hitbox.Rectangle + actor.Position).Overlaps(other.Hitbox.Rectangle + other.Position))
+                    return other;
             }
             return null;
         }
@@ -213,6 +215,7 @@ namespace GameTest1.GameStates
             if (GetFirstActor<Player>() is Player player && (capsuleCount <= 0 || player.energy <= 0))
             {
                 currentState = State.GameOver;
+                player.CurrentState = Player.State.InputDisabled;
                 player.Stop();
                 player.PlayAnimation("WarpOut", false);
             }
@@ -258,7 +261,12 @@ namespace GameTest1.GameStates
             manager.Batcher.PushMatrix(camera.Matrix);
 
             manager.MapRenderer.Render(currentMap, currentTileset, Globals.ShowDebugInfo);
-            foreach (var actor in actors.Where(x => x.IsVisible).OrderBy(x => x.DrawPriority))
+
+            var actorsToRender = actors.Where(x => x.IsVisible).OrderBy(x => x.DrawPriority).OrderBy(x => x.TransformedPosition.Y + x.Frame?.Size.Y).ToList();
+            foreach (var actor in actorsToRender)
+                actor.RenderShadow();
+
+            foreach (var actor in actorsToRender)
             {
                 actor.Render();
                 if (Globals.ShowDebugInfo)
@@ -274,9 +282,9 @@ namespace GameTest1.GameStates
                     manager.Batcher.RectLine(new(spawnPos, currentTileset.CellSize), 2f, new Color(255, 128, 0, 128));
                 }
 
-                if (GetFirstActor<Player>() is Player player)
+                foreach (var actor in actors)
                 {
-                    foreach (var hit in player.GetMapCells())
+                    foreach (var hit in actor.GetMapCells())
                     {
                         var cellPos = new Vector2(hit.X, hit.Y) * currentTileset.CellSize;
                         manager.Batcher.Rect(cellPos, currentTileset.CellSize, new Color(0, 0, 64, 64));

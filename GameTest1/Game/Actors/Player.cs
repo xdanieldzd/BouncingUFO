@@ -10,14 +10,12 @@ namespace GameTest1.Game.Actors
     {
         private const float acceleration = 1500f, friction = 100f, maxSpeed = 200f;
         private const float spriteRotation = 10f;
-        private const float bobSpeed = 5f;
         private const float bounceCooldown = 25f;
         private const int maxEnergy = 99;
 
         public enum State { Normal, InputDisabled }
         public State CurrentState;
 
-        private float bobDirection = 0f;
         private Vector2 currentBounceCooldown = Vector2.Zero;
 
         public Vector2 BounceCooldown => currentBounceCooldown;
@@ -28,15 +26,16 @@ namespace GameTest1.Game.Actors
         {
             Class = ActorClass.Solid | ActorClass.Player;
             Sprite = manager.Assets.Sprites["Player"];
-            Hitbox = new(new(2, 20, 28, 12));
+            Hitbox = new(new(4, 16, 24, 12));
             MapLayer = 0;
             DrawPriority = 100;
             Shadow.Enabled = true;
+            BobSpeed = 5f;
+            BobDirection = 1f;
             PlayAnimation("Idle");
 
             CurrentState = State.InputDisabled;
 
-            bobDirection = 1f;
             energy = maxEnergy;
 
             IsRunning = true;
@@ -48,31 +47,37 @@ namespace GameTest1.Game.Actors
             gameState.SetCameraFollowActor(this);
         }
 
-        public override void OnCollisionX()
+        public override void OnCollisionX(ActorBase? other)
         {
-            Velocity.X = -Velocity.X;
-            veloRemainder.X = -veloRemainder.X;
-            currentBounceCooldown.X = bounceCooldown;
-            energy--;
+            if ((other != null && other.Class.HasFlag(ActorClass.Solid)) || other == null)
+            {
+                Velocity.X = -Velocity.X;
+                veloRemainder.X = -veloRemainder.X;
+                currentBounceCooldown.X = bounceCooldown;
+                energy--;
+            }
         }
 
-        public override void OnCollisionY()
+        public override void OnCollisionY(ActorBase? other)
         {
-            Velocity.Y = -Velocity.Y;
-            veloRemainder.Y = -veloRemainder.Y;
-            currentBounceCooldown.Y = bounceCooldown;
-            energy--;
+            if ((other != null && other.Class.HasFlag(ActorClass.Solid)) || other == null)
+            {
+                Velocity.Y = -Velocity.Y;
+                veloRemainder.Y = -veloRemainder.Y;
+                currentBounceCooldown.Y = bounceCooldown;
+                energy--;
+            }
         }
 
         public override void Update()
         {
             base.Update();
 
-            var actorHit = gameState.GetFirstOverlapActor(Hitbox.Rectangle + Position, ActorClass.Solid | ActorClass.Collectible);
+            var actorHit = gameState.GetFirstOverlapActor(this, ActorClass.None);
             if (actorHit != null)
             {
-                OnCollisionX();
-                OnCollisionY();
+                OnCollisionX(actorHit);
+                OnCollisionY(actorHit);
 
                 gameState.DestroyActor(actorHit);
             }
@@ -89,9 +94,7 @@ namespace GameTest1.Game.Actors
                     break;
             }
 
-            CalcBobbing();
             CalcBounceCooldown();
-            CalcShadow();
         }
 
         private void CalcPlayerVelocityAndRotation(Point2 direction, bool action1, bool action2)
@@ -123,26 +126,10 @@ namespace GameTest1.Game.Actors
                 Velocity.Y = Calc.Approach(Velocity.Y, 0f, fric);
         }
 
-        private void CalcBobbing()
-        {
-            if (bobDirection == 0f) return;
-            Elevation = Calc.Approach(Elevation, bobDirection, bobSpeed * manager.Time.Delta);
-            if (Elevation >= 1f || Elevation <= -1f) bobDirection = -bobDirection;
-        }
-
         private void CalcBounceCooldown()
         {
             currentBounceCooldown.X = MathF.Floor(Calc.Approach(currentBounceCooldown.X, 0f, manager.Time.Delta));
             currentBounceCooldown.Y = MathF.Floor(Calc.Approach(currentBounceCooldown.Y, 0f, manager.Time.Delta));
-        }
-
-        private void CalcShadow()
-        {
-            if (sprite == null || animation == null) return;
-
-            var frame = sprite.GetFrameAt(animation, animTimer, isLoopingAnim);
-            Shadow.Offset = new(0f, frame.Size.Y * 0.35f);
-            Shadow.Scale = new Vector2(0.75f, 0.425f) * Calc.ClampedMap(Elevation, -1f, 1f, 0.9f, 1f);
         }
     }
 }

@@ -3,7 +3,7 @@
   "SpritesheetFile": "Assets\\Sprites\\Capsule.png",
   "Origin": {
     "X": 0,
-    "Y": 0
+    "Y": 8
   },
   "Frames": [
     {
@@ -13,7 +13,7 @@
       },
       "Size": {
         "X": 16,
-        "Y": 32
+        "Y": 16
       },
       "Duration": 0.15
     },
@@ -24,7 +24,7 @@
       },
       "Size": {
         "X": 16,
-        "Y": 32
+        "Y": 16
       },
       "Duration": 0.15
     },
@@ -35,7 +35,7 @@
       },
       "Size": {
         "X": 16,
-        "Y": 32
+        "Y": 16
       },
       "Duration": 0.15
     },
@@ -46,7 +46,7 @@
       },
       "Size": {
         "X": 16,
-        "Y": 32
+        "Y": 16
       },
       "Duration": 0.15
     }

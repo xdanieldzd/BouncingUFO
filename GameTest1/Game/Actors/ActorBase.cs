@@ -45,10 +45,13 @@ namespace GameTest1.Game.Actors
         public Frame? Frame => currentFrame;
         public int MapLayer = 0, DrawPriority = 0;
         public float Rotation = 0f, Elevation = 0f;
+        public float BobSpeed = 10f, BobDirection = 0f;
         public Shadow Shadow = new(manager);
         public float Timer = 0f;
         public bool IsVisible = true;
         public bool IsRunning = false;
+
+        public Vector2 TransformedPosition => new Vector2(Position.X, Position.Y + Elevation) + sprite?.Origin ?? Vector2.Zero;
 
         protected Vector2 veloRemainder;
         protected Sprite? sprite;
@@ -57,8 +60,8 @@ namespace GameTest1.Game.Actors
         protected float animTimer = 0f;
         protected bool isLoopingAnim = false;
 
-        public virtual void OnCollisionX() => StopX();
-        public virtual void OnCollisionY() => StopY();
+        public virtual void OnCollisionX(ActorBase? other) => StopX();
+        public virtual void OnCollisionY(ActorBase? other) => StopY();
 
         public virtual void Created() { }
 
@@ -72,6 +75,9 @@ namespace GameTest1.Game.Actors
 
             if (sprite != null && animation != null)
                 currentFrame = sprite.GetFrameAt(animation, animTimer, isLoopingAnim);
+
+            CalcBobbing();
+            CalcShadow();
         }
 
         public Point2[] GetMapCells()
@@ -107,7 +113,7 @@ namespace GameTest1.Game.Actors
                 var sign = Math.Sign(move.X);
                 if (!MovePixel(Point2.UnitX * sign))
                 {
-                    OnCollisionX();
+                    OnCollisionX(null);
                     break;
                 }
                 else
@@ -119,7 +125,7 @@ namespace GameTest1.Game.Actors
                 var sign = Math.Sign(move.Y);
                 if (!MovePixel(Point2.UnitY * sign))
                 {
-                    OnCollisionY();
+                    OnCollisionY(null);
                     break;
                 }
                 else
@@ -198,15 +204,28 @@ namespace GameTest1.Game.Actors
             isLoopingAnim = loop;
         }
 
+        public virtual void CalcShadow()
+        {
+            if (sprite == null || animation == null) return;
+
+            var frame = sprite.GetFrameAt(animation, animTimer, isLoopingAnim);
+            Shadow.Offset = new(0f, frame.Size.Y * 0.35f);
+            Shadow.Scale = new Vector2(0.75f, 0.425f) * Calc.ClampedMap(Elevation, -1f, 1f, 0.9f, 1f);
+        }
+
+        public virtual void CalcBobbing()
+        {
+            if (BobDirection == 0f) return;
+            Elevation = Calc.Approach(Elevation, BobDirection, BobSpeed * manager.Time.Delta);
+            if (Elevation >= 1f || Elevation <= -1f) BobDirection = -BobDirection;
+        }
+
         public virtual void Render()
         {
-            if (sprite != null && animation != null)
+            if (sprite != null)
             {
                 if (currentFrame != null && currentFrame.Texture != null && currentFrame.Texture is Subtexture texture)
                 {
-                    if (Shadow.Enabled)
-                        Shadow.Render(sprite, currentFrame, Position);
-
                     manager.Batcher.PushMatrix(
                         Matrix3x2.CreateTranslation(-currentFrame.Size / 2f) *
                         Matrix3x2.CreateRotation(Calc.DegToRad * Rotation) *
@@ -216,6 +235,12 @@ namespace GameTest1.Game.Actors
                     manager.Batcher.PopMatrix();
                 }
             }
+        }
+
+        public void RenderShadow()
+        {
+            if (Shadow.Enabled && sprite != null && currentFrame != null)
+                Shadow.Render(sprite, currentFrame, Position);
         }
 
         public virtual void Destroyed() { }
