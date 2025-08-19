@@ -5,7 +5,7 @@ namespace GameTest1.Game.Actors
 {
     public class Capsule : ActorBase
     {
-        public Capsule(Manager manager, InGame gameState, Map map, Tileset tileset) : base(manager, gameState, map, tileset)
+        public Capsule(Manager manager, InGame gameState, Map map, Tileset tileset, int argument) : base(manager, gameState, map, tileset, argument)
         {
             Class = ActorClass.Collectible;
             Sprite = manager.Assets.Sprites["Capsule"];

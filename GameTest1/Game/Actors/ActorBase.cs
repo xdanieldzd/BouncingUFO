@@ -18,12 +18,13 @@ namespace GameTest1.Game.Actors
         Collectible = 1 << 2
     }
 
-    public abstract class ActorBase(Manager manager, InGame gameState, Map map, Tileset tileset)
+    public abstract class ActorBase(Manager manager, InGame gameState, Map map, Tileset tileset, int argument)
     {
         protected Manager manager = manager;
         protected InGame gameState = gameState;
         protected Map map = map;
         protected Tileset tileset = tileset;
+        protected int argument = argument;
 
         public ActorClass Class = ActorClass.None;
         public Point2 Position = Point2.Zero;
@@ -80,9 +81,11 @@ namespace GameTest1.Game.Actors
             CalcShadow();
         }
 
-        public Point2[] GetMapCells()
+        public Point2[] GetMapCells() => GetMapCells(Position, Hitbox.Rectangle, tileset, map);
+
+        public static Point2[] GetMapCells(Point2 position, RectInt hitboxRect, Tileset tileset, Map map)
         {
-            var localHitbox = (Position + Hitbox.Rectangle) / (Vector2)tileset.CellSize;
+            var localHitbox = (position + hitboxRect) / (Vector2)tileset.CellSize;
             var topLeftFloor = localHitbox.TopLeft.FloorToPoint2();
             var bottomRightCeil = localHitbox.BottomRight.CeilingToPoint2();
 
@@ -244,5 +247,11 @@ namespace GameTest1.Game.Actors
         }
 
         public virtual void Destroyed() { }
+    }
+
+    public class ActorException : Exception
+    {
+        public ActorException(string message) : base(message) { }
+        public ActorException(Type actorType, string message) : base($"{actorType.Name}: {message}") { }
     }
 }

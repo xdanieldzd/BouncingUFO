@@ -11,7 +11,7 @@ namespace GameTest1.Game
 
         public Matrix3x2 Matrix => Matrix3x2.CreateTranslation(position);
 
-        public void FollowActor(ActorBase actor)
+        public void FollowActor(ActorBase? actor)
         {
             followedActor = actor;
         }

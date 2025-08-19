@@ -36,6 +36,13 @@ namespace GameTest1.GameStates
             "Alright, that's about it, I'll leave you to the game, then! Have fun!"
         ];
 
+        private readonly Dictionary<string, Type> actorTypeDictionary = new()
+        {
+            { "Player", typeof(Player) },
+            { "Capsule", typeof(Capsule) },
+            { "CapsuleSpawner", typeof(CapsuleSpawner) }
+        };
+
         private readonly List<ActorBase> actors = [];
         private readonly List<ActorBase> actorsToDestroy = [];
 
@@ -50,16 +57,27 @@ namespace GameTest1.GameStates
 
         //
 
-        public ActorBase CreateActor(Type type, Point2? position = null)
+        public ActorBase CreateActor(string actorType, Point2? position = null, int mapLayer = 0, int argument = 0)
         {
-            var actor = Activator.CreateInstance(type, manager, this, currentMap, currentTileset) as ActorBase ??
-                throw new Exception($"Failed to create actor of type {type.Name}");
+            if (actorTypeDictionary.TryGetValue(actorType, out Type? type))
+                return CreateActor(type, position, mapLayer, argument);
+            else
+                throw new ActorException($"Actor type '{actorType}' not recognized");
+        }
 
+        public ActorBase CreateActor(Type type, Point2? position = null, int mapLayer = 0, int argument = 0)
+        {
+            var actor = Activator.CreateInstance(type, manager, this, currentMap, currentTileset, argument) as ActorBase ??
+                throw new ActorException(type, "Failed to create actor instance");
             actor.Position = position * currentTileset?.CellSize ?? Point2.One;
+            actor.MapLayer = mapLayer;
             actor.Created();
-
             return actor;
         }
+
+        public void SpawnActor(ActorBase actor) => actors.Add(actor);
+        public void SpawnActor(string actorType, Point2? position = null, int mapLayer = 0, int argument = 0) => actors.Add(CreateActor(actorType, position, mapLayer, argument));
+        public void SpawnActor(Type type, Point2? position = null, int mapLayer = 0, int argument = 0) => actors.Add(CreateActor(type, position, mapLayer, argument));
 
         public void DestroyActor(ActorBase actor)
         {
@@ -73,19 +91,21 @@ namespace GameTest1.GameStates
         public T? GetFirstActor<T>() where T : ActorBase => actors.FirstOrDefault(x => x is T && !actorsToDestroy.Contains(x)) as T;
         public ActorBase? GetFirstActor(ActorClass actorClass) => actors.FirstOrDefault(x => x.Class.Has(actorClass) && !actorsToDestroy.Contains(x));
 
-        public ActorBase? GetFirstOverlapActor(ActorBase actor, ActorClass actorClass)
+        public ActorBase? GetFirstOverlapActor(Point2 position, RectInt hitboxRect, ActorClass actorClass) => GetFirstOverlapActor(position, hitboxRect, actorClass, actors);
+        public ActorBase? GetFirstOverlapActor(ActorBase actor, ActorClass actorClass) => GetFirstOverlapActor(actor.Position, actor.Hitbox.Rectangle, actorClass, actors.Where(x => x != actor));
+
+        private static ActorBase? GetFirstOverlapActor(Point2 position, RectInt hitboxRect, ActorClass actorClass, IEnumerable<ActorBase> actorsToCheck)
         {
-            foreach (var other in actors)
+            foreach (var other in actorsToCheck)
             {
-                if (other != actor &&
-                    other.Class.HasFlag(actorClass) &&
-                    (actor.Hitbox.Rectangle + actor.Position).Overlaps(other.Hitbox.Rectangle + other.Position))
+                if (other.Class.HasFlag(actorClass) &&
+                    (hitboxRect + position).Overlaps(other.Hitbox.Rectangle + other.Position))
                     return other;
             }
             return null;
         }
 
-        public void SetCameraFollowActor(ActorBase actor) => camera.FollowActor(actor);
+        public void SetCameraFollowActor(ActorBase? actor) => camera.FollowActor(actor);
 
         public override void UpdateApp()
         {
@@ -193,14 +213,7 @@ namespace GameTest1.GameStates
             currentTileset = manager.Assets.Tilesets[currentMap.Tileset];
 
             foreach (var spawn in currentMap.Spawns)
-            {
-                actors.Add(spawn.ActorType switch
-                {
-                    "Player" => CreateActor(typeof(Player), spawn.Position),
-                    "Capsule" => CreateActor(typeof(Capsule), spawn.Position),
-                    _ => throw new Exception($"Cannot spawn unknown actor type '{spawn.ActorType}'"),
-                });
-            }
+                SpawnActor(spawn.ActorType, spawn.Position, spawn.MapLayer, spawn.Argument);
         }
 
         private void ResetTimer()

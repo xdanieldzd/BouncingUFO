@@ -11,5 +11,7 @@ namespace GameTest1.Game.Levels
         public Point2 Position = Point2.Zero;
         [JsonInclude]
         public int MapLayer = 0;
+        [JsonInclude]
+        public int Argument = 0;
     }
 }

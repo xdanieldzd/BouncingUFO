@@ -22,7 +22,7 @@ namespace GameTest1.Game.Actors
 
         public int energy = 0;
 
-        public Player(Manager manager, InGame gameState, Map map, Tileset tileset) : base(manager, gameState, map, tileset)
+        public Player(Manager manager, InGame gameState, Map map, Tileset tileset, int argument) : base(manager, gameState, map, tileset, argument)
         {
             Class = ActorClass.Solid | ActorClass.Player;
             Sprite = manager.Assets.Sprites["Player"];

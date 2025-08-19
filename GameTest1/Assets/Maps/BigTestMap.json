@@ -3255,6 +3255,15 @@
         "Y": 9
       },
       "MapLayer": 0
+    },
+    {
+      "ActorType": "CapsuleSpawner",
+      "Position": {
+        "X": 0,
+        "Y": 0
+      },
+      "MapLayer": 0,
+      "Argument": 10
     }
   ]
 }
