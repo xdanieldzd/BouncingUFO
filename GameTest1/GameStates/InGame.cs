@@ -67,10 +67,9 @@ namespace GameTest1.GameStates
 
         public ActorBase CreateActor(Type type, Point2? position = null, int mapLayer = 0, int argument = 0)
         {
-            var actor = Activator.CreateInstance(type, manager, this, currentMap, currentTileset, argument) as ActorBase ??
+            var actor = Activator.CreateInstance(type, manager, this, currentMap, currentTileset, mapLayer, argument) as ActorBase ??
                 throw new ActorException(type, "Failed to create actor instance");
             actor.Position = position * currentTileset?.CellSize ?? Point2.One;
-            actor.MapLayer = mapLayer;
             actor.Created();
             return actor;
         }
@@ -238,7 +237,9 @@ namespace GameTest1.GameStates
         {
             manager.Screen.Clear(0x3E4F65);
 
-            RenderMapAndActors();
+            manager.Batcher.PushMatrix(camera.Matrix);
+            manager.MapRenderer.Render(currentMap, currentTileset, actors, Globals.ShowDebugInfo);
+            manager.Batcher.PopMatrix();
 
             RenderHUD();
 
@@ -267,45 +268,6 @@ namespace GameTest1.GameStates
             }
 
             screenFader.Render();
-        }
-
-        private void RenderMapAndActors()
-        {
-            manager.Batcher.PushMatrix(camera.Matrix);
-
-            manager.MapRenderer.Render(currentMap, currentTileset, Globals.ShowDebugInfo);
-
-            var actorsToRender = actors.Where(x => x.IsVisible).OrderBy(x => x.DrawPriority).OrderBy(x => x.TransformedPosition.Y + x.Frame?.Size.Y).ToList();
-            foreach (var actor in actorsToRender)
-                actor.RenderShadow();
-
-            foreach (var actor in actorsToRender)
-            {
-                actor.Render();
-                if (Globals.ShowDebugInfo)
-                    actor.Hitbox.Render(manager.Batcher, actor.Position, Color.Red);
-            }
-
-            if (Globals.ShowDebugInfo && currentMap != null && currentTileset != null)
-            {
-                foreach (var spawn in currentMap.Spawns)
-                {
-                    var spawnPos = new Vector2(spawn.Position.X, spawn.Position.Y) * currentTileset.CellSize;
-                    manager.Batcher.Rect(spawnPos, currentTileset.CellSize, new Color(128, 64, 0, 64));
-                    manager.Batcher.RectLine(new(spawnPos, currentTileset.CellSize), 2f, new Color(255, 128, 0, 128));
-                }
-
-                foreach (var actor in actors)
-                {
-                    foreach (var hit in actor.GetMapCells())
-                    {
-                        var cellPos = new Vector2(hit.X, hit.Y) * currentTileset.CellSize;
-                        manager.Batcher.Rect(cellPos, currentTileset.CellSize, new Color(0, 0, 64, 64));
-                    }
-                }
-            }
-
-            manager.Batcher.PopMatrix();
         }
 
         private void RenderHUD()

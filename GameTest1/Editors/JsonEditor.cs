@@ -12,12 +12,7 @@ namespace GameTest1.Editors
         private string currentJsonPath = string.Empty;
         private JsonObject? jsonObject = null;
 
-        public override void Setup()
-        {
-            isOpen = true;
-            currentJsonPath = @"D:\Programming\UFO\\UI\DialogBox.json";
-            jsonObject = JsonSerializer.Deserialize<JsonObject>(File.ReadAllText(currentJsonPath), Assets.SerializerOptions);
-        }
+        public override void Setup() { }
 
         public override void Run()
         {

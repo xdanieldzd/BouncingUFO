@@ -2,7 +2,6 @@
 using GameTest1.Game.Levels;
 using GameTest1.Game.Sprites;
 using GameTest1.GameStates;
-using GameTest1.Utilities;
 using System.Numerics;
 
 namespace GameTest1.Game.Actors
@@ -18,7 +17,7 @@ namespace GameTest1.Game.Actors
         Collectible = 1 << 2
     }
 
-    public abstract class ActorBase(Manager manager, InGame gameState, Map map, Tileset tileset, int argument)
+    public abstract class ActorBase(Manager manager, InGame gameState, Map map, Tileset tileset, int mapLayer = 0, int argument = 0)
     {
         protected Manager manager = manager;
         protected InGame gameState = gameState;
@@ -28,6 +27,7 @@ namespace GameTest1.Game.Actors
 
         public ActorClass Class = ActorClass.None;
         public Point2 Position = Point2.Zero;
+        public Vector2 Offset = Vector2.Zero;
         public Vector2 Velocity = Vector2.Zero;
         public Hitbox Hitbox = new();
         public Sprite? Sprite
@@ -44,15 +44,18 @@ namespace GameTest1.Game.Actors
             }
         }
         public Frame? Frame => currentFrame;
-        public int MapLayer = 0, DrawPriority = 0;
-        public float Rotation = 0f, Elevation = 0f;
+        public int MapLayer = mapLayer, DrawPriority = 0;
+        public float Rotation = 0f;
         public float BobSpeed = 10f, BobDirection = 0f;
-        public Shadow Shadow = new(manager);
+        public bool HasShadow = false;
+        public Color ShadowColor = new(0f, 0f, 0f, 0.5f);
+        public Vector2 ShadowScale = Vector2.One / 2f;
+        public Vector2 ShadowOffset = Vector2.Zero;
         public float Timer = 0f;
         public bool IsVisible = true;
         public bool IsRunning = false;
 
-        public Vector2 TransformedPosition => new Vector2(Position.X, Position.Y + Elevation) + sprite?.Origin ?? Vector2.Zero;
+        public Vector2 TransformedPosition => Position + Offset + (sprite?.Origin ?? Vector2.Zero);
 
         protected Vector2 veloRemainder;
         protected Sprite? sprite;
@@ -178,7 +181,7 @@ namespace GameTest1.Game.Actors
                 return true;
             }
 
-            var layers = map.Layers.Where((_, i) => i >= MapLayer).ToArray();
+            var layers = map.Layers.Where((_, i) => i <= MapLayer).Reverse().ToArray();
             var cells = GetMapCells();
             var destRect = Position + Hitbox.Rectangle + sign;
 
@@ -209,41 +212,33 @@ namespace GameTest1.Game.Actors
 
         public virtual void CalcShadow()
         {
-            if (sprite == null || animation == null) return;
+            if (sprite == null || animation == null || currentFrame == null) return;
 
-            var frame = sprite.GetFrameAt(animation, animTimer, isLoopingAnim);
-            Shadow.Offset = new(0f, frame.Size.Y * 0.35f);
-            Shadow.Scale = new Vector2(0.75f, 0.425f) * Calc.ClampedMap(Elevation, -1f, 1f, 0.9f, 1f);
+            ShadowOffset = new(0f, currentFrame.Size.Y * 0.35f);
+            ShadowScale = new Vector2(0.75f, 0.425f) * Calc.ClampedMap(Offset.Y, -1f, 1f, 0.9f, 1f);
         }
 
         public virtual void CalcBobbing()
         {
             if (BobDirection == 0f) return;
-            Elevation = Calc.Approach(Elevation, BobDirection, BobSpeed * manager.Time.Delta);
-            if (Elevation >= 1f || Elevation <= -1f) BobDirection = -BobDirection;
+            Offset.Y = Calc.Approach(Offset.Y, BobDirection, BobSpeed * manager.Time.Delta);
+            if (Offset.Y >= 1f || Offset.Y <= -1f) BobDirection = -BobDirection;
         }
 
-        public virtual void Render()
+        public virtual void RenderSprite()
         {
-            if (sprite != null)
+            if (sprite != null && currentFrame != null && currentFrame.Texture is Subtexture texture)
+                manager.Batcher.Image(texture, Position + Offset + sprite.Origin, sprite.Origin, Vector2.One, Calc.DegToRad * Rotation, Color.White);
+        }
+
+        public virtual void RenderShadow()
+        {
+            if (HasShadow && sprite != null && currentFrame != null && currentFrame.Texture is Subtexture texture)
             {
-                if (currentFrame != null && currentFrame.Texture != null && currentFrame.Texture is Subtexture texture)
-                {
-                    manager.Batcher.PushMatrix(
-                        Matrix3x2.CreateTranslation(-currentFrame.Size / 2f) *
-                        Matrix3x2.CreateRotation(Calc.DegToRad * Rotation) *
-                        Matrix3x2.CreateTranslation(currentFrame.Size / 2f) *
-                        Matrix3x2.CreateTranslation(new Vector2(Position.X, Position.Y + Elevation)));
-                    manager.Batcher.Image(texture, Vector2.Zero, sprite.Origin, Vector2.One, 0f, Color.White);
-                    manager.Batcher.PopMatrix();
-                }
+                manager.Batcher.PushMode(Batcher.Modes.Wash);
+                manager.Batcher.Image(texture, Position + ShadowOffset + sprite.Origin, sprite.Origin, ShadowScale, 0f, ShadowColor);
+                manager.Batcher.PopMode();
             }
-        }
-
-        public void RenderShadow()
-        {
-            if (Shadow.Enabled && sprite != null && currentFrame != null)
-                Shadow.Render(sprite, currentFrame, Position);
         }
 
         public virtual void Destroyed() { }

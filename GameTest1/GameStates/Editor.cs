@@ -57,7 +57,7 @@ namespace GameTest1.GameStates
             }
             else if (focusedEditor == mapEditor)
             {
-                manager.MapRenderer.Render(mapEditor.CurrentMapAndTileset.Map, mapEditor.CurrentMapAndTileset.Tileset);
+                manager.MapRenderer.Render(mapEditor.CurrentMapAndTileset.Map, mapEditor.CurrentMapAndTileset.Tileset, []);
             }
             else if (focusedEditor == spriteEditor)
             {

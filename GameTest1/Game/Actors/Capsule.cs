@@ -5,20 +5,24 @@ namespace GameTest1.Game.Actors
 {
     public class Capsule : ActorBase
     {
-        public Capsule(Manager manager, InGame gameState, Map map, Tileset tileset, int argument) : base(manager, gameState, map, tileset, argument)
+        public Capsule(Manager manager, InGame gameState, Map map, Tileset tileset, int mapLayer = 0, int argument = 0) : base(manager, gameState, map, tileset, mapLayer, argument)
         {
             Class = ActorClass.Collectible;
             Sprite = manager.Assets.Sprites["Capsule"];
-            Hitbox = new(new(0, 0, 16, 16));
-            MapLayer = 0;
+            Hitbox = new(new(3, 3, 10, 10));
             DrawPriority = 50;
-            Shadow.Enabled = true;
+            HasShadow = true;
             PlayAnimation("Idle");
 
-            Elevation = Random.Shared.NextSingle() * 2f - 1f;
-            BobDirection = Elevation < 0f ? -1f : 1f;
+            Offset.Y = Random.Shared.NextSingle() * 2f - 1f;
+            BobDirection = Offset.Y < 0 ? -1f : 1f;
 
             IsRunning = true;
+        }
+
+        public override void Created()
+        {
+            Position.Y -= 8;
         }
     }
 }

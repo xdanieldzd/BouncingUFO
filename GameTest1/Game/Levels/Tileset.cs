@@ -11,7 +11,8 @@ namespace GameTest1.Game.Levels
         Ground = 1 << 0,
         Wall = 1 << 1,
         Damaging = 1 << 2,
-        Healing = 1 << 3
+        Healing = 1 << 3,
+        Translucent = 1 << 4
     }
 
     public record Tileset

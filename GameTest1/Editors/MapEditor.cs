@@ -1,6 +1,5 @@
 ﻿using Foster.Framework;
 using GameTest1.Game.Levels;
-using GameTest1.Game.Sprites;
 using GameTest1.Utilities;
 using ImGuiNET;
 using System.Numerics;
@@ -163,6 +162,7 @@ namespace GameTest1.Editors
                     {
                         hoveredMapCell = -1;
                         map.ResizeLayers();
+                        activeLayer = Math.Min(activeLayer, map.Layers.Count - 1);
                         layersDirty = false;
                     }
 

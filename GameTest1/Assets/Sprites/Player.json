@@ -2,8 +2,8 @@
   "Name": "Player",
   "SpritesheetFile": "Assets\\Sprites\\Player.png",
   "Origin": {
-    "X": 0,
-    "Y": 0
+    "X": 16,
+    "Y": 24
   },
   "Frames": [
     {

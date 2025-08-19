@@ -1,7 +1,6 @@
 ﻿using Foster.Framework;
 using GameTest1.Game.Levels;
 using GameTest1.GameStates;
-using GameTest1.Utilities;
 using System.Numerics;
 
 namespace GameTest1.Game.Actors
@@ -22,14 +21,13 @@ namespace GameTest1.Game.Actors
 
         public int energy = 0;
 
-        public Player(Manager manager, InGame gameState, Map map, Tileset tileset, int argument) : base(manager, gameState, map, tileset, argument)
+        public Player(Manager manager, InGame gameState, Map map, Tileset tileset, int mapLayer = 0, int argument = 0) : base(manager, gameState, map, tileset, mapLayer, argument)
         {
             Class = ActorClass.Solid | ActorClass.Player;
             Sprite = manager.Assets.Sprites["Player"];
-            Hitbox = new(new(4, 16, 24, 12));
-            MapLayer = 0;
+            Hitbox = new(new(0, 12, 32, 12));
             DrawPriority = 100;
-            Shadow.Enabled = true;
+            HasShadow = true;
             BobSpeed = 5f;
             BobDirection = 1f;
             PlayAnimation("Idle");
@@ -43,7 +41,7 @@ namespace GameTest1.Game.Actors
 
         public override void Created()
         {
-            Position -= Hitbox.Rectangle.Center / 2;
+            Position -= Hitbox.Rectangle.Center / 2 + Point2.UnitY * 8;
             gameState.SetCameraFollowActor(this);
         }
 
@@ -99,18 +97,15 @@ namespace GameTest1.Game.Actors
 
         private void CalcPlayerVelocityAndRotation(Point2 direction, bool action1, bool action2)
         {
-            var accel = acceleration * (action1 ? 2.5f : 1f) * manager.Time.Delta;
+            var accel = acceleration * (action1 ? 2f : 1f) * manager.Time.Delta;
 
-            if (currentBounceCooldown.X == 0f)
-            {
-                Velocity.X += direction.X * accel;
+            if (currentBounceCooldown.X == 0f) Velocity.X += direction.X * accel;
+            if (currentBounceCooldown.Y == 0f) Velocity.Y += direction.Y * accel;
 
-                if (Velocity.X < 0) Rotation = -spriteRotation;
-                else if (Velocity.X > 0) Rotation = spriteRotation;
-            }
-
-            if (currentBounceCooldown.Y == 0f)
-                Velocity.Y += direction.Y * accel;
+            var maxRotation = 0f;
+            if (Velocity.X < 0f) maxRotation = -spriteRotation * (action1 ? 3f : 1f);
+            else if (Velocity.X > 0f) maxRotation = spriteRotation * (action1 ? 3f : 1f);
+            Rotation = Calc.Approach(Rotation, maxRotation, manager.Time.Delta * (action1 ? 100f : 25f));
 
             if (MathF.Abs(Velocity.X) > maxSpeed) Velocity.X = Calc.Approach(Velocity.X, MathF.Sign(Velocity.X) * maxSpeed, 2000f * manager.Time.Delta);
             if (MathF.Abs(Velocity.Y) > maxSpeed) Velocity.Y = Calc.Approach(Velocity.Y, MathF.Sign(Velocity.Y) * maxSpeed, 2000f * manager.Time.Delta);
@@ -120,7 +115,7 @@ namespace GameTest1.Game.Actors
             if (direction.X == 0)
             {
                 Velocity.X = Calc.Approach(Velocity.X, 0f, fric);
-                Rotation = Calc.Approach(Rotation, 0f, fric * 5f);
+                Rotation = Calc.Approach(Rotation, 0f, friction * manager.Time.Delta);
             }
             if (direction.Y == 0)
                 Velocity.Y = Calc.Approach(Velocity.Y, 0f, fric);

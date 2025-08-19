@@ -2,8 +2,8 @@
   "Name": "Capsule",
   "SpritesheetFile": "Assets\\Sprites\\Capsule.png",
   "Origin": {
-    "X": 0,
-    "Y": 8
+    "X": 8,
+    "Y": 16
   },
   "Frames": [
     {

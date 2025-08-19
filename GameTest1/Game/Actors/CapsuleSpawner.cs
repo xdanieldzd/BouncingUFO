@@ -9,10 +9,9 @@ namespace GameTest1.Game.Actors
         private const string actorToSpawn = "Capsule";
         private const int maxSpawnAttempts = 30;
 
-        public CapsuleSpawner(Manager manager, InGame gameState, Map map, Tileset tileset, int argument) : base(manager, gameState, map, tileset, argument)
+        public CapsuleSpawner(Manager manager, InGame gameState, Map map, Tileset tileset, int mapLayer = 0, int argument = 0) : base(manager, gameState, map, tileset, mapLayer, argument)
         {
             Class = ActorClass.None;
-            MapLayer = 0;
 
             for (var i = 0; i < argument; i++)
             {
@@ -20,6 +19,7 @@ namespace GameTest1.Game.Actors
                 for (var j = 0; j < maxSpawnAttempts; j++)
                 {
                     actor.Position = new Point2(Random.Shared.Next(0, map.Size.X), Random.Shared.Next(0, map.Size.Y)) * tileset.CellSize;
+                    actor.Created();
 
                     if (gameState.GetFirstOverlapActor(actor.Position, actor.Hitbox.Rectangle, ActorClass.None) != null)
                         continue;
@@ -28,7 +28,7 @@ namespace GameTest1.Game.Actors
 
                     foreach (var cellPos in GetMapCells(actor.Position, actor.Hitbox.Rectangle, tileset, map))
                     {
-                        foreach (var layer in map.Layers.Where((_, i) => i >= MapLayer))
+                        foreach (var layer in map.Layers.Where((_, i) => i <= MapLayer))
                         {
                             var cellFlags = tileset.CellFlags[layer.Tiles[cellPos.Y * map.Size.X + cellPos.X]];
                             if (cellFlags != CellFlag.Empty &&
