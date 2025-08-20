@@ -10,7 +10,7 @@ namespace GameTest1.GameStates
     public class InGame(Manager manager) : GameStateBase(manager), IGameState
     {
         private const float screenFadeDuration = 0.75f;
-        private const string startOnMap = "BigTestMap";
+        private const string startOnMap = "SmallTest2";
 
         private enum State { Initialize, FadeIn, GameIntroduction, GameStartCountdown, MainLogic, GameOver, Restart }
 
@@ -46,6 +46,7 @@ namespace GameTest1.GameStates
         private readonly List<ActorBase> actors = [];
         private readonly List<ActorBase> actorsToDestroy = [];
 
+        private string currentMapName = startOnMap;
         private Map? currentMap;
         private Tileset? currentTileset;
 
@@ -114,8 +115,10 @@ namespace GameTest1.GameStates
             {
                 case State.Initialize:
                     InitializeDialogBox();
-                    InitializeGame();
                     ResetTimer();
+
+                    if (currentMap == null || currentTileset == null)
+                        LoadMap(currentMapName, hasSeenIntroDialog);
 
                     screenFader.FadeType = ScreenFadeType.FadeIn;
                     screenFader.Duration = screenFadeDuration;
@@ -177,6 +180,8 @@ namespace GameTest1.GameStates
                     if (screenFader.Update())
                     {
                         actorsToDestroy.AddRange(actors);
+                        currentMap = null;
+                        currentTileset = null;
                         currentState = State.Initialize;
                     }
                     break;
@@ -197,7 +202,7 @@ namespace GameTest1.GameStates
 
             capsuleCount = actors.Count(x => x is Capsule);
 
-            camera.Update(Globals.ShowDebugInfo ? null : currentMap?.Size * currentTileset?.CellSize);
+            camera.Update(Globals.ShowDebugInfo ? Point2.Zero : (currentMap?.Size * currentTileset?.CellSize) ?? Point2.Zero);
         }
 
         private void InitializeDialogBox()
@@ -206,18 +211,25 @@ namespace GameTest1.GameStates
             dialogBox.Position = new(manager.Screen.Bounds.Center.X - dialogBox.Size.X / 2, manager.Screen.Bounds.Bottom - dialogBox.Size.Y - 16);
         }
 
-        private void InitializeGame()
+        private void ResetTimer()
         {
-            currentMap = manager.Assets.Maps[startOnMap];
+            gameStartTime = gameEndTime = DateTime.Now;
+        }
+
+        public void LoadMap(string mapName, bool skipIntro = false)
+        {
+            hasSeenIntroDialog = skipIntro;
+
+            actors.Clear();
+            actorsToDestroy.Clear();
+
+            camera.FollowActor(null);
+
+            currentMap = manager.Assets.Maps[currentMapName = mapName];
             currentTileset = manager.Assets.Tilesets[currentMap.Tileset];
 
             foreach (var spawn in currentMap.Spawns)
                 SpawnActor(spawn.ActorType, spawn.Position, spawn.MapLayer, spawn.Argument);
-        }
-
-        private void ResetTimer()
-        {
-            gameStartTime = gameEndTime = DateTime.Now;
         }
 
         private void PerformMainLogic()

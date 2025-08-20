@@ -91,7 +91,7 @@ namespace GameTest1.Editors
                     manager.FileSystem.SaveFileDialog(new FileSystem.DialogCallbackSingleFile((s, r) =>
                     {
                         if (r == FileSystem.DialogResult.Success)
-                            File.WriteAllText(s, JsonSerializer.Serialize(map, Assets.SerializerOptions));
+                            File.WriteAllText(currentMapPath = s, JsonSerializer.Serialize(map, Assets.SerializerOptions));
                     }), [new("JSON files (*.json)", "json")], currentMapPath);
                 }
                 if (map == null) ImGui.EndDisabled();
@@ -133,7 +133,10 @@ namespace GameTest1.Editors
                     if (ImGui.SliderInt2("Size", ref map.Size.X, 1, 40))
                         layersDirty = true;
                     if (ImGui.InputText("Tileset", ref map.Tileset, 128))
+                    {
+                        layersDirty = true;
                         tilesetDirty = true;
+                    }
                     ImGui.EndGroup();
                     ImGui.SameLine();
 

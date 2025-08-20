@@ -55,7 +55,7 @@ namespace GameTest1.GameStates
                     if (screenFader.Update())
                     {
                         manager.GameStates.Pop();
-                        manager.GameStates.Push(new InGame(manager));
+                        manager.GameStates.Push(new TitleScreen(manager));
                     }
                     break;
             }
