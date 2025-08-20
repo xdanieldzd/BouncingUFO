@@ -22,6 +22,7 @@ namespace GameTest1
                             var cellOffset = y * map.Size.X + x;
                             var cellValue = map.Layers[i].Tiles[cellOffset];
                             var cellFlags = tileset.CellFlags[cellValue];
+
                             manager.Batcher.Image(tileset.CellTextures[cellValue], cellPos, cellFlags.Has(CellFlag.Translucent) ? new(255, 255, 255, 64) : Color.White);
 
                             if (debug)
@@ -33,7 +34,7 @@ namespace GameTest1
                     var actorsToRender = actors
                         .Where(x => x.IsVisible && x.MapLayer == i)
                         .OrderBy(x => x.DrawPriority)
-                        .OrderBy(x => x.TransformedPosition.Y + x.Frame?.Size.Y);
+                        .ThenBy(x => x.TransformedPosition.Y + x.Frame?.Size.Y);
 
                     foreach (var actor in actorsToRender)
                         actor.RenderShadow();

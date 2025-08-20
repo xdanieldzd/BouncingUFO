@@ -31,5 +31,20 @@ namespace GameTest1.Utilities
             ImGui.SameLine();
             if (ImGui.Button("Browse...")) filesystem.OpenFileDialog(callback, filters, input);
         }
+
+        public static void InfoPopUp(string text, string label = "Info", string header = "Information")
+        {
+            ImGui.BeginDisabled();
+            ImGui.Button(label);
+            ImGui.EndDisabled();
+            if (ImGui.BeginItemTooltip())
+            {
+                ImGui.SeparatorText(header);
+                ImGui.PushTextWrapPos(ImGui.GetFontSize() * 75f);
+                ImGui.TextUnformatted(text);
+                ImGui.PopTextWrapPos();
+                ImGui.EndTooltip();
+            }
+        }
     }
 }

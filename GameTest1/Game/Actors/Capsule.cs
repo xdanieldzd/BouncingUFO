@@ -9,7 +9,7 @@ namespace GameTest1.Game.Actors
         {
             Class = ActorClass.Collectible;
             Sprite = manager.Assets.Sprites["Capsule"];
-            Hitbox = new(new(3, 3, 10, 10));
+            Hitbox = new(new(2, 2, 12, 12));
             DrawPriority = 50;
             HasShadow = true;
             PlayAnimation("Idle");

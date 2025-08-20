@@ -19,7 +19,7 @@ namespace GameTest1.Editors
 
         private string currentMapPath = string.Empty;
         private int hoveredMapCell = -1, hoveredTilemapCell = -1, selectedTilemapCell = 0;
-        private Color gridColor, inactiveLayerColor, hoveredHighlightColor, selectedHighlightColor, hoveredBorderColor, selectedBorderColor, inactiveSpawnColor;
+        private Color gridColor, inactiveLayerColor, hoveredHighlightColor, selectedHighlightColor, hoveredBorderColor, selectedBorderColor, activeSpawnColor, inactiveSpawnColor;
         private bool drawMapCellGrid = true, drawTilesetCellGrid = true, dimInactiveLayers = true;
         private int activeLayer = 0;
         private readonly string spawnEditorName = "Spawn Editor";
@@ -31,12 +31,13 @@ namespace GameTest1.Editors
         public override void Setup()
         {
             if (gridColor.RGBA == 0) gridColor = new(0, 0, 0, 128);
-            if (inactiveLayerColor.RGBA == 0) inactiveLayerColor = new(96, 96, 96, 96);
+            if (inactiveLayerColor.RGBA == 0) inactiveLayerColor = new(255, 255, 255, 64);
             if (hoveredBorderColor.RGBA == 0) hoveredBorderColor = new(0, 255, 0, 128);
             if (selectedBorderColor.RGBA == 0) selectedBorderColor = new(255, 0, 0, 128);
             if (hoveredHighlightColor.RGBA == 0) hoveredHighlightColor = ImGuiUtilities.GetFosterColor(ImGuiCol.Border, 128);
             if (selectedHighlightColor.RGBA == 0) selectedHighlightColor = ImGuiUtilities.GetFosterColor(ImGuiCol.TextSelectedBg, 128);
-            if (inactiveSpawnColor.RGBA == 0) inactiveSpawnColor = new(64, 32, 0, 64);
+            if (activeSpawnColor.RGBA == 0) activeSpawnColor = new(192, 192, 0, 192);
+            if (inactiveSpawnColor.RGBA == 0) inactiveSpawnColor = new(32, 32, 0, 32);
         }
 
         public override void Run()
@@ -99,9 +100,23 @@ namespace GameTest1.Editors
                 if (map != null)
                 {
                     ImGui.SameLine();
-                    ImGui.Dummy(new(10f, 0f));
-                    ImGui.SameLine();
-                    ImGui.Text($"Current map: {(string.IsNullOrWhiteSpace(currentMapPath) ? "unsaved" : currentMapPath)}");
+                    ImGuiUtilities.InfoPopUp(
+                        "Actors will...\n" +
+                        "- ... collide with terrain on their layer and below\n" +
+                        "- ... appear behind terrain on layers above theirs\n" +
+                        "Example: Player on layer 1 will collide with layers 0 & 1, render behind layer 2\n" +
+                        "\n" +
+                        "Layering example with 4 layers:\n" +
+                        "- 0: Ground, water, walls, etc.; cells must *not* have transparency\n" +
+                        "- 1: Cells with transparency, ex. fences, flowers, etc.; player actor also goes here\n" +
+                        "- 2: Fences (again!), bridges, certain chunks of wall (again!), etc., so that player appears behind them\n" +
+                        "- 3: Further decorative cells, plus \"shadows\" cast by layer 2 terrain (from ex. bridges)",
+                        "Editing Help",
+                        "Tips and Tricks");
+
+                    var currentMapLabel = $"Current map: {(string.IsNullOrWhiteSpace(currentMapPath) ? "unsaved" : currentMapPath)}";
+                    ImGui.SameLine(ImGui.GetContentRegionAvail().X - ImGui.CalcTextSize(currentMapLabel).X);
+                    ImGui.Text(currentMapLabel);
                 }
                 ImGui.EndGroup();
 
@@ -190,14 +205,17 @@ namespace GameTest1.Editors
                                 batcher.CheckeredPattern(bounds, 8, 8, Color.DarkGray, Color.Gray);
                                 for (var i = 0; i < map.Layers.Count; i++)
                                 {
-                                    for (var x = 0; x < map.Size.X; x++)
+                                    for (var y = 0; y < map.Size.Y; y++)
                                     {
-                                        for (var y = 0; y < map.Size.Y; y++)
+                                        for (var x = 0; x < map.Size.X; x++)
                                         {
+                                            var cellPos = new Vector2(x, y) * tileset.CellSize * mapZoom;
                                             var cellOffset = y * map.Size.X + x;
                                             var cellValue = map.Layers[i].Tiles[cellOffset];
-                                            var cellPos = new Vector2(x, y) * mapZoom * tileset.CellSize;
+
+                                            batcher.PushBlend(BlendMode.NonPremultiplied);
                                             batcher.Image(tileset.CellTextures[cellValue], cellPos, Vector2.Zero, new(mapZoom), 0f, i == activeLayer || !dimInactiveLayers ? Color.White : inactiveLayerColor);
+                                            batcher.PopBlend();
 
                                             var cellRect = new Rect(cellPos, tileset.CellSize * mapZoom);
                                             if (drawMapCellGrid)
@@ -209,7 +227,7 @@ namespace GameTest1.Editors
                                                 {
                                                     if ((i == spawn.MapLayer && i == activeLayer) || !dimInactiveLayers)
                                                     {
-                                                        batcher.Rect(cellRect, Color.Yellow);
+                                                        batcher.Rect(cellRect, activeSpawnColor);
                                                         break;
                                                     }
                                                     else
@@ -274,7 +292,11 @@ namespace GameTest1.Editors
                                 for (var i = 0; i < tileset.TilesheetSizeInCells.X * tileset.TilesheetSizeInCells.Y; i++)
                                 {
                                     var cellPos = new Vector2(i % tileSelectorWidth, i / tileSelectorWidth) * tilesetZoom * tileset.CellSize;
-                                    batcher.Image(tileset.CellTextures[i], cellPos, Vector2.Zero, new(tilesetZoom), 0f, Color.White);
+                                    var cellFlags = tileset.CellFlags[i];
+
+                                    batcher.PushBlend(BlendMode.NonPremultiplied);
+                                    batcher.Image(tileset.CellTextures[i], cellPos, Vector2.Zero, new(tilesetZoom), 0f, cellFlags.Has(CellFlag.Translucent) ? new(255, 255, 255, 160) : Color.White);
+                                    batcher.PopBlend();
 
                                     var cellRect = new Rect(cellPos, tileset.CellSize * tilesetZoom);
                                     if (drawTilesetCellGrid)

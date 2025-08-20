@@ -39,7 +39,7 @@ namespace GameTest1.Game.Actors
                 {
                     sprite = value;
                     animation = null;
-                    animTimer = 0f;
+                    AnimationTimer = 0f;
                 }
             }
         }
@@ -51,7 +51,7 @@ namespace GameTest1.Game.Actors
         public Color ShadowColor = new(0f, 0f, 0f, 0.5f);
         public Vector2 ShadowScale = Vector2.One / 2f;
         public Vector2 ShadowOffset = Vector2.Zero;
-        public float Timer = 0f;
+        public float LogicTimer = 0f, AnimationTimer = 0f;
         public bool IsVisible = true;
         public bool IsRunning = false;
 
@@ -61,7 +61,6 @@ namespace GameTest1.Game.Actors
         protected Sprite? sprite;
         protected Animation? animation;
         protected Frame? currentFrame;
-        protected float animTimer = 0f;
         protected bool isLoopingAnim = false;
 
         public virtual void OnCollisionX(ActorBase? other) => StopX();
@@ -74,11 +73,11 @@ namespace GameTest1.Game.Actors
             if (Velocity != Vector2.Zero)
                 Move(Velocity * manager.Time.Delta);
 
-            Timer += manager.Time.Delta;
-            animTimer += manager.Time.Delta;
+            LogicTimer += manager.Time.Delta;
+            AnimationTimer += manager.Time.Delta;
 
             if (sprite != null && animation != null)
-                currentFrame = sprite.GetFrameAt(animation, animTimer, isLoopingAnim);
+                currentFrame = sprite.GetFrameAt(animation, AnimationTimer, isLoopingAnim);
 
             CalcBobbing();
             CalcShadow();
@@ -205,7 +204,7 @@ namespace GameTest1.Game.Actors
             if (sprite != null && sprite.Animations.FirstOrDefault(x => x.Name == name) is Animation anim && animation?.Name != name)
             {
                 animation = anim;
-                animTimer = 0f;
+                AnimationTimer = 0f;
             }
             isLoopingAnim = loop;
         }

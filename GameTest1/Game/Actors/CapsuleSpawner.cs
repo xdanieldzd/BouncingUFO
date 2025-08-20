@@ -21,6 +21,8 @@ namespace GameTest1.Game.Actors
                     actor.Position = new Point2(Random.Shared.Next(0, map.Size.X), Random.Shared.Next(0, map.Size.Y)) * tileset.CellSize;
                     actor.Created();
 
+                    actor.AnimationTimer = Random.Shared.NextSingle();
+
                     if (gameState.GetFirstOverlapActor(actor.Position, actor.Hitbox.Rectangle, ActorClass.None) != null)
                         continue;
 
