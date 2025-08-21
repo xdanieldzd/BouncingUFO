@@ -11,9 +11,15 @@ namespace GameTest1
         {
             if (map != null && tileset != null && tileset.CellTextures != null)
             {
+                var actorsToRender = actors
+                    .Where(x => x.IsVisible)
+                    .OrderBy(x => x.DrawPriority)
+                    .ToList();
+
+                manager.Batcher.PushBlend(BlendMode.NonPremultiplied);
+
                 for (var i = 0; i < map.Layers.Count; i++)
                 {
-                    manager.Batcher.PushBlend(BlendMode.NonPremultiplied);
                     for (var y = 0; y < map.Size.Y; y++)
                     {
                         for (var x = 0; x < map.Size.X; x++)
@@ -28,28 +34,28 @@ namespace GameTest1
                             if (debug)
                                 manager.Batcher.RectLine(new(cellPos, tileset.CellSize), 1f, new(0, 0, 0, 64));
                         }
-                    }
-                    manager.Batcher.PopBlend();
 
-                    var actorsToRender = actors
-                        .Where(x => x.IsVisible && x.MapLayer == i)
-                        .OrderBy(x => x.DrawPriority)
-                        .ThenBy(x => x.TransformedPosition.Y + x.Frame?.Size.Y);
+                        var actorsInRange = actorsToRender.Where(x => x.MapLayer == i && (x.Position + x.Offset).Y <= y * tileset.CellSize.Y);
 
-                    foreach (var actor in actorsToRender)
-                        actor.RenderShadow();
+                        foreach (var actor in actorsInRange)
+                            actor.RenderShadow();
 
-                    foreach (var actor in actorsToRender)
-                    {
-                        actor.RenderSprite();
-
-                        if (debug)
+                        foreach (var actor in actorsInRange)
                         {
-                            actor.Hitbox.Render(manager.Batcher, actor.Position, Color.Red);
-                            manager.Batcher.Circle(actor.Position + actor.Sprite?.Origin ?? Vector2.Zero, 2f, 5, Color.Magenta);
+                            actor.RenderSprite();
+
+                            if (debug)
+                            {
+                                manager.Batcher.RectLine(new(actor.Position + actor.Offset, actor.Frame?.Size ?? Vector2.Zero), 2f, Color.White);
+                                actor.Hitbox.Render(manager.Batcher, actor.Position, Color.Red);
+                                manager.Batcher.Circle(actor.Position + actor.Sprite?.Origin ?? Vector2.Zero, 2f, 5, Color.Magenta);
+                            }
                         }
+                        actorsToRender.RemoveAll(x => actorsInRange.Contains(x));
                     }
                 }
+
+                manager.Batcher.PopBlend();
 
                 if (debug)
                 {

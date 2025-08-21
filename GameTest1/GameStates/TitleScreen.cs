@@ -6,7 +6,7 @@ namespace GameTest1.GameStates
 {
     public class TitleScreen(Manager manager) : GameStateBase(manager), IGameState
     {
-        private const float screenFadeDuration = 0.75f;
+        private const float screenFadeDuration = 0.5f;
 
         private enum State { Initialize, FadeIn, MainMenu, FadeOut }
 
