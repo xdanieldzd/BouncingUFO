@@ -19,6 +19,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<None Update="Assets\DialogText\Levels.json">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
 		<None Update="Assets\Fonts\FutureFont.png">
 		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>

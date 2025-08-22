@@ -1,4 +1,5 @@
 ﻿using Foster.Framework;
+using GameTest1.Game;
 using GameTest1.Game.Levels;
 using GameTest1.Game.Sprites;
 using GameTest1.Game.UI;
@@ -15,6 +16,7 @@ namespace GameTest1
         public const string MapFolderName = "Maps";
         public const string SpriteFolderName = "Sprites";
         public const string UIFolderName = "UI";
+        public const string DialogTextFolderName = "DialogText";
 
         public readonly static JsonSerializerOptions SerializerOptions = new() { WriteIndented = true, IncludeFields = true };
 
@@ -25,6 +27,7 @@ namespace GameTest1
         public Dictionary<string, Map> Maps { get; private set; } = [];
         public Dictionary<string, Sprite> Sprites { get; private set; } = [];
         public Dictionary<string, GraphicsSheet> UI { get; private set; } = [];
+        public Dictionary<string, Dictionary<string, DialogText>> DialogText { get; private set; } = [];
 
         public Assets(GraphicsDevice graphicsDevice)
         {
@@ -91,6 +94,14 @@ namespace GameTest1
 
                 uiElements.CreateTextures(graphicsDevice);
                 UI.Add(Path.GetFileNameWithoutExtension(uiElementsFiles), uiElements);
+            }
+
+            foreach (var dialogTextFiles in Directory.EnumerateFiles(Path.Join(AssetsFolderName, DialogTextFolderName), "*.json", SearchOption.AllDirectories))
+            {
+                var dialogText = JsonSerializer.Deserialize<Dictionary<string, DialogText>>(File.ReadAllText(dialogTextFiles), SerializerOptions);
+                if (dialogText == null) continue;
+
+                DialogText.Add(Path.GetFileNameWithoutExtension(dialogTextFiles), dialogText);
             }
         }
     }

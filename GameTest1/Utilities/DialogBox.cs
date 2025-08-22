@@ -27,9 +27,10 @@ namespace GameTest1.Utilities
 
         public int LinesPerBox => (int)((Height - FramePadding.Y - LinePadding) / Font?.LineHeight ?? 8);
 
-        private string currentText = string.Empty;
-        private string? currentSpeaker = string.Empty;
-        private readonly Queue<(int start, int length)> textWrapPositions = [];
+        private string currentSpeaker = string.Empty;
+        private List<string> currentText = [];
+        private int currentTextIndex = 0;
+        private readonly List<Queue<(int start, int length)>> textWrapPositions = [];
         private (int start, int totalLength, int currentLength)[] currentTextWrapPositions = [];
         private int currentMaxLine = 0;
         private float charTimer = 0f;
@@ -37,34 +38,44 @@ namespace GameTest1.Utilities
         enum DialogBoxState { Opening, Printing, WaitingForInput, AdvancingText, Closing }
         private DialogBoxState currentState = DialogBoxState.Opening;
 
-        public bool Print(string text, string? speaker = null)
-        {
-            if (Font == null) return false;
+        public bool IsOpen => currentState != DialogBoxState.Closing;
 
-            var result = false;
+        public void Print(string speaker, List<string> text)
+        {
+            if (Font == null) return;
+
+            var shouldRender = false;
             switch (currentState)
             {
                 case DialogBoxState.Opening:
-                    textWrapPositions.Clear();
+                    currentText = text;
                     currentSpeaker = speaker;
-                    foreach (var wrapPos in Font.WrapText(currentText = text, Width - FramePadding.X * 2))
-                        textWrapPositions.Enqueue(wrapPos);
+                    currentTextIndex = 0;
+
+                    textWrapPositions.Clear();
+                    for (var i = 0; i < currentText.Count; i++)
+                    {
+                        textWrapPositions.Add(new());
+                        foreach (var wrapPos in Font.WrapText(currentText[i], Width - FramePadding.X * 2))
+                            textWrapPositions[i].Enqueue(wrapPos);
+                    }
                     currentMaxLine = 0;
                     currentState = DialogBoxState.AdvancingText;
                     break;
 
                 case DialogBoxState.AdvancingText:
-                    if (textWrapPositions.Count > 0)
+                    if (currentTextIndex < textWrapPositions.Count && textWrapPositions[currentTextIndex].Count > 0)
                     {
-                        var lineCount = Math.Min(LinesPerBox, textWrapPositions.Count);
+                        var lineCount = Math.Min(LinesPerBox, textWrapPositions[currentTextIndex].Count);
                         currentTextWrapPositions = new (int start, int totalLength, int currentLength)[lineCount];
                         for (var i = 0; i < lineCount; i++)
                         {
-                            var (start, length) = textWrapPositions.Dequeue();
+                            var (start, length) = textWrapPositions[currentTextIndex].Dequeue();
                             currentTextWrapPositions[i] = new(start, length, 0);
                         }
                         currentMaxLine = 0;
                         currentState = DialogBoxState.Printing;
+                        shouldRender = true;
                     }
                     else
                         currentState = DialogBoxState.Closing;
@@ -85,22 +96,33 @@ namespace GameTest1.Utilities
                                 currentMaxLine++;
                         }
                     }
+                    if (manager.Controls.Action1.ConsumePress() || manager.Controls.Action2.ConsumePress())
+                    {
+                        /* Skippa, skippa */
+                        for (var i = 0; i < currentTextWrapPositions.Length; i++)
+                            currentTextWrapPositions[i].currentLength = currentTextWrapPositions[i].totalLength;
+                        currentMaxLine = currentTextWrapPositions.Length;
+                    }
+                    shouldRender = true;
                     break;
 
                 case DialogBoxState.WaitingForInput:
                     if (manager.Controls.Action1.ConsumePress() || manager.Controls.Action2.ConsumePress())
+                    {
+                        currentTextIndex++;
                         currentState = DialogBoxState.AdvancingText;
+                    }
+                    shouldRender = true;
                     break;
 
                 case DialogBoxState.Closing:
                     if (currentText != text || currentSpeaker != speaker)
                         currentState = DialogBoxState.Opening;
-                    else
-                        result = true;
                     break;
             }
 
-            Render(BackgroundColor);
+            if (shouldRender && currentTextIndex < currentText.Count)
+                Render(currentText[currentTextIndex], BackgroundColor);
 
             if (Globals.ShowDebugInfo)
             {
@@ -112,11 +134,9 @@ namespace GameTest1.Utilities
                     manager.Batcher.Text(manager.Assets.SmallFont, $"{start}, {totalLength}, {currentLength}", new(0f, (i + 2) * manager.Assets.SmallFont.LineHeight), Color.White);
                 }
             }
-
-            return result;
         }
 
-        private void Render(Color tint)
+        private void Render(string text, Color tint)
         {
             if (Font == null || GraphicsSheet == null) return;
 
@@ -144,7 +164,7 @@ namespace GameTest1.Utilities
             if (currentState == DialogBoxState.Printing || currentState == DialogBoxState.WaitingForInput)
             {
                 for (var i = 0; i <= Math.Min(currentMaxLine, currentTextWrapPositions.Length - 1); i++)
-                    manager.Batcher.Text(Font, currentText.AsSpan(currentTextWrapPositions[i].start, currentTextWrapPositions[i].currentLength), Position + new Vector2(FramePadding.X, FramePadding.Y + i * (Font.LineHeight + LinePadding)), Color.White);
+                    manager.Batcher.Text(Font, text.AsSpan(currentTextWrapPositions[i].start, currentTextWrapPositions[i].currentLength), Position + new Vector2(FramePadding.X, FramePadding.Y + i * (Font.LineHeight + LinePadding)), Color.White);
 
                 if (currentState == DialogBoxState.WaitingForInput && manager.Time.BetweenInterval(0.5f))
                 {
@@ -153,7 +173,7 @@ namespace GameTest1.Utilities
                 }
             }
 
-            if (currentSpeaker != null)
+            if (!string.IsNullOrWhiteSpace(currentSpeaker))
             {
                 var texIBL = GraphicsSheet.GetSubtexture("InnerBottomLeft");
                 var widthBG = Font.WidthOf(currentSpeaker) + Math.Abs(FramePadding.X - texML.Width);

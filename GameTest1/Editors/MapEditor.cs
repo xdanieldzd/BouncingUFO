@@ -137,6 +137,7 @@ namespace GameTest1.Editors
                         layersDirty = true;
                         tilesetDirty = true;
                     }
+                    ImGui.InputText("Intro ID", ref map.IntroID, 128);
                     ImGui.EndGroup();
                     ImGui.SameLine();
 
@@ -159,6 +160,7 @@ namespace GameTest1.Editors
                         layersDirty = true;
                     }
                     if (currentLayerCount <= 0) ImGui.EndDisabled();
+                    ImGui.NewLine();
                     if (ImGui.Button("Spawn editor")) { isSpawnEditorOpen = true; ImGui.SetWindowFocus(spawnEditorName); }
                     ImGui.EndGroup();
                     ImGui.SameLine();
@@ -167,13 +169,14 @@ namespace GameTest1.Editors
                     ImGui.SameLine();
 
                     ImGui.BeginGroup();
-                    ImGui.Checkbox("Draw map grid", ref drawMapCellGrid);
-                    ImGui.SameLine();
-                    ImGui.Checkbox("Draw tileset grid", ref drawTilesetCellGrid);
                     if (map.Layers.Count == 0) ImGui.BeginDisabled();
                     ImGui.SliderInt("Active layer", ref activeLayer, 0, map.Layers.Count == 0 ? 0 : map.Layers.Count - 1);
                     if (map.Layers.Count == 0) ImGui.EndDisabled();
                     ImGui.Checkbox("Dim inactive layers", ref dimInactiveLayers);
+                    ImGui.NewLine();
+                    ImGui.Checkbox("Draw map grid", ref drawMapCellGrid);
+                    ImGui.SameLine();
+                    ImGui.Checkbox("Draw tileset grid", ref drawTilesetCellGrid);
                     ImGui.EndGroup();
 
                     if (layersDirty)

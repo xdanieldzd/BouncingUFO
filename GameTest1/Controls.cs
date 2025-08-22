@@ -8,7 +8,8 @@ namespace GameTest1
         public VirtualAction Action1 { get; private set; }
         public VirtualAction Action2 { get; private set; }
         public VirtualAction Menu { get; private set; }
-        public VirtualAction Debug { get; private set; }
+        public VirtualAction DebugDisplay { get; private set; }
+        public VirtualAction DebugEditors { get; private set; }
 
         public Controls(Input input)
         {
@@ -16,7 +17,8 @@ namespace GameTest1
             Action1 = new(input, nameof(Action1), new ActionBindingSet().Add(Keys.A).Add(Buttons.South));
             Action2 = new(input, nameof(Action2), new ActionBindingSet().Add(Keys.S).Add(Buttons.East));
             Menu = new(input, nameof(Menu), new ActionBindingSet().Add(Keys.Enter).Add(Buttons.Start));
-            Debug = new(input, nameof(Debug), new ActionBindingSet().Add(Keys.Space).Add(Buttons.Back));
+            DebugDisplay = new(input, nameof(DebugDisplay), new ActionBindingSet().Add(Keys.Space).Add(Buttons.Back));
+            DebugEditors = new(input, nameof(DebugDisplay), new ActionBindingSet().Add(Keys.Backspace));
         }
     }
 }

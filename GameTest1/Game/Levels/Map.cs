@@ -12,6 +12,8 @@ namespace GameTest1.Game.Levels
         [JsonInclude]
         public string Tileset = string.Empty;
         [JsonInclude]
+        public string IntroID = string.Empty;
+        [JsonInclude]
         public List<MapLayer> Layers = [];
         [JsonInclude]
         public List<Spawn> Spawns = [];

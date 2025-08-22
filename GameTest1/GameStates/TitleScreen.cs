@@ -66,7 +66,7 @@ namespace GameTest1.GameStates
                     if (screenFader.Update())
                     {
                         var inGameState = new InGame(manager);
-                        inGameState.LoadMap(selectedMapName, true);
+                        inGameState.LoadMap(selectedMapName);
 
                         manager.GameStates.Pop();
                         manager.GameStates.Push(inGameState);

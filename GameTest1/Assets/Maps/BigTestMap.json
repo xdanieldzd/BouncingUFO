@@ -5,6 +5,7 @@
     "Y": 40
   },
   "Tileset": "Grass2",
+  "IntroID": "BigTestMapIntro",
   "Layers": [
     {
       "Tiles": [

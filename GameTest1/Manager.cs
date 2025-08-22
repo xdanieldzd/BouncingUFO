@@ -62,7 +62,7 @@ namespace GameTest1
         protected override void Update()
         {
             if (Input.Keyboard.Pressed(Keys.Escape)) Exit();
-            if (Controls.Debug.ConsumePress()) Globals.ShowDebugInfo = !Globals.ShowDebugInfo;
+            if (Controls.DebugDisplay.ConsumePress()) Globals.ShowDebugInfo = !Globals.ShowDebugInfo;
 
             if (GameStates.TryPeek(out IGameState? gameState))
                 gameState.UpdateApp();

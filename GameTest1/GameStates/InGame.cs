@@ -10,9 +10,10 @@ namespace GameTest1.GameStates
     public class InGame(Manager manager) : GameStateBase(manager), IGameState
     {
         private const float screenFadeDuration = 0.75f;
-        private const string startOnMap = "SmallTest2";
+        private const string defaultMapName = "SmallTest2";
+        private const string levelsDialogFile = "Levels";
 
-        private enum State { Initialize, FadeIn, GameIntroduction, GameStartCountdown, MainLogic, GameOver, Restart }
+        private enum State { Initialize, LoadMap, ResetMap, FadeIn, GameIntroduction, GameStartCountdown, MainLogic, GameOver, Restart }
 
         private readonly ScreenFader screenFader = new(manager);
         private readonly Camera camera = new(manager);
@@ -24,18 +25,6 @@ namespace GameTest1.GameStates
             BackgroundColor = new(0x3E4F65)
         };
 
-        private bool hasSeenIntroDialog = false;
-        private int introDialogIndex = 0;
-        private readonly string[] introDialogText =
-        [
-            "Hello and welcome to \"Bouncing UFO\"!",
-            "In this game (if you want to call it that), you control a UFO on a mission on Earth, which has lost its cargo of, erm... \"biological material for research purposes\". Yes.",
-            "Your objective is to collect all the floating capsules of cargo around each stage. Not much of a difficult task, you think?",
-            "Well, velocity and inertia on Earth are a b*tch, and your fancy spacecraft wasn't built for that stuff! Nor for slamming into earthly geology and structures for that matter, so watch for your shield energy!",
-            "In short: Collect the capsules, be smart about accelerating and breaking. That's all there is to it! Which isn't much, I know, but eh, it's my first \"game\" that went anywhere near this far, so I hope you'll enjoy it a bit regardless.",
-            "Alright, that's about it, I'll leave you to the game, then! Have fun!"
-        ];
-
         private readonly Dictionary<string, Type> actorTypeDictionary = new()
         {
             { "Player", typeof(Player) },
@@ -46,9 +35,11 @@ namespace GameTest1.GameStates
         private readonly List<ActorBase> actors = [];
         private readonly List<ActorBase> actorsToDestroy = [];
 
-        private string currentMapName = startOnMap;
+        private string currentMapName = defaultMapName;
         private Map? currentMap;
         private Tileset? currentTileset;
+
+        private DialogText? currentDialogText = null;
 
         private State currentState = State.Initialize;
         private float gameStartCountdown;
@@ -115,37 +106,56 @@ namespace GameTest1.GameStates
             {
                 case State.Initialize:
                     InitializeDialogBox();
-                    ResetTimer();
 
+                    currentState = State.LoadMap;
+
+                    if (Globals.QuickStart)
+                    {
+                        LoadMap(currentMapName);
+                        ResetMap();
+                        screenFader.Cancel();
+                        currentState = State.MainLogic;
+                        gameStartCountdown = 0f;
+                        if (GetFirstActor<Player>() is Player p) p.CurrentState = Player.State.Normal;
+                    }
+                    break;
+
+                case State.LoadMap:
                     if (currentMap == null || currentTileset == null)
-                        LoadMap(currentMapName, hasSeenIntroDialog);
+                        LoadMap(currentMapName);
+
+                    currentState = State.ResetMap;
+                    break;
+
+                case State.ResetMap:
+                    ResetMap();
+                    ResetTimer();
 
                     screenFader.FadeType = ScreenFadeType.FadeIn;
                     screenFader.Duration = screenFadeDuration;
                     screenFader.Color = ScreenFader.PreviousColor;
                     screenFader.Reset();
-                    currentState = State.FadeIn;
                     gameStartCountdown = 5f;
 
-                    if (Globals.QuickStart)
-                    {
-                        screenFader.Cancel();
-                        currentState = State.MainLogic;
-                        gameStartCountdown = 0f;
-                        hasSeenIntroDialog = true;
-                        if (GetFirstActor<Player>() is Player p) p.CurrentState = Player.State.Normal;
-                    }
+                    currentState = State.FadeIn;
                     break;
 
                 case State.FadeIn:
                     if (screenFader.Update())
+                    {
+                        if (!string.IsNullOrWhiteSpace(currentMap?.IntroID) && manager.Assets.DialogText[levelsDialogFile].TryGetValue(currentMap.IntroID, out DialogText? dialogText))
+                            currentDialogText = dialogText;
+
                         currentState = State.GameIntroduction;
+                    }
                     break;
 
                 case State.GameIntroduction:
-                    if (hasSeenIntroDialog || introDialogIndex == introDialogText.Length)
+                    if (!dialogBox.IsOpen)
                     {
-                        hasSeenIntroDialog = true;
+                        if (currentDialogText != null)
+                            currentDialogText.HasBeenShownOnce = true;
+
                         currentState = State.GameStartCountdown;
                     }
                     break;
@@ -154,9 +164,10 @@ namespace GameTest1.GameStates
                     gameStartCountdown = Calc.Approach(gameStartCountdown, 0f, manager.Time.Delta);
                     if (gameStartCountdown <= 0f)
                     {
-                        currentState = State.MainLogic;
                         if (player != null) player.CurrentState = Player.State.Normal;
                         ResetTimer();
+
+                        currentState = State.MainLogic;
                     }
                     break;
 
@@ -166,12 +177,14 @@ namespace GameTest1.GameStates
 
                 case State.GameOver:
                     if (player != null) player.CurrentState = Player.State.InputDisabled;
+
                     if (manager.Controls.Action1.ConsumePress() || manager.Controls.Action2.ConsumePress())
                     {
                         screenFader.FadeType = ScreenFadeType.FadeOut;
                         screenFader.Duration = screenFadeDuration;
                         screenFader.Color = Color.White;
                         screenFader.Reset();
+
                         currentState = State.Restart;
                     }
                     break;
@@ -180,14 +193,13 @@ namespace GameTest1.GameStates
                     if (screenFader.Update())
                     {
                         actorsToDestroy.AddRange(actors);
-                        currentMap = null;
-                        currentTileset = null;
-                        currentState = State.Initialize;
+
+                        currentState = State.ResetMap;
                     }
                     break;
             }
 
-            if (manager.Controls.Menu.ConsumePress())
+            if (manager.Controls.DebugEditors.ConsumePress())
                 manager.GameStates.Push(new Editor(manager));
 
             for (var i = 0; i < actorsToDestroy.Count; i++)
@@ -216,17 +228,20 @@ namespace GameTest1.GameStates
             gameStartTime = gameEndTime = DateTime.Now;
         }
 
-        public void LoadMap(string mapName, bool skipIntro = false)
+        public void LoadMap(string mapName)
         {
-            hasSeenIntroDialog = skipIntro;
+            currentMap = manager.Assets.Maps[currentMapName = mapName];
+            currentTileset = manager.Assets.Tilesets[currentMap.Tileset];
+        }
+
+        private void ResetMap()
+        {
+            if (currentMap == null) return;
 
             actors.Clear();
             actorsToDestroy.Clear();
 
             camera.FollowActor(null);
-
-            currentMap = manager.Assets.Maps[currentMapName = mapName];
-            currentTileset = manager.Assets.Tilesets[currentMap.Tileset];
 
             foreach (var spawn in currentMap.Spawns)
                 SpawnActor(spawn.ActorType, spawn.Position, spawn.MapLayer, spawn.Argument);
@@ -242,6 +257,13 @@ namespace GameTest1.GameStates
                 player.CurrentState = Player.State.InputDisabled;
                 player.Stop();
                 player.PlayAnimation("WarpOut", false);
+            }
+
+            if (manager.Controls.Menu.ConsumePress())
+            {
+                // TODO
+                if (!dialogBox.IsOpen)
+                    currentDialogText = new() { SpeakerName = "xdaniel", TextStrings = ["Sorry, the pause menu hasn't been implemented yet!"], HasBeenShownOnce = false };
             }
         }
 
@@ -260,7 +282,7 @@ namespace GameTest1.GameStates
                 if (GetFirstActor<Player>() is Player player)
                 {
                     manager.Batcher.Text(manager.Assets.SmallFont, $"Current hitbox == {player.Position + player.Hitbox.Rectangle}", Vector2.Zero, Color.White);
-                    manager.Batcher.Text(manager.Assets.SmallFont, $"{manager.Controls.Move.Name}:{manager.Controls.Move.IntValue} {manager.Controls.Action1.Name}:{manager.Controls.Action1.Down} {manager.Controls.Action2.Name}:{manager.Controls.Action2.Down} {manager.Controls.Menu.Name}:{manager.Controls.Menu.Down} {manager.Controls.Debug.Name}:{manager.Controls.Debug.Down}", new Vector2(0f, manager.Screen.Height - manager.Assets.SmallFont.LineHeight), Color.White);
+                    manager.Batcher.Text(manager.Assets.SmallFont, $"{manager.Controls.Move.Name}:{manager.Controls.Move.IntValue} {manager.Controls.Action1.Name}:{manager.Controls.Action1.Down} {manager.Controls.Action2.Name}:{manager.Controls.Action2.Down} {manager.Controls.Menu.Name}:{manager.Controls.Menu.Down} {manager.Controls.DebugDisplay.Name}:{manager.Controls.DebugDisplay.Down}", new Vector2(0f, manager.Screen.Height - manager.Assets.SmallFont.LineHeight), Color.White);
 
                     if (currentMap != null && currentTileset != null)
                     {
@@ -273,11 +295,8 @@ namespace GameTest1.GameStates
                 }
             }
 
-            if (currentState == State.GameIntroduction && !hasSeenIntroDialog)
-            {
-                if (dialogBox.Print(introDialogText[introDialogIndex], "xdaniel"))
-                    introDialogIndex++;
-            }
+            if (currentDialogText is DialogText dialogText && !dialogText.HasBeenShownOnce)
+                dialogBox.Print(dialogText.SpeakerName, dialogText.TextStrings);
 
             screenFader.Render();
         }
