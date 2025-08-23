@@ -1,32 +1,10 @@
 ﻿using Foster.Framework;
-using GameTest1.Game.UI;
 using System.Numerics;
 
-namespace GameTest1.Utilities
+namespace GameTest1.Game.UI
 {
-    public class DialogBox(Manager manager)
+    public class DialogBox : UserInterfaceWindow
     {
-        public SpriteFont? Font = null;
-        public Point2 Position = new(0, 0);
-        public Point2 Size = new(256, 64);
-        public Point2 FramePadding = new(8, 8);
-        public int LinePadding = 6;
-        public GraphicsSheet? GraphicsSheet = null;
-        public Color BackgroundColor = Color.CornflowerBlue;
-
-        public int Width => Size.X;
-        public int Height => Size.Y;
-        public int Left => Position.X;
-        public int Right => Position.X + Size.X;
-        public int Top => Position.Y;
-        public int Bottom => Position.Y + Size.Y;
-        public Point2 TopLeft => new(Left, Top);
-        public Point2 TopRight => new(Right, Top);
-        public Point2 BottomLeft => new(Left, Bottom);
-        public Point2 BottomRight => new(Right, Bottom);
-
-        public int LinesPerBox => (int)((Height - FramePadding.Y - LinePadding) / Font?.LineHeight ?? 8);
-
         private string currentSpeaker = string.Empty;
         private List<string> currentText = [];
         private int currentTextIndex = 0;
@@ -37,6 +15,15 @@ namespace GameTest1.Utilities
 
         enum DialogBoxState { Opening, Printing, WaitingForInput, AdvancingText, Closing }
         private DialogBoxState currentState = DialogBoxState.Opening;
+
+        public DialogBox(Manager manager) : base(manager)
+        {
+            Size = new((int)(manager.Screen.Width / 1.25f), 64);
+            Position = new(manager.Screen.Bounds.Center.X - Size.X / 2, manager.Screen.Bounds.Bottom - Size.Y - 16);
+            FramePaddingTopLeft = (8, 8);
+            FramePaddingBottomRight = (10, 10);
+            LinePadding = 6;
+        }
 
         public bool IsOpen => currentState != DialogBoxState.Closing;
 
@@ -56,7 +43,7 @@ namespace GameTest1.Utilities
                     for (var i = 0; i < currentText.Count; i++)
                     {
                         textWrapPositions.Add(new());
-                        foreach (var wrapPos in Font.WrapText(currentText[i], Width - FramePadding.X * 2))
+                        foreach (var wrapPos in Font.WrapText(currentText[i], Width - FramePaddingBottomRight.X - FramePaddingTopLeft.X))
                             textWrapPositions[i].Enqueue(wrapPos);
                     }
                     currentMaxLine = 0;
@@ -66,7 +53,9 @@ namespace GameTest1.Utilities
                 case DialogBoxState.AdvancingText:
                     if (currentTextIndex < textWrapPositions.Count && textWrapPositions[currentTextIndex].Count > 0)
                     {
-                        var lineCount = Math.Min(LinesPerBox, textWrapPositions[currentTextIndex].Count);
+                        var lineCount = Math.Min(
+                            (int)((Height - FramePaddingBottomRight.Y - FramePaddingTopLeft.Y - LinePadding) / Font?.LineHeight ?? 8),
+                            textWrapPositions[currentTextIndex].Count);
                         currentTextWrapPositions = new (int start, int totalLength, int currentLength)[lineCount];
                         for (var i = 0; i < lineCount; i++)
                         {
@@ -77,8 +66,15 @@ namespace GameTest1.Utilities
                         currentState = DialogBoxState.Printing;
                         shouldRender = true;
                     }
-                    else
+                    else if (currentTextIndex >= textWrapPositions.Count)
+                    {
                         currentState = DialogBoxState.Closing;
+                    }
+                    else
+                    {
+                        currentTextIndex++;
+                        shouldRender = true;
+                    }
                     break;
 
                 case DialogBoxState.Printing:
@@ -109,7 +105,6 @@ namespace GameTest1.Utilities
                 case DialogBoxState.WaitingForInput:
                     if (manager.Controls.Action1.ConsumePress() || manager.Controls.Action2.ConsumePress())
                     {
-                        currentTextIndex++;
                         currentState = DialogBoxState.AdvancingText;
                     }
                     shouldRender = true;
@@ -126,8 +121,8 @@ namespace GameTest1.Utilities
 
             if (Globals.ShowDebugInfo)
             {
-                manager.Batcher.RectLine(new RectInt(TopLeft + FramePadding, Size - FramePadding * 2), 2f, Color.Red);
-                manager.Batcher.Text(manager.Assets.SmallFont, $"{currentState}, {currentMaxLine}, {LinesPerBox}", new(0f, manager.Assets.SmallFont.LineHeight), Color.White);
+                manager.Batcher.RectLine(new RectInt(TopLeft.X + FramePaddingTopLeft.X, TopLeft.Y + FramePaddingTopLeft.Y, Size.X - FramePaddingBottomRight.X - FramePaddingTopLeft.X, Size.Y - FramePaddingBottomRight.Y - FramePaddingTopLeft.Y), 2f, Color.Red);
+                manager.Batcher.Text(manager.Assets.SmallFont, $"{currentState}, {currentMaxLine}", new(0f, manager.Assets.SmallFont.LineHeight), Color.White);
                 for (var i = 0; i < currentTextWrapPositions.Length; i++)
                 {
                     var (start, totalLength, currentLength) = currentTextWrapPositions[i];
@@ -164,19 +159,19 @@ namespace GameTest1.Utilities
             if (currentState == DialogBoxState.Printing || currentState == DialogBoxState.WaitingForInput)
             {
                 for (var i = 0; i <= Math.Min(currentMaxLine, currentTextWrapPositions.Length - 1); i++)
-                    manager.Batcher.Text(Font, text.AsSpan(currentTextWrapPositions[i].start, currentTextWrapPositions[i].currentLength), Position + new Vector2(FramePadding.X, FramePadding.Y + i * (Font.LineHeight + LinePadding)), Color.White);
+                    manager.Batcher.Text(Font, text.AsSpan(currentTextWrapPositions[i].start, currentTextWrapPositions[i].currentLength), Position + new Vector2(FramePaddingTopLeft.X, FramePaddingTopLeft.Y + i * (Font.LineHeight + LinePadding)), Color.White);
 
                 if (currentState == DialogBoxState.WaitingForInput && manager.Time.BetweenInterval(0.5f))
                 {
-                    var texMarker = GraphicsSheet.GetSubtexture(textWrapPositions.Count > 0 ? "MarkerNextPage" : "MarkerEndDialog");
-                    manager.Batcher.Image(texMarker, new(Right - FramePadding.X - texMarker.Width, Bottom - FramePadding.Y - texMarker.Height), Color.White);
+                    var texMarker = GraphicsSheet.GetSubtexture(currentTextIndex < textWrapPositions.Count - 1 ? "MarkerNextPage" : "MarkerEndDialog");
+                    manager.Batcher.Image(texMarker, new(Right - FramePaddingBottomRight.X - texMarker.Width, Bottom - FramePaddingBottomRight.Y - texMarker.Height), Color.White);
                 }
             }
 
             if (!string.IsNullOrWhiteSpace(currentSpeaker))
             {
                 var texIBL = GraphicsSheet.GetSubtexture("InnerBottomLeft");
-                var widthBG = Font.WidthOf(currentSpeaker) + Math.Abs(FramePadding.X - texML.Width);
+                var widthBG = Font.WidthOf(currentSpeaker) + Math.Abs(FramePaddingTopLeft.X - texML.Width);
                 manager.Batcher.ImageStretch(texML, new(Left, Top - Font.LineHeight + texBG.Height - LinePadding, texML.Width, Font.LineHeight + LinePadding), tint);
                 manager.Batcher.ImageStretch(texBG, new(Left + texML.Width, Top - Font.LineHeight + texBG.Height - LinePadding, widthBG, Font.LineHeight + LinePadding), tint);
                 manager.Batcher.ImageStretch(texML, new(Left + texML.Width + widthBG, Top - Font.LineHeight + texBG.Height - LinePadding, texML.Width, Font.LineHeight + LinePadding - texIBL.Height), new(texML.Width, 0f), new Vector2(-1f, 1f), 0f, tint);
@@ -186,7 +181,7 @@ namespace GameTest1.Utilities
                 manager.Batcher.ImageStretch(texTL, new(Left + texTL.Width + widthBG, Top - Font.LineHeight - LinePadding, texTL.Width, texTL.Height), new(texTL.Width, 0f), new Vector2(-1f, 1f), 0f, tint);
                 manager.Batcher.ImageStretch(texTC, new(Left + texTL.Width, Top - Font.LineHeight - LinePadding, widthBG, texTC.Height), tint);
 
-                manager.Batcher.Text(Font, currentSpeaker, new(Left + FramePadding.X, Top - Font.LineHeight + texBG.Height - LinePadding), Color.White);
+                manager.Batcher.Text(Font, currentSpeaker, new(Left + FramePaddingTopLeft.X, Top - Font.LineHeight + texBG.Height - LinePadding), Color.White);
             }
         }
     }

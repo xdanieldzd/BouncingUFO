@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace GameTest1.Game
+namespace GameTest1.Game.UI
 {
     public record DialogText
     {

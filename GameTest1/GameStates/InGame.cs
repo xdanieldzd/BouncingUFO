@@ -2,6 +2,7 @@
 using GameTest1.Game;
 using GameTest1.Game.Actors;
 using GameTest1.Game.Levels;
+using GameTest1.Game.UI;
 using GameTest1.Utilities;
 using System.Numerics;
 
@@ -21,7 +22,8 @@ namespace GameTest1.GameStates
         {
             Font = manager.Assets.LargeFont,
             GraphicsSheet = manager.Assets.UI["DialogBox"],
-            FramePadding = new(12, 12),
+            FramePaddingTopLeft = (12, 12),
+            FramePaddingBottomRight = (12, 12),
             BackgroundColor = new(0x3E4F65)
         };
 
@@ -105,8 +107,6 @@ namespace GameTest1.GameStates
             switch (currentState)
             {
                 case State.Initialize:
-                    InitializeDialogBox();
-
                     currentState = State.LoadMap;
 
                     if (Globals.QuickStart)
@@ -215,12 +215,6 @@ namespace GameTest1.GameStates
             capsuleCount = actors.Count(x => x is Capsule);
 
             camera.Update(Globals.ShowDebugInfo ? Point2.Zero : (currentMap?.Size * currentTileset?.CellSize) ?? Point2.Zero);
-        }
-
-        private void InitializeDialogBox()
-        {
-            dialogBox.Size = new((int)(manager.Screen.Width / 1.25f), 64);
-            dialogBox.Position = new(manager.Screen.Bounds.Center.X - dialogBox.Size.X / 2, manager.Screen.Bounds.Bottom - dialogBox.Size.Y - 16);
         }
 
         private void ResetTimer()

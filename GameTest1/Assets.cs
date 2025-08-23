@@ -1,5 +1,4 @@
 ﻿using Foster.Framework;
-using GameTest1.Game;
 using GameTest1.Game.Levels;
 using GameTest1.Game.Sprites;
 using GameTest1.Game.UI;
