@@ -18,6 +18,14 @@ namespace GameTest1.Utilities
 
         public static Color PreviousColor { get; private set; }
 
+        public void Begin(ScreenFadeType type, float duration, Color color)
+        {
+            FadeType = type;
+            Duration = duration;
+            Color = color;
+            Reset();
+        }
+
         public void Reset()
         {
             IsRunning = true;

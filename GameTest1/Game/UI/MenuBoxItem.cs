@@ -3,6 +3,6 @@
     public class MenuBoxItem
     {
         public string Label = string.Empty;
-        public Action? Action = null;
+        public Action<MenuBox>? Action = null;
     }
 }

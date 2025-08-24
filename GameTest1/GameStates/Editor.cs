@@ -40,7 +40,7 @@ namespace GameTest1.GameStates
                 if (ImGui.Button("Exit", new(150f, 0f)))
                 {
                     manager.GameStates.Pop();
-                    if (manager.GameStates.Count == 0) manager.GameStates.Push(new Intro(manager));
+                    if (manager.GameStates.Count == 0) manager.GameStates.Push(new TitleScreen(manager));
                 }
             }
             ImGui.End();

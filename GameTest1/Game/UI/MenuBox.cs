@@ -1,5 +1,4 @@
 ﻿using Foster.Framework;
-using System;
 using System.Numerics;
 
 namespace GameTest1.Game.UI
@@ -16,15 +15,15 @@ namespace GameTest1.Game.UI
         private int currentItemIndex = 0;
 
         enum MenuBoxState { Opening, WaitingForInput, PerformingAction, Closed }
-        private MenuBoxState currentState = MenuBoxState.Opening;
+        private MenuBoxState currentState = MenuBoxState.Closed;
 
         public bool IsOpen => currentState != MenuBoxState.Closed;
         public int SelectedIndex => currentItemIndex;
 
-        public void Initialize(string title, MenuBoxItem[] items)
+        public void Initialize(string title, IEnumerable<MenuBoxItem> items)
         {
             menuTitle = title;
-            menuItems = items;
+            menuItems = [.. items];
             currentItemIndex = 0;
 
             if (Font != null)
@@ -38,6 +37,11 @@ namespace GameTest1.Game.UI
             }
 
             currentState = MenuBoxState.WaitingForInput;
+        }
+
+        public void Close()
+        {
+            currentState = MenuBoxState.Closed;
         }
 
         public void Update()
@@ -72,9 +76,9 @@ namespace GameTest1.Game.UI
                     break;
 
                 case MenuBoxState.PerformingAction:
-                    if (currentItemIndex >= 0 && currentItemIndex < menuItems.Length && menuItems[currentItemIndex]?.Action is Action action)
+                    if (currentItemIndex >= 0 && currentItemIndex < menuItems.Length && menuItems[currentItemIndex]?.Action is Action<MenuBox> action)
                     {
-                        action();
+                        action(this);
                         currentState = MenuBoxState.Closed;
                     }
                     else

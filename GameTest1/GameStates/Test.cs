@@ -33,9 +33,9 @@ namespace GameTest1.GameStates
             menuBox.Initialize("PAUSE", items);
         }
 
-        private void MenuContinueAction() => menuResultTest = "Continue was selected, return to game!";
-        private void MenuRestartAction() => menuResultTest = "Restart was selected, restart the current level!";
-        private void MenuExitAction() => menuResultTest = "Exit to Menu was selected, exit to main menu!";
+        private void MenuContinueAction(MenuBox menuBox) => menuResultTest = "Continue was selected, return to game!";
+        private void MenuRestartAction(MenuBox menuBox) => menuResultTest = "Restart was selected, restart the current level!";
+        private void MenuExitAction(MenuBox menuBox) => menuResultTest = "Exit to Menu was selected, exit to main menu!";
 
         public override void UpdateApp()
         {
@@ -47,7 +47,7 @@ namespace GameTest1.GameStates
                 if (continueToIntroTimer >= waitDuration)
                 {
                     manager.GameStates.Pop();
-                    manager.GameStates.Push(new Intro(manager));
+                    manager.GameStates.Push(new TitleScreen(manager));
                 }
             }
         }

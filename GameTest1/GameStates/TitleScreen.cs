@@ -6,58 +6,35 @@ namespace GameTest1.GameStates
 {
     public class TitleScreen(Manager manager) : GameStateBase(manager), IGameState
     {
-        private const float screenFadeDuration = 0.5f;
+        private const float screenFadeDuration = 0.75f;
+        private const float waitDuration = 5f;
 
-        private enum State { Initialize, FadeIn, MainMenu, FadeOut }
+        private enum State { Initialize, FadeIn, WaitForTimeoutOrInput, FadeOut }
 
         private readonly ScreenFader screenFader = new(manager);
 
         private State currentState = State.Initialize;
-        private string selectedMapName = manager.Assets.Maps.ElementAt(0).Key;
-        private int selectedMapIndex = 0;
+        private float mainStateTimer = 0f;
 
         public override void UpdateApp()
         {
             switch (currentState)
             {
                 case State.Initialize:
-                    screenFader.FadeType = ScreenFadeType.FadeIn;
-                    screenFader.Duration = screenFadeDuration;
-                    screenFader.Color = Color.Black;
-                    screenFader.Reset();
+                    screenFader.Begin(ScreenFadeType.FadeIn, screenFadeDuration, Color.Black);
                     currentState = State.FadeIn;
-
-                    if (Globals.QuickStart)
-                    {
-                        manager.GameStates.Pop();
-                        manager.GameStates.Push(new InGame(manager));
-                    }
                     break;
 
                 case State.FadeIn:
                     if (screenFader.Update())
-                        currentState = State.MainMenu;
+                        currentState = State.WaitForTimeoutOrInput;
                     break;
 
-                case State.MainMenu:
-                    if (manager.Controls.Move.PressedDown)
+                case State.WaitForTimeoutOrInput:
+                    mainStateTimer = Calc.Approach(mainStateTimer, waitDuration, manager.Time.Delta);
+                    if (mainStateTimer >= waitDuration || manager.Controls.Action1.Down || manager.Controls.Action2.Down)
                     {
-                        selectedMapIndex++;
-                        if (selectedMapIndex > manager.Assets.Maps.Count - 1) selectedMapIndex = 0;
-                        selectedMapName = manager.Assets.Maps.ElementAt(selectedMapIndex).Key;
-                    }
-                    else if (manager.Controls.Move.PressedUp)
-                    {
-                        selectedMapIndex--;
-                        if (selectedMapIndex < 0) selectedMapIndex = manager.Assets.Maps.Count - 1;
-                        selectedMapName = manager.Assets.Maps.ElementAt(selectedMapIndex).Key;
-                    }
-                    else if (manager.Controls.Action1.Down || manager.Controls.Action2.Down)
-                    {
-                        screenFader.FadeType = ScreenFadeType.FadeOut;
-                        screenFader.Duration = screenFadeDuration;
-                        screenFader.Color = ScreenFader.PreviousColor;
-                        screenFader.Reset();
+                        screenFader.Begin(ScreenFadeType.FadeOut, screenFadeDuration, ScreenFader.PreviousColor);
                         currentState = State.FadeOut;
                     }
                     break;
@@ -65,11 +42,8 @@ namespace GameTest1.GameStates
                 case State.FadeOut:
                     if (screenFader.Update())
                     {
-                        var inGameState = new InGame(manager);
-                        inGameState.LoadMap(selectedMapName);
-
                         manager.GameStates.Pop();
-                        manager.GameStates.Push(inGameState);
+                        manager.GameStates.Push(new MainMenu(manager));
                     }
                     break;
             }
@@ -79,18 +53,23 @@ namespace GameTest1.GameStates
         {
             manager.Screen.Clear(Color.DarkGray);
 
-            var textPos = new Vector2(16f, 16f);
-            manager.Batcher.Text(manager.Assets.LargeFont, "Select Map", textPos, Color.White);
-            textPos.Y += manager.Assets.LargeFont.LineHeight;
+            var titleText =
+                "GAME TEST PROJECT #1\n" +
+                " -- BOUNCING UFO -- \n" +
+                "\n" +
+                "PROTOTYPE  VERSION 2";
+            manager.Batcher.Text(
+                manager.Assets.FutureFont,
+                titleText,
+                manager.Screen.Bounds.Center - manager.Assets.FutureFont.SizeOf(titleText) / 2f - new Vector2(0f, manager.Assets.FutureFont.Size * 4f),
+                Color.White);
 
-            for (var i = 0; i < manager.Assets.Maps.Count; i++)
-            {
-                var (name, map) = manager.Assets.Maps.ElementAt(i);
-                var textColor = selectedMapName == name ? Color.Green : Color.White;
-                if (selectedMapName == name) manager.Batcher.Text(manager.Assets.LargeFont, ">", textPos, textColor);
-                manager.Batcher.Text(manager.Assets.LargeFont, $"{map.Title} ({name})", textPos + new Vector2(12f, 0f), textColor);
-                textPos.Y += manager.Assets.LargeFont.LineHeight;
-            }
+            var bottomText = "August 2025 by xdaniel -- xdaniel.neocities.org";
+            manager.Batcher.Text(
+                manager.Assets.SmallFont,
+                bottomText,
+                manager.Screen.Bounds.BottomCenter - manager.Assets.SmallFont.SizeOf(bottomText) / 2f - new Vector2(0f, manager.Assets.SmallFont.Size * 2f),
+                Color.White);
 
             screenFader.Render();
         }

@@ -13,19 +13,25 @@ namespace GameTest1.Game.UI
         private int currentMaxLine = 0;
         private float charTimer = 0f;
 
-        enum DialogBoxState { Opening, Printing, WaitingForInput, AdvancingText, Closing }
-        private DialogBoxState currentState = DialogBoxState.Opening;
+        enum DialogBoxState { Opening, Printing, WaitingForInput, AdvancingText, Closed }
+        private DialogBoxState currentState = DialogBoxState.Closed;
 
         public DialogBox(Manager manager) : base(manager)
         {
-            Size = new((int)(manager.Screen.Width / 1.25f), 64);
-            Position = new(manager.Screen.Bounds.Center.X - Size.X / 2, manager.Screen.Bounds.Bottom - Size.Y - 16);
             FramePaddingTopLeft = (8, 8);
             FramePaddingBottomRight = (10, 10);
             LinePadding = 6;
+
+            Resize(3);
         }
 
-        public bool IsOpen => currentState != DialogBoxState.Closing;
+        public bool IsOpen => currentState != DialogBoxState.Closed;
+
+        public void Resize(int numTextLines)
+        {
+            Size = new((int)(manager.Screen.Width / 1.25f), (int)((Font?.LineHeight ?? 8) * numTextLines) + LinePadding * (numTextLines - 1) + FramePaddingTopLeft.Y + FramePaddingBottomRight.Y);
+            Position = new(manager.Screen.Bounds.Center.X - Size.X / 2, manager.Screen.Bounds.Bottom - Size.Y - 16);
+        }
 
         public void Print(string speaker, List<string> text)
         {
@@ -68,7 +74,7 @@ namespace GameTest1.Game.UI
                     }
                     else if (currentTextIndex >= textWrapPositions.Count)
                     {
-                        currentState = DialogBoxState.Closing;
+                        currentState = DialogBoxState.Closed;
                     }
                     else
                     {
@@ -110,23 +116,26 @@ namespace GameTest1.Game.UI
                     shouldRender = true;
                     break;
 
-                case DialogBoxState.Closing:
+                case DialogBoxState.Closed:
                     if (currentText != text || currentSpeaker != speaker)
                         currentState = DialogBoxState.Opening;
                     break;
             }
 
-            if (shouldRender && currentTextIndex < currentText.Count)
-                Render(currentText[currentTextIndex], BackgroundColor);
-
-            if (Globals.ShowDebugInfo)
+            if (shouldRender)
             {
-                manager.Batcher.RectLine(new RectInt(TopLeft.X + FramePaddingTopLeft.X, TopLeft.Y + FramePaddingTopLeft.Y, Size.X - FramePaddingBottomRight.X - FramePaddingTopLeft.X, Size.Y - FramePaddingBottomRight.Y - FramePaddingTopLeft.Y), 2f, Color.Red);
-                manager.Batcher.Text(manager.Assets.SmallFont, $"{currentState}, {currentMaxLine}", new(0f, manager.Assets.SmallFont.LineHeight), Color.White);
-                for (var i = 0; i < currentTextWrapPositions.Length; i++)
+                if (currentTextIndex < currentText.Count)
+                    Render(currentText[currentTextIndex], BackgroundColor);
+
+                if (Globals.ShowDebugInfo)
                 {
-                    var (start, totalLength, currentLength) = currentTextWrapPositions[i];
-                    manager.Batcher.Text(manager.Assets.SmallFont, $"{start}, {totalLength}, {currentLength}", new(0f, (i + 2) * manager.Assets.SmallFont.LineHeight), Color.White);
+                    manager.Batcher.RectLine(new RectInt(TopLeft.X + FramePaddingTopLeft.X, TopLeft.Y + FramePaddingTopLeft.Y, Size.X - FramePaddingBottomRight.X - FramePaddingTopLeft.X, Size.Y - FramePaddingBottomRight.Y - FramePaddingTopLeft.Y), 2f, Color.Red);
+                    manager.Batcher.Text(manager.Assets.SmallFont, $"{currentState}, {currentMaxLine}", new(0f, manager.Assets.SmallFont.LineHeight), Color.White);
+                    for (var i = 0; i < currentTextWrapPositions.Length; i++)
+                    {
+                        var (start, totalLength, currentLength) = currentTextWrapPositions[i];
+                        manager.Batcher.Text(manager.Assets.SmallFont, $"{start}, {totalLength}, {currentLength}", new(0f, (i + 2) * manager.Assets.SmallFont.LineHeight), Color.White);
+                    }
                 }
             }
         }

@@ -46,10 +46,12 @@ namespace GameTest1
             GameStates = [];
             if (Globals.GotoTestGameState)
                 GameStates.Push(new Test(this));
+            else if (Globals.QuickStart)
+                GameStates.Push(new InGame(this));
             else if (!Globals.NormalStartup)
                 GameStates.Push(new Editor(this));
             else
-                GameStates.Push(new Intro(this));
+                GameStates.Push(new TitleScreen(this));
         }
 
         protected override void Startup() { }

@@ -14,7 +14,7 @@ namespace GameTest1.GameStates
         private const string defaultMapName = "SmallTest2";
         private const string levelsDialogFile = "Levels";
 
-        private enum State { Initialize, LoadMap, ResetMap, FadeIn, GameIntroduction, GameStartCountdown, MainLogic, GameOver, Restart }
+        private enum State { Initialize, LoadMap, ResetMap, FadeIn, GameIntroduction, GameStartCountdown, MainLogic, GameOver, Restart, ExitToMenu }
 
         private readonly ScreenFader screenFader = new(manager);
         private readonly Camera camera = new(manager);
@@ -22,8 +22,17 @@ namespace GameTest1.GameStates
         {
             Font = manager.Assets.LargeFont,
             GraphicsSheet = manager.Assets.UI["DialogBox"],
-            FramePaddingTopLeft = (12, 12),
+            FramePaddingTopLeft = (10, 10),
             FramePaddingBottomRight = (12, 12),
+            BackgroundColor = new(0x3E4F65)
+        };
+        private readonly MenuBox menuBox = new(manager)
+        {
+            Font = manager.Assets.LargeFont,
+            GraphicsSheet = manager.Assets.UI["DialogBox"],
+            FramePaddingTopLeft = (10, 10),
+            FramePaddingBottomRight = (12, 12),
+            LinePadding = 4,
             BackgroundColor = new(0x3E4F65)
         };
 
@@ -33,6 +42,8 @@ namespace GameTest1.GameStates
             { "Capsule", typeof(Capsule) },
             { "CapsuleSpawner", typeof(CapsuleSpawner) }
         };
+
+        private readonly List<MenuBoxItem> pauseMenuItems = [];
 
         private readonly List<ActorBase> actors = [];
         private readonly List<ActorBase> actorsToDestroy = [];
@@ -46,7 +57,7 @@ namespace GameTest1.GameStates
         private State currentState = State.Initialize;
         private float gameStartCountdown;
 
-        private DateTime gameStartTime, gameEndTime;
+        private TimeSpan gameDuration = TimeSpan.Zero;
         private int capsuleCount;
 
         //
@@ -100,6 +111,19 @@ namespace GameTest1.GameStates
 
         public void SetCameraFollowActor(ActorBase? actor) => camera.FollowActor(actor);
 
+        public override void Initialize()
+        {
+            dialogBox.Resize(2);
+            menuBox.HighlightTextColor = Color.Lerp(Color.Green, Color.White, 0.35f);
+
+            pauseMenuItems.AddRange(
+            [
+                new() { Label = "Continue", Action = (m) => { m.Close(); } },
+                new() { Label = "Restart", Action = (m) => { screenFader.Begin(ScreenFadeType.FadeOut, screenFadeDuration, Color.White); currentState = State.Restart; } },
+                new() { Label = "Exit to Menu", Action = (m) => { screenFader.Begin(ScreenFadeType.FadeOut, screenFadeDuration, Color.Black); currentState = State.ExitToMenu; } }
+            ]);
+        }
+
         public override void UpdateApp()
         {
             var player = GetFirstActor<Player>();
@@ -113,6 +137,7 @@ namespace GameTest1.GameStates
                     {
                         LoadMap(currentMapName);
                         ResetMap();
+                        gameDuration = TimeSpan.Zero;
                         screenFader.Cancel();
                         currentState = State.MainLogic;
                         gameStartCountdown = 0f;
@@ -129,12 +154,10 @@ namespace GameTest1.GameStates
 
                 case State.ResetMap:
                     ResetMap();
-                    ResetTimer();
+                    gameDuration = TimeSpan.Zero;
 
-                    screenFader.FadeType = ScreenFadeType.FadeIn;
-                    screenFader.Duration = screenFadeDuration;
-                    screenFader.Color = ScreenFader.PreviousColor;
-                    screenFader.Reset();
+                    screenFader.Begin(ScreenFadeType.FadeIn, screenFadeDuration, ScreenFader.PreviousColor);
+
                     gameStartCountdown = 5f;
 
                     currentState = State.FadeIn;
@@ -165,7 +188,6 @@ namespace GameTest1.GameStates
                     if (gameStartCountdown <= 0f)
                     {
                         if (player != null) player.CurrentState = Player.State.Normal;
-                        ResetTimer();
 
                         currentState = State.MainLogic;
                     }
@@ -180,10 +202,7 @@ namespace GameTest1.GameStates
 
                     if (manager.Controls.Action1.ConsumePress() || manager.Controls.Action2.ConsumePress())
                     {
-                        screenFader.FadeType = ScreenFadeType.FadeOut;
-                        screenFader.Duration = screenFadeDuration;
-                        screenFader.Color = Color.White;
-                        screenFader.Reset();
+                        screenFader.Begin(ScreenFadeType.FadeOut, screenFadeDuration, Color.White);
 
                         currentState = State.Restart;
                     }
@@ -197,29 +216,35 @@ namespace GameTest1.GameStates
                         currentState = State.ResetMap;
                     }
                     break;
+
+                case State.ExitToMenu:
+                    if (screenFader.Update())
+                    {
+                        manager.GameStates.Pop();
+                        manager.GameStates.Push(new MainMenu(manager));
+                    }
+                    break;
             }
 
             if (manager.Controls.DebugEditors.ConsumePress())
                 manager.GameStates.Push(new Editor(manager));
 
-            for (var i = 0; i < actorsToDestroy.Count; i++)
+            if (!menuBox.IsOpen)
             {
-                actorsToDestroy[i].Destroyed();
-                actors.Remove(actorsToDestroy[i]);
+                for (var i = 0; i < actorsToDestroy.Count; i++)
+                {
+                    actorsToDestroy[i].Destroyed();
+                    actors.Remove(actorsToDestroy[i]);
+                }
+                actorsToDestroy.Clear();
+
+                foreach (var actor in actors)
+                    actor.Update();
+
+                capsuleCount = actors.Count(x => x is Capsule);
             }
-            actorsToDestroy.Clear();
-
-            foreach (var actor in actors)
-                actor.Update();
-
-            capsuleCount = actors.Count(x => x is Capsule);
 
             camera.Update(Globals.ShowDebugInfo ? Point2.Zero : (currentMap?.Size * currentTileset?.CellSize) ?? Point2.Zero);
-        }
-
-        private void ResetTimer()
-        {
-            gameStartTime = gameEndTime = DateTime.Now;
         }
 
         public void LoadMap(string mapName)
@@ -243,22 +268,26 @@ namespace GameTest1.GameStates
 
         private void PerformMainLogic()
         {
-            gameEndTime = DateTime.Now;
-
-            if (GetFirstActor<Player>() is Player player && (capsuleCount <= 0 || player.energy <= 0))
+            if (!menuBox.IsOpen)
             {
-                currentState = State.GameOver;
-                player.CurrentState = Player.State.InputDisabled;
-                player.Stop();
-                player.PlayAnimation("WarpOut", false);
+                gameDuration += TimeSpan.FromSeconds(manager.Time.Delta);
+
+                if (GetFirstActor<Player>() is Player player && (capsuleCount <= 0 || player.energy <= 0))
+                {
+                    currentState = State.GameOver;
+                    player.CurrentState = Player.State.InputDisabled;
+                    player.Stop();
+                    player.PlayAnimation("WarpOut", false);
+                }
             }
 
             if (manager.Controls.Menu.ConsumePress())
             {
-                // TODO
-                if (!dialogBox.IsOpen)
-                    currentDialogText = new() { SpeakerName = "xdaniel", TextStrings = ["Sorry, the pause menu hasn't been implemented yet!"], HasBeenShownOnce = false };
+                if (!menuBox.IsOpen) menuBox.Initialize("PAUSE", pauseMenuItems);
+                else menuBox.Close();
             }
+
+            menuBox.Update();
         }
 
         public override void Render()
@@ -292,6 +321,8 @@ namespace GameTest1.GameStates
             if (currentDialogText is DialogText dialogText && !dialogText.HasBeenShownOnce)
                 dialogBox.Print(dialogText.SpeakerName, dialogText.TextStrings);
 
+            menuBox.Render();
+
             screenFader.Render();
         }
 
@@ -316,7 +347,7 @@ namespace GameTest1.GameStates
                     break;
             }
 
-            manager.Batcher.Text(manager.Assets.FutureFont, $"TIME {gameEndTime - gameStartTime:mm\\:ss\\:ff}", new(8f), currentState == State.GameOver || currentState == State.Restart ? Color.Green : Color.White);
+            manager.Batcher.Text(manager.Assets.FutureFont, $"TIME {gameDuration:mm\\:ss\\:ff}", new(8f), capsuleCount == 0 ? Color.Green : Color.White);
             manager.Batcher.Text(manager.Assets.FutureFont, $"LEFT {capsuleCount:00}", new Vector2(manager.Screen.Bounds.Right - 8f, 8f), new Vector2(1f, 0f), Color.White);
             if (currentState != State.GameOver && currentState != State.Restart && GetFirstActor<Player>() is Player player)
                 manager.Batcher.Text(manager.Assets.FutureFont, $"ENERGY {player?.energy:00}", new Vector2(manager.Screen.Bounds.Right - 8f, manager.Screen.Bounds.Bottom - 8f - manager.Assets.FutureFont.Size), new Vector2(1f, 1f), player?.energy < 50 && manager.Time.BetweenInterval(0.5) ? Color.Red : Color.White);
