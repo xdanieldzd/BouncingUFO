@@ -19,6 +19,7 @@ namespace GameTest1.Game.UI
 
         public bool IsOpen => currentState != MenuBoxState.Closed;
         public int SelectedIndex => currentItemIndex;
+        public IEnumerable<MenuBoxItem> MenuItems => menuItems;
 
         public void Initialize(string title, IEnumerable<MenuBoxItem> items)
         {

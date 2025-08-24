@@ -1,6 +1,6 @@
 ﻿using Foster.Framework;
+using GameTest1.Game.UI;
 using GameTest1.Utilities;
-using System.Numerics;
 
 namespace GameTest1.GameStates
 {
@@ -11,10 +11,32 @@ namespace GameTest1.GameStates
         private enum State { Initialize, FadeIn, MainMenu, FadeOut }
 
         private readonly ScreenFader screenFader = new(manager);
+        private readonly MenuBox menuBox = new(manager)
+        {
+            Font = manager.Assets.LargeFont,
+            GraphicsSheet = manager.Assets.UI["DialogBox"],
+            FramePaddingTopLeft = (10, 10),
+            FramePaddingBottomRight = (12, 12),
+            LinePadding = 4,
+            BackgroundColor = new(0x3E4F65)
+        };
 
         private State currentState = State.Initialize;
         private string selectedMapName = manager.Assets.Maps.ElementAt(0).Key;
-        private int selectedMapIndex = 0;
+
+        public override void Initialize()
+        {
+            menuBox.HighlightTextColor = Color.Lerp(Color.Green, Color.White, 0.35f);
+            menuBox.Initialize("Select Map", manager.Assets.Maps.Select(x => new MenuBoxItem() { Label = $"{x.Value.Title} ({x.Key})", Action = MenuAction }));
+        }
+
+        private void MenuAction(MenuBox menuBox)
+        {
+            selectedMapName = manager.Assets.Maps.ElementAt(menuBox.SelectedIndex).Key;
+
+            screenFader.Begin(ScreenFadeType.FadeOut, screenFadeDuration, ScreenFader.PreviousColor);
+            currentState = State.FadeOut;
+        }
 
         public override void UpdateApp()
         {
@@ -31,23 +53,7 @@ namespace GameTest1.GameStates
                     break;
 
                 case State.MainMenu:
-                    if (manager.Controls.Move.PressedDown)
-                    {
-                        selectedMapIndex++;
-                        if (selectedMapIndex > manager.Assets.Maps.Count - 1) selectedMapIndex = 0;
-                        selectedMapName = manager.Assets.Maps.ElementAt(selectedMapIndex).Key;
-                    }
-                    else if (manager.Controls.Move.PressedUp)
-                    {
-                        selectedMapIndex--;
-                        if (selectedMapIndex < 0) selectedMapIndex = manager.Assets.Maps.Count - 1;
-                        selectedMapName = manager.Assets.Maps.ElementAt(selectedMapIndex).Key;
-                    }
-                    else if (manager.Controls.Action1.Down || manager.Controls.Action2.Down)
-                    {
-                        screenFader.Begin(ScreenFadeType.FadeOut, screenFadeDuration, ScreenFader.PreviousColor);
-                        currentState = State.FadeOut;
-                    }
+                    menuBox.Update();
                     break;
 
                 case State.FadeOut:
@@ -67,18 +73,7 @@ namespace GameTest1.GameStates
         {
             manager.Screen.Clear(Color.DarkGray);
 
-            var textPos = new Vector2(16f, 16f);
-            manager.Batcher.Text(manager.Assets.LargeFont, "Select Map", textPos, Color.White);
-            textPos.Y += manager.Assets.LargeFont.LineHeight;
-
-            for (var i = 0; i < manager.Assets.Maps.Count; i++)
-            {
-                var (name, map) = manager.Assets.Maps.ElementAt(i);
-                var textColor = selectedMapName == name ? Color.Green : Color.White;
-                if (selectedMapName == name) manager.Batcher.Text(manager.Assets.LargeFont, ">", textPos, textColor);
-                manager.Batcher.Text(manager.Assets.LargeFont, $"{map.Title} ({name})", textPos + new Vector2(12f, 0f), textColor);
-                textPos.Y += manager.Assets.LargeFont.LineHeight;
-            }
+            menuBox.Render();
 
             screenFader.Render();
         }
