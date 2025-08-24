@@ -10,7 +10,7 @@ namespace GameTest1.Game.Actors
         private const float acceleration = 1500f, friction = 100f, maxSpeed = 200f;
         private const float spriteRotation = 10f;
         private const float bounceCooldown = 25f;
-        private const int maxEnergy = 99;
+        private const int maxEnergy = 69;
 
         public enum State { Normal, InputDisabled }
         public State CurrentState;

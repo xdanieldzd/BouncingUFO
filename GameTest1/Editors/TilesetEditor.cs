@@ -77,7 +77,7 @@ namespace GameTest1.Editors
                     manager.FileSystem.SaveFileDialog(new FileSystem.DialogCallbackSingleFile((s, r) =>
                     {
                         if (r == FileSystem.DialogResult.Success)
-                            File.WriteAllText(s, JsonSerializer.Serialize(tileset, Assets.SerializerOptions));
+                            File.WriteAllText(currentTilesetPath = s, JsonSerializer.Serialize(tileset, Assets.SerializerOptions));
                     }), [new("JSON files (*.json)", "json")], currentTilesetPath);
                 }
                 if (tileset == null) ImGui.EndDisabled();

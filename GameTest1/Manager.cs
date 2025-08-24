@@ -27,9 +27,9 @@ namespace GameTest1
         {
             ApplicationName = "GameTest1",
             WindowTitle = "Game Test #1 - Bouncing UFO (REWRITE)",
-            Width = Globals.NormalStartup ? 480 * DefaultZoom : 1280,
-            Height = Globals.NormalStartup ? 272 * DefaultZoom : 720,
-            Resizable = !Globals.NormalStartup
+            Width = !Globals.StartInEditorMode ? 480 * DefaultZoom : 1600,
+            Height = !Globals.StartInEditorMode ? 272 * DefaultZoom : 900,
+            Resizable = Globals.StartInEditorMode
         })
         {
             GraphicsDevice.VSync = true;
@@ -44,12 +44,12 @@ namespace GameTest1
             MapRenderer = new(this);
 
             GameStates = [];
-            if (Globals.GotoTestGameState)
+            if (Globals.StartInEditorMode)
+                GameStates.Push(new Editor(this));
+            else if (Globals.StartInTestGameState)
                 GameStates.Push(new Test(this));
             else if (Globals.QuickStart)
                 GameStates.Push(new InGame(this));
-            else if (!Globals.NormalStartup)
-                GameStates.Push(new Editor(this));
             else
                 GameStates.Push(new TitleScreen(this));
         }

@@ -101,16 +101,17 @@ namespace GameTest1.Editors
                 {
                     ImGui.SameLine();
                     ImGuiUtilities.InfoPopUp(
-                        "Actors will...\n" +
-                        "- ... collide with terrain on their layer and below\n" +
-                        "- ... appear behind terrain on layers above theirs\n" +
-                        "Example: Player on layer 1 will collide with layers 0 & 1, render behind layer 2\n" +
+                        "Recommended layer setup:\n" +
+                        "- 0: Ground, water, etc.; cells must *not* have transparency\n" +
+                        "- 1: Decorative cells with transparency, ex. grass, flowers, etc.\n" +
+                        "- 2: Walls, fences, etc.; all actors (player, collectibles, etc.)\n" +
+                        "- 3: Bridges, certain chunks of wall (again!), etc., so that the player appears behind them\n" +
+                        "- 4: Further decorative cells, plus \"shadows\" cast by layer 3 terrain (from ex. bridges)\n" +
                         "\n" +
-                        "Layering example with 4 layers:\n" +
-                        "- 0: Ground, water, walls, etc.; cells must *not* have transparency\n" +
-                        "- 1: Cells with transparency, ex. fences, flowers, etc.; player actor also goes here\n" +
-                        "- 2: Fences (again!), bridges, certain chunks of wall (again!), etc., so that player appears behind them\n" +
-                        "- 3: Further decorative cells, plus \"shadows\" cast by layer 2 terrain (from ex. bridges)",
+                        "Layer 4 can be considered optional, if no decorative elements are wanted for layer 3.\n" +
+                        "Layer 3 *could* also be considered optional, *but* the player might appear in front of cells they shouldn't.\n" +
+                        "\n" +
+                        "If there are no walls or similar complex structures on the map, layers 3 and 4 are basically optional.",
                         "Editing Help",
                         "Tips and Tricks");
 
@@ -197,11 +198,11 @@ namespace GameTest1.Editors
                     {
                         ImGui.Separator();
 
-                        var mapScrollHeight = tileset.CellSize.Y * 10 * tilesetZoom;
+                        var mapScrollHeight = tileset.CellSize.Y * 14 * tilesetZoom;
                         var tileScrollWidth = tileset.CellSize.X * tileSelectorWidth * tilesetZoom + style.ScrollbarSize;
 
                         ImGui.BeginGroup();
-                        if (ImGui.BeginChild("mapscroll", new(850f - tileScrollWidth, mapScrollHeight + style.ScrollbarSize), ImGuiChildFlags.AlwaysAutoResize | ImGuiChildFlags.AutoResizeY, ImGuiWindowFlags.AlwaysHorizontalScrollbar))
+                        if (ImGui.BeginChild("mapscroll", new(1250f - tileScrollWidth, mapScrollHeight + style.ScrollbarSize), ImGuiChildFlags.AlwaysAutoResize | ImGuiChildFlags.AutoResizeY, ImGuiWindowFlags.AlwaysHorizontalScrollbar))
                         {
                             ImGui.BeginGroup();
 

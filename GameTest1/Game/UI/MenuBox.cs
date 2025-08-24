@@ -99,13 +99,13 @@ namespace GameTest1.Game.UI
             {
                 RenderBackground();
                 RenderText();
-            }
 
-            if (Globals.ShowDebugInfo)
-            {
-                manager.Batcher.RectLine(new(Position, Size), 1f, Color.Red);
-                manager.Batcher.Circle(manager.Screen.Bounds.Center, 2f, 5, Color.Magenta);
-                manager.Batcher.Text(manager.Assets.SmallFont, $"== DEBUG ==\nState:{currentState}\nIndex:{currentItemIndex}\nPosition:{Position}\nSize:{Size}\n", manager.Screen.Bounds.BottomRight - Point2.One, Vector2.One, Color.Yellow);
+                if (Globals.ShowDebugInfo)
+                {
+                    manager.Batcher.RectLine(new(Position, Size), 1f, Color.Red);
+                    manager.Batcher.Circle(manager.Screen.Bounds.Center, 2f, 5, Color.Magenta);
+                    manager.Batcher.Text(manager.Assets.SmallFont, $"== MENU BOX DEBUG ==\nState:{currentState}\nIndex:{currentItemIndex}\nPosition:{Position}\nSize:{Size}\n", manager.Screen.Bounds.BottomRight - Point2.One, Vector2.One, Color.Yellow);
+                }
             }
         }
 

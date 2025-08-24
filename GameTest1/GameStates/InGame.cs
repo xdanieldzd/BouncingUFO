@@ -367,7 +367,7 @@ namespace GameTest1.GameStates
             manager.Batcher.Text(manager.Assets.FutureFont, $"TIME {gameDuration:mm\\:ss\\:ff}", new(8f), capsuleCount == 0 ? Color.Green : Color.White);
             manager.Batcher.Text(manager.Assets.FutureFont, $"LEFT {capsuleCount:00}", new Vector2(manager.Screen.Bounds.Right - 8f, 8f), new Vector2(1f, 0f), Color.White);
             if (GetFirstActor<Player>() is Player player)
-                manager.Batcher.Text(manager.Assets.FutureFont, $"ENERGY {player?.energy:00}", new Vector2(manager.Screen.Bounds.Right - 8f, manager.Screen.Bounds.Bottom - 8f - manager.Assets.FutureFont.Size), new Vector2(1f, 1f), blinkEnergy && player?.energy < 50 && manager.Time.BetweenInterval(0.5) ? Color.Red : Color.White);
+                manager.Batcher.Text(manager.Assets.FutureFont, $"ENERGY {player?.energy:00}", new Vector2(manager.Screen.Bounds.Right - 8f, manager.Screen.Bounds.Bottom - 8f - manager.Assets.FutureFont.Size), new Vector2(1f, 1f), blinkEnergy && player?.energy <= 25 && manager.Time.BetweenInterval(0.5) ? Color.Red : Color.White);
         }
     }
 }
