@@ -1,12 +1,11 @@
 ﻿using Foster.Framework;
-using GameTest1.Game;
 using GameTest1.Game.Actors;
 using GameTest1.Game.Levels;
 using GameTest1.Game.UI;
 using GameTest1.Utilities;
 using System.Numerics;
 
-namespace GameTest1.GameStates
+namespace GameTest1.Game.States
 {
     public class InGame : IGameState
     {
@@ -236,7 +235,7 @@ namespace GameTest1.GameStates
                 capsuleCount = actors.Count(x => x is Capsule);
             }
 
-            camera.Update(Globals.ShowDebugInfo ? Point2.Zero : (currentMap?.Size * currentTileset?.CellSize) ?? Point2.Zero);
+            camera.Update(Globals.ShowDebugInfo ? Point2.Zero : currentMap?.Size * currentTileset?.CellSize ?? Point2.Zero);
 
             menuBox.Update();
         }
@@ -305,7 +304,7 @@ namespace GameTest1.GameStates
                 case State.GameStartCountdown:
                     {
                         var startTimer = Math.Floor(gameStartCountdown);
-                        var startText = startTimer < 1f ? "GO!!" : (startTimer < 4f ? $"{startTimer}" : "GET READY...");
+                        var startText = startTimer < 1f ? "GO!!" : startTimer < 4f ? $"{startTimer}" : "GET READY...";
                         manager.Batcher.Text(manager.Assets.FutureFont, startText, manager.Screen.Bounds.Center - manager.Assets.FutureFont.SizeOf(startText + Environment.NewLine) / 2f, Color.White);
                     }
                     break;

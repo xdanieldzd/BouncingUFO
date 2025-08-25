@@ -1,5 +1,5 @@
-﻿using GameTest1.Game.Levels;
-using GameTest1.GameStates;
+﻿using GameTest1.Game.States;
+using GameTest1.Game.Levels;
 
 namespace GameTest1.Game.Actors
 {

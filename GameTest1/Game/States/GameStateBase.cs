@@ -1,7 +1,7 @@
 ﻿using Foster.Framework;
 using GameTest1.Utilities;
 
-namespace GameTest1.GameStates
+namespace GameTest1.Game.States
 {
     public abstract class GameStateBase(Manager manager) : IGameState
     {

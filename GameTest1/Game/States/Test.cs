@@ -2,7 +2,7 @@
 using GameTest1.Game.UI;
 using System.Numerics;
 
-namespace GameTest1.GameStates
+namespace GameTest1.Game.States
 {
     public class Test(Manager manager) : GameStateBase(manager)
     {

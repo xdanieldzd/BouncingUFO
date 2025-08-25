@@ -4,12 +4,12 @@ namespace GameTest1
 {
     public class Controls
     {
-        public VirtualStick Move { get; private set; }
-        public VirtualAction Action1 { get; private set; }
-        public VirtualAction Action2 { get; private set; }
-        public VirtualAction Menu { get; private set; }
-        public VirtualAction DebugDisplay { get; private set; }
-        public VirtualAction DebugEditors { get; private set; }
+        public readonly VirtualStick Move;
+        public readonly VirtualAction Action1;
+        public readonly VirtualAction Action2;
+        public readonly VirtualAction Menu;
+        public readonly VirtualAction DebugDisplay;
+        public readonly VirtualAction DebugEditors;
 
         public Controls(Input input)
         {

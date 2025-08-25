@@ -3,7 +3,7 @@ using GameTest1.Editors;
 using ImGuiNET;
 using System.Numerics;
 
-namespace GameTest1.GameStates
+namespace GameTest1.Game.States
 {
     public class Editor(Manager manager) : GameStateBase(manager), IGameState
     {

@@ -2,7 +2,7 @@
 using GameTest1.Game.UI;
 using GameTest1.Utilities;
 
-namespace GameTest1.GameStates
+namespace GameTest1.Game.States
 {
     public class MainMenu(Manager manager) : GameStateBase(manager)
     {

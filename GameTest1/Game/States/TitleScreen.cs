@@ -1,7 +1,7 @@
 ﻿using Foster.Framework;
 using System.Numerics;
 
-namespace GameTest1.GameStates
+namespace GameTest1.Game.States
 {
     public class TitleScreen(Manager manager) : GameStateBase(manager)
     {

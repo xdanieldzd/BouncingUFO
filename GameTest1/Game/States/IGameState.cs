@@ -1,4 +1,4 @@
-﻿namespace GameTest1.GameStates
+﻿namespace GameTest1.Game.States
 {
     public interface IGameState
     {

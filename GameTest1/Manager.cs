@@ -1,5 +1,5 @@
 ﻿using Foster.Framework;
-using GameTest1.GameStates;
+using GameTest1.Game.States;
 using GameTest1.Utilities;
 using System.Numerics;
 
@@ -10,7 +10,12 @@ namespace GameTest1
 {
     public class Manager : App
     {
-        public const int DefaultZoom = 2;
+        private const string applicationName = nameof(GameTest1);
+        private const string windowTitle = "Game Test #1 - Bouncing UFO (REWRITE)";
+
+        private const int defaultScreenWidth = 480;
+        private const int defaultScreenHeight = 272;
+        private const int defaultWindowScale = 2;
 
         public readonly Batcher Batcher;
         public readonly Target Screen;
@@ -19,27 +24,29 @@ namespace GameTest1
         public readonly Assets Assets;
         public readonly Controls Controls;
 
-        public Stack<IGameState> GameStates;
+        public readonly Stack<IGameState> GameStates = [];
 
         public Manager() : base(new AppConfig()
         {
-            ApplicationName = "GameTest1",
-            WindowTitle = "Game Test #1 - Bouncing UFO (REWRITE)",
-            Width = !Globals.StartInEditorMode ? 480 * DefaultZoom : 1600,
-            Height = !Globals.StartInEditorMode ? 272 * DefaultZoom : 900,
+            ApplicationName = applicationName,
+            WindowTitle = windowTitle,
+            Width = !Globals.StartInEditorMode ? defaultScreenWidth * defaultWindowScale : 1600,
+            Height = !Globals.StartInEditorMode ? defaultScreenHeight * defaultWindowScale : 900,
             Resizable = Globals.StartInEditorMode
         })
         {
             GraphicsDevice.VSync = true;
 
             Batcher = new(GraphicsDevice);
-            Screen = new(GraphicsDevice, 480, 272, "Screen");
+            Screen = new(GraphicsDevice, defaultScreenWidth, defaultScreenHeight, "Screen");
 
             ImGuiRenderer = new(this);
             Assets = new(GraphicsDevice);
             Controls = new(Input);
+        }
 
-            GameStates = [];
+        protected override void Startup()
+        {
             if (Globals.StartInEditorMode)
                 GameStates.Push(new Editor(this));
             else if (Globals.StartInTestGameState)
@@ -49,8 +56,6 @@ namespace GameTest1
             else
                 GameStates.Push(new TitleScreen(this));
         }
-
-        protected override void Startup() { }
 
         protected override void Shutdown()
         {
