@@ -80,10 +80,12 @@ namespace GameTest1.Game.Actors
             CalcShadow();
         }
 
-        public Point2[] GetMapCells() => GetMapCells(Position, Hitbox.Rectangle, level.Tileset, level.Map);
+        public Point2[] GetMapCells() => GetMapCells(Position, Hitbox.Rectangle, level.Map, level.Tileset);
 
-        public static Point2[] GetMapCells(Point2 position, RectInt hitboxRect, Tileset tileset, Map map)
+        public static Point2[] GetMapCells(Point2 position, RectInt hitboxRect, Map? map, Tileset? tileset)
         {
+            if (map == null || tileset == null) return [];
+
             var localHitbox = (position + hitboxRect) / (Vector2)tileset.CellSize;
             var topLeftFloor = localHitbox.TopLeft.FloorToPoint2();
             var bottomRightCeil = localHitbox.BottomRight.CeilingToPoint2();
@@ -137,6 +139,8 @@ namespace GameTest1.Game.Actors
 
         private bool MovePixel(Point2 sign)
         {
+            if (level.Map == null || level.Tileset == null) return false;
+
             sign.X = Math.Sign(sign.X);
             sign.Y = Math.Sign(sign.Y);
 

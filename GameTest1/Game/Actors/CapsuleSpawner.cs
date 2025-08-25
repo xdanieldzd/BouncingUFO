@@ -10,6 +10,8 @@ namespace GameTest1.Game.Actors
 
         public CapsuleSpawner(Manager manager, LevelManager level, int mapLayer = 0, int argument = 0) : base(manager, level, mapLayer, argument)
         {
+            if (level.Map == null || level.Tileset == null) return;
+
             Class = ActorClass.None;
 
             for (var i = 0; i < argument; i++)
@@ -27,7 +29,7 @@ namespace GameTest1.Game.Actors
 
                     var isLocationSpawnable = true;
 
-                    foreach (var cellPos in GetMapCells(actor.Position, actor.Hitbox.Rectangle, level.Tileset, level.Map))
+                    foreach (var cellPos in GetMapCells(actor.Position, actor.Hitbox.Rectangle, level.Map, level.Tileset))
                     {
                         foreach (var layer in level.Map.Layers.Where((_, i) => i <= MapLayer))
                         {
