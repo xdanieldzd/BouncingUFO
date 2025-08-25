@@ -8,33 +8,22 @@ using System.Numerics;
 
 namespace GameTest1.GameStates
 {
-    public class InGame(Manager manager) : GameStateBase(manager), IGameState
+    public class InGame : IGameState
     {
         private const float screenFadeDuration = 0.75f;
-        private const string defaultMapName = "SmallTest2";
+        private const string defaultMapName = "TestMaps\\SmallTest2";
         private const string levelsDialogFile = "Levels";
 
         private enum State { Initialize, LoadMap, ResetMap, FadeIn, GameIntroduction, GameStartCountdown, MainLogic, GameOver, ShowGameOverMenu, Restart, ExitToMenu }
 
-        private readonly ScreenFader screenFader = new(manager);
-        private readonly Camera camera = new(manager);
-        private readonly DialogBox dialogBox = new(manager)
-        {
-            Font = manager.Assets.LargeFont,
-            GraphicsSheet = manager.Assets.UI["DialogBox"],
-            FramePaddingTopLeft = (10, 10),
-            FramePaddingBottomRight = (12, 12),
-            BackgroundColor = new(0x3E4F65)
-        };
-        private readonly MenuBox menuBox = new(manager)
-        {
-            Font = manager.Assets.LargeFont,
-            GraphicsSheet = manager.Assets.UI["DialogBox"],
-            FramePaddingTopLeft = (10, 10),
-            FramePaddingBottomRight = (12, 12),
-            LinePadding = 4,
-            BackgroundColor = new(0x3E4F65)
-        };
+        private readonly Manager manager;
+
+        private readonly ScreenFader screenFader;
+        private readonly Camera camera;
+        private readonly DialogBox dialogBox;
+        private readonly MenuBox menuBox;
+
+        private readonly MapRenderer mapRenderer;
 
         private readonly Dictionary<string, Type> actorTypeDictionary = new()
         {
@@ -63,61 +52,34 @@ namespace GameTest1.GameStates
 
         private float gameOverWaitTimer;
 
-        //
-
-        public ActorBase CreateActor(string actorType, Point2? position = null, int mapLayer = 0, int argument = 0)
+        public InGame(Manager manager)
         {
-            if (actorTypeDictionary.TryGetValue(actorType, out Type? type))
-                return CreateActor(type, position, mapLayer, argument);
-            else
-                throw new ActorException($"Actor type '{actorType}' not recognized");
-        }
+            this.manager = manager;
 
-        public ActorBase CreateActor(Type type, Point2? position = null, int mapLayer = 0, int argument = 0)
-        {
-            var actor = Activator.CreateInstance(type, manager, this, currentMap, currentTileset, mapLayer, argument) as ActorBase ??
-                throw new ActorException(type, "Failed to create actor instance");
-            actor.Position = position * currentTileset?.CellSize ?? Point2.One;
-            actor.Created();
-            return actor;
-        }
-
-        public void SpawnActor(ActorBase actor) => actors.Add(actor);
-        public void SpawnActor(string actorType, Point2? position = null, int mapLayer = 0, int argument = 0) => actors.Add(CreateActor(actorType, position, mapLayer, argument));
-        public void SpawnActor(Type type, Point2? position = null, int mapLayer = 0, int argument = 0) => actors.Add(CreateActor(type, position, mapLayer, argument));
-
-        public void DestroyActor(ActorBase actor)
-        {
-            if (!actorsToDestroy.Contains(actor))
-                actorsToDestroy.Add(actor);
-        }
-
-        public IEnumerable<T> GetActors<T>() where T : ActorBase => actors.Where(x => x is T && !actorsToDestroy.Contains(x)).Cast<T>();
-        public IEnumerable<ActorBase> GetActors(ActorClass actorClass) => actors.Where(x => x.Class.Has(actorClass) && !actorsToDestroy.Contains(x));
-
-        public T? GetFirstActor<T>() where T : ActorBase => actors.FirstOrDefault(x => x is T && !actorsToDestroy.Contains(x)) as T;
-        public ActorBase? GetFirstActor(ActorClass actorClass) => actors.FirstOrDefault(x => x.Class.Has(actorClass) && !actorsToDestroy.Contains(x));
-
-        public ActorBase? GetFirstOverlapActor(Point2 position, RectInt hitboxRect, ActorClass actorClass) => GetFirstOverlapActor(position, hitboxRect, actorClass, actors);
-        public ActorBase? GetFirstOverlapActor(ActorBase actor, ActorClass actorClass) => GetFirstOverlapActor(actor.Position, actor.Hitbox.Rectangle, actorClass, actors.Where(x => x != actor));
-
-        private static ActorBase? GetFirstOverlapActor(Point2 position, RectInt hitboxRect, ActorClass actorClass, IEnumerable<ActorBase> actorsToCheck)
-        {
-            foreach (var other in actorsToCheck)
+            screenFader = new(manager);
+            camera = new(manager);
+            dialogBox = new(manager)
             {
-                if (other.Class.HasFlag(actorClass) &&
-                    (hitboxRect + position).Overlaps(other.Hitbox.Rectangle + other.Position))
-                    return other;
-            }
-            return null;
-        }
-
-        public void SetCameraFollowActor(ActorBase? actor) => camera.FollowActor(actor);
-
-        public override void Initialize()
-        {
+                Font = manager.Assets.LargeFont,
+                GraphicsSheet = manager.Assets.UI["DialogBox"],
+                FramePaddingTopLeft = (10, 10),
+                FramePaddingBottomRight = (12, 12),
+                BackgroundColor = new(0x3E4F65)
+            };
             dialogBox.Resize(2);
-            menuBox.HighlightTextColor = Color.Lerp(Color.Green, Color.White, 0.35f);
+
+            menuBox = new(manager)
+            {
+                Font = manager.Assets.LargeFont,
+                GraphicsSheet = manager.Assets.UI["DialogBox"],
+                FramePaddingTopLeft = (10, 10),
+                FramePaddingBottomRight = (12, 12),
+                LinePadding = 4,
+                BackgroundColor = new(0x3E4F65),
+                HighlightTextColor = Color.Lerp(Color.Green, Color.White, 0.35f)
+            };
+
+            mapRenderer = new(manager);
 
             pauseMenuItems.AddRange(
             [
@@ -133,7 +95,7 @@ namespace GameTest1.GameStates
             ]);
         }
 
-        public override void UpdateApp()
+        public void Update()
         {
             var player = GetFirstActor<Player>();
 
@@ -298,12 +260,12 @@ namespace GameTest1.GameStates
                 SpawnActor(spawn.ActorType, spawn.Position, spawn.MapLayer, spawn.Argument);
         }
 
-        public override void Render()
+        public void Render()
         {
             manager.Screen.Clear(0x3E4F65);
 
             manager.Batcher.PushMatrix(camera.Matrix);
-            manager.MapRenderer.Render(currentMap, currentTileset, actors, Globals.ShowDebugInfo);
+            mapRenderer.Render(currentMap, currentTileset, actors, Globals.ShowDebugInfo);
             manager.Batcher.PopMatrix();
 
             RenderHUD();
@@ -369,5 +331,54 @@ namespace GameTest1.GameStates
             if (GetFirstActor<Player>() is Player player)
                 manager.Batcher.Text(manager.Assets.FutureFont, $"ENERGY {player?.energy:00}", new Vector2(manager.Screen.Bounds.Right - 8f, manager.Screen.Bounds.Bottom - 8f - manager.Assets.FutureFont.Size), new Vector2(1f, 1f), blinkEnergy && player?.energy <= 25 && manager.Time.BetweenInterval(0.5) ? Color.Red : Color.White);
         }
+
+        public ActorBase CreateActor(string actorType, Point2? position = null, int mapLayer = 0, int argument = 0)
+        {
+            if (actorTypeDictionary.TryGetValue(actorType, out Type? type))
+                return CreateActor(type, position, mapLayer, argument);
+            else
+                throw new ActorException($"Actor type '{actorType}' not recognized");
+        }
+
+        public ActorBase CreateActor(Type type, Point2? position = null, int mapLayer = 0, int argument = 0)
+        {
+            var actor = Activator.CreateInstance(type, manager, this, currentMap, currentTileset, mapLayer, argument) as ActorBase ??
+                throw new ActorException(type, "Failed to create actor instance");
+            actor.Position = position * currentTileset?.CellSize ?? Point2.One;
+            actor.Created();
+            return actor;
+        }
+
+        public void SpawnActor(ActorBase actor) => actors.Add(actor);
+        public void SpawnActor(string actorType, Point2? position = null, int mapLayer = 0, int argument = 0) => actors.Add(CreateActor(actorType, position, mapLayer, argument));
+        public void SpawnActor(Type type, Point2? position = null, int mapLayer = 0, int argument = 0) => actors.Add(CreateActor(type, position, mapLayer, argument));
+
+        public void DestroyActor(ActorBase actor)
+        {
+            if (!actorsToDestroy.Contains(actor))
+                actorsToDestroy.Add(actor);
+        }
+
+        public IEnumerable<T> GetActors<T>() where T : ActorBase => actors.Where(x => x is T && !actorsToDestroy.Contains(x)).Cast<T>();
+        public IEnumerable<ActorBase> GetActors(ActorClass actorClass) => actors.Where(x => x.Class.Has(actorClass) && !actorsToDestroy.Contains(x));
+
+        public T? GetFirstActor<T>() where T : ActorBase => actors.FirstOrDefault(x => x is T && !actorsToDestroy.Contains(x)) as T;
+        public ActorBase? GetFirstActor(ActorClass actorClass) => actors.FirstOrDefault(x => x.Class.Has(actorClass) && !actorsToDestroy.Contains(x));
+
+        public ActorBase? GetFirstOverlapActor(Point2 position, RectInt hitboxRect, ActorClass actorClass) => GetFirstOverlapActor(position, hitboxRect, actorClass, actors);
+        public ActorBase? GetFirstOverlapActor(ActorBase actor, ActorClass actorClass) => GetFirstOverlapActor(actor.Position, actor.Hitbox.Rectangle, actorClass, actors.Where(x => x != actor));
+
+        private static ActorBase? GetFirstOverlapActor(Point2 position, RectInt hitboxRect, ActorClass actorClass, IEnumerable<ActorBase> actorsToCheck)
+        {
+            foreach (var other in actorsToCheck)
+            {
+                if (other.Class.HasFlag(actorClass) &&
+                    (hitboxRect + position).Overlaps(other.Hitbox.Rectangle + other.Position))
+                    return other;
+            }
+            return null;
+        }
+
+        public void SetCameraFollowActor(ActorBase? actor) => camera.FollowActor(actor);
     }
 }

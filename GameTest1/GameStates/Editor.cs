@@ -7,16 +7,18 @@ namespace GameTest1.GameStates
 {
     public class Editor(Manager manager) : GameStateBase(manager), IGameState
     {
+        public override float ScreenFadeDuration => 0f;
+
         private readonly TilesetEditor tilesetEditor = new(manager);
         private readonly MapEditor mapEditor = new(manager);
         private readonly SpriteEditor spriteEditor = new(manager);
         private readonly JsonEditor jsonEditor = new(manager);
 
+        private readonly MapRenderer mapRenderer = new(manager);
+
         private IEditor[]? editors;
 
-        public override void UpdateApp() { }
-
-        public override void UpdateUI()
+        public void RenderImGui()
         {
             if (editors == null)
             {
@@ -38,18 +40,17 @@ namespace GameTest1.GameStates
                 }
                 ImGui.Separator();
                 if (ImGui.Button("Exit", new(150f, 0f)))
-                {
-                    manager.GameStates.Pop();
-                    if (manager.GameStates.Count == 0) manager.GameStates.Push(new TitleScreen(manager));
-                }
+                    ExitState();
             }
             ImGui.End();
         }
 
-        public override void Render()
-        {
-            manager.Screen.Clear(Color.DarkGray);
+        public override void OnEnter() { }
 
+        public override void OnUpdateMain() { }
+
+        public override void OnRenderMain()
+        {
             var focusedEditor = editors?.FirstOrDefault(x => x.IsFocused) ?? null;
             if (focusedEditor == tilesetEditor)
             {
@@ -57,7 +58,7 @@ namespace GameTest1.GameStates
             }
             else if (focusedEditor == mapEditor)
             {
-                manager.MapRenderer.Render(mapEditor.CurrentMapAndTileset.Map, mapEditor.CurrentMapAndTileset.Tileset, []);
+                mapRenderer.Render(mapEditor.CurrentMapAndTileset.Map, mapEditor.CurrentMapAndTileset.Tileset, []);
             }
             else if (focusedEditor == spriteEditor)
             {
@@ -69,6 +70,12 @@ namespace GameTest1.GameStates
             }
             else
                 manager.Batcher.Text(manager.Assets.SmallFont, "No editor selected.", 1024f, new(0f, manager.Screen.Height), new(0f, 1.5f), Color.White);
+        }
+
+        public override void OnExit()
+        {
+            manager.GameStates.Pop();
+            if (manager.GameStates.Count == 0) manager.GameStates.Push(new TitleScreen(manager));
         }
     }
 }

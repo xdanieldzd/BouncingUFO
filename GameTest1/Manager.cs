@@ -19,8 +19,6 @@ namespace GameTest1
         public readonly Assets Assets;
         public readonly Controls Controls;
 
-        public readonly MapRenderer MapRenderer;
-
         public Stack<IGameState> GameStates;
 
         public Manager() : base(new AppConfig()
@@ -40,8 +38,6 @@ namespace GameTest1
             ImGuiRenderer = new(this);
             Assets = new(GraphicsDevice);
             Controls = new(Input);
-
-            MapRenderer = new(this);
 
             GameStates = [];
             if (Globals.StartInEditorMode)
@@ -67,14 +63,14 @@ namespace GameTest1
             if (Controls.DebugDisplay.ConsumePress()) Globals.ShowDebugInfo = !Globals.ShowDebugInfo;
 
             if (GameStates.TryPeek(out IGameState? gameState))
-                gameState.UpdateApp();
+                gameState.Update();
 
             ImGuiRenderer.BeginLayout();
 
             if (ImGuiRenderer.WantsTextInput) Window.StartTextInput();
             else Window.StopTextInput();
 
-            gameState?.UpdateUI();
+            gameState?.RenderImGui();
 
             ImGuiRenderer.EndLayout();
         }
