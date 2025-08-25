@@ -84,121 +84,149 @@ namespace GameTest1.Game.States
 
         public void Update()
         {
-            var player = levelManager.GetFirstActor<Player>();
-
             switch (currentState)
             {
                 case State.Initialize:
-                    if (!Globals.QuickStart)
                     {
-                        levelManager.Reset();
+                        if (!Globals.QuickStart)
+                        {
+                            levelManager.Reset();
+                            gameStartCountdown = 5f;
+
+                            screenFader.Begin(ScreenFadeType.FadeIn, screenFadeDuration, ScreenFader.PreviousColor);
+                            currentState = State.FadeIn;
+                        }
+                        else
+                        {
+                            levelManager.Load(@"TestMaps\SmallTest2");
+                            gameStartCountdown = 0f;
+
+                            if (levelManager.GetFirstActor<Player>() is Player player)
+                                player.CurrentState = Player.State.Normal;
+
+                            screenFader.Cancel();
+                            currentState = State.MainLogic;
+                        }
+
+                        menuBox.Initialize("Paused", pauseMenuItems);
                         camera.FollowActor(levelManager.GetFirstActor<Player>());
 
                         gameDuration = TimeSpan.Zero;
-                        gameStartCountdown = 5f;
-
-                        screenFader.Begin(ScreenFadeType.FadeIn, screenFadeDuration, ScreenFader.PreviousColor);
-                        currentState = State.FadeIn;
-                    }
-                    else
-                    {
-                        levelManager.Load(@"TestMaps\SmallTest2");
-                        camera.FollowActor(levelManager.GetFirstActor<Player>());
-                        gameDuration = TimeSpan.Zero;
-                        screenFader.Cancel();
-                        currentState = State.MainLogic;
-                        gameStartCountdown = 0f;
-                        if (levelManager.GetFirstActor<Player>() is Player p) p.CurrentState = Player.State.Normal;
                     }
                     break;
 
                 case State.FadeIn:
-                    if (screenFader.Update())
                     {
-                        if (!string.IsNullOrWhiteSpace(levelManager.Map?.IntroID) && manager.Assets.DialogText[levelsDialogFile].TryGetValue(levelManager.Map.IntroID, out DialogText? dialogText))
-                            currentDialogText = dialogText;
+                        if (screenFader.Update())
+                        {
+                            if (!string.IsNullOrWhiteSpace(levelManager.Map?.IntroID) &&
+                                manager.Assets.DialogText[levelsDialogFile].TryGetValue(levelManager.Map.IntroID, out DialogText? dialogText))
+                                currentDialogText = dialogText;
 
-                        currentState = State.GameIntroduction;
+                            currentState = State.GameIntroduction;
+                        }
                     }
                     break;
 
                 case State.GameIntroduction:
-                    if (!dialogBox.IsOpen)
                     {
-                        if (currentDialogText != null)
-                            currentDialogText.HasBeenShownOnce = true;
+                        if (!dialogBox.IsOpen)
+                        {
+                            if (currentDialogText != null)
+                                currentDialogText.HasBeenShownOnce = true;
 
-                        currentState = State.GameStartCountdown;
+                            currentState = State.GameStartCountdown;
+                        }
                     }
                     break;
 
                 case State.GameStartCountdown:
-                    gameStartCountdown = Calc.Approach(gameStartCountdown, 0f, manager.Time.Delta);
-                    if (gameStartCountdown <= 0f)
                     {
-                        if (player != null) player.CurrentState = Player.State.Normal;
-                        currentState = State.MainLogic;
+                        gameStartCountdown = Calc.Approach(gameStartCountdown, 0f, manager.Time.Delta);
+                        if (gameStartCountdown <= 0f)
+                        {
+                            if (levelManager.GetFirstActor<Player>() is Player player)
+                                player.CurrentState = Player.State.Normal;
+
+                            currentState = State.MainLogic;
+                        }
                     }
                     break;
 
                 case State.MainLogic:
-                    if (!menuBox.IsOpen)
                     {
-                        gameDuration += TimeSpan.FromSeconds(manager.Time.Delta);
-                        if (player != null && (capsuleCount <= 0 || player.energy <= 0))
+                        if (!menuBox.IsOpen)
                         {
-                            gameOverWaitTimer = 2.5f;
-                            currentState = State.GameOver;
+                            gameDuration += TimeSpan.FromSeconds(manager.Time.Delta);
+                            if (levelManager.GetFirstActor<Player>() is Player player && (capsuleCount <= 0 || player.energy <= 0))
+                            {
+                                gameOverWaitTimer = 2.5f;
+                                currentState = State.GameOver;
+                            }
                         }
-                    }
 
-                    if (manager.Controls.Menu.ConsumePress())
-                    {
-                        if (!menuBox.IsOpen) menuBox.Initialize("PAUSE", pauseMenuItems);
-                        else menuBox.Close();
+                        if (manager.Controls.Menu.ConsumePress())
+                            menuBox.Toggle();
                     }
                     break;
 
                 case State.GameOver:
-                    if (player != null)
                     {
-                        player.CurrentState = Player.State.InputDisabled;
-                        player.Stop();
-                        player.PlayAnimation("WarpOut", false);
-                    }
+                        if (levelManager.GetFirstActor<Player>() is Player player)
+                        {
+                            player.CurrentState = Player.State.InputDisabled;
+                            player.Stop();
+                            player.PlayAnimation("WarpOut", false);
+                        }
 
-                    gameOverWaitTimer = Calc.Approach(gameOverWaitTimer, 0f, manager.Time.Delta);
-                    if (gameOverWaitTimer <= 0f || manager.Controls.Action1.ConsumePress() || manager.Controls.Action2.ConsumePress())
-                        currentState = State.ShowGameOverMenu;
+                        gameOverWaitTimer = Calc.Approach(gameOverWaitTimer, 0f, manager.Time.Delta);
+                        if (gameOverWaitTimer <= 0f || manager.Controls.Action1.ConsumePress() || manager.Controls.Action2.ConsumePress())
+                            currentState = State.ShowGameOverMenu;
+                    }
                     break;
 
                 case State.ShowGameOverMenu:
-                    if (!menuBox.IsOpen)
-                        menuBox.Initialize(string.Empty, gameOverMenuItems);
+                    {
+                        if (!menuBox.IsOpen)
+                        {
+                            menuBox.Initialize(string.Empty, gameOverMenuItems);
+                            menuBox.Open();
+                        }
+                    }
                     break;
 
                 case State.Restart:
-                    if (screenFader.Update())
                     {
-                        levelManager.DestroyAllActors();
-                        currentState = State.Initialize;
+                        if (screenFader.Update())
+                        {
+                            menuBox.Close();
+
+                            levelManager.DestroyAllActors();
+                            currentState = State.Initialize;
+                        }
                     }
                     break;
 
                 case State.ExitToMenu:
-                    if (screenFader.Update())
                     {
-                        manager.GameStates.Pop();
-                        manager.GameStates.Push(new MainMenu(manager));
+                        if (screenFader.Update())
+                        {
+                            menuBox.Close();
+
+                            manager.GameStates.Pop();
+                            manager.GameStates.Push(new MainMenu(manager));
+                        }
                     }
                     break;
 
                 case State.LoadNextLevel:
-                    if (screenFader.Update())
                     {
-                        // TODO: game progression!
-                        levelManager.Load(@"TestMaps\BigTestMap");
-                        currentState = State.Initialize;
+                        if (screenFader.Update())
+                        {
+                            // TODO: game progression!
+                            levelManager.Load(@"TestMaps\BigTestMap");
+                            currentState = State.Initialize;
+                        }
                     }
                     break;
             }

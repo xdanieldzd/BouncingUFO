@@ -22,6 +22,7 @@ namespace GameTest1.Game.States
         public override void OnEnter()
         {
             menuBox.Initialize("Select Map", manager.Assets.Maps.Select(x => new MenuBoxItem() { Label = $"{x.Value.Title} ({x.Key})", Action = MenuAction }));
+            menuBox.Open();
 
             selectedMapName = manager.Assets.Maps.ElementAt(0).Key;
         }
@@ -38,6 +39,8 @@ namespace GameTest1.Game.States
 
         public override void OnExit()
         {
+            menuBox.Close();
+
             manager.GameStates.Pop();
             manager.GameStates.Push(new InGame(manager, selectedMapName));
         }

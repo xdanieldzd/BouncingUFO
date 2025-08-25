@@ -14,7 +14,7 @@ namespace GameTest1.Game.UI
         private MenuBoxItem[] menuItems = [];
         private int currentItemIndex = 0;
 
-        enum MenuBoxState { Opening, WaitingForInput, PerformingAction, Closed }
+        enum MenuBoxState { WaitingForInput, InitiateAction, PerformingAction, Closed }
         private MenuBoxState currentState = MenuBoxState.Closed;
 
         public bool IsOpen => currentState != MenuBoxState.Closed;
@@ -36,7 +36,10 @@ namespace GameTest1.Game.UI
                 Size = new Vector2(totalWidth, totalHeight).CeilingToPoint2();
                 Position = new(manager.Screen.Bounds.Center.X - Size.X / 2, manager.Screen.Bounds.Center.Y - Size.Y / 2);
             }
+        }
 
+        public void Open()
+        {
             currentState = MenuBoxState.WaitingForInput;
         }
 
@@ -45,14 +48,16 @@ namespace GameTest1.Game.UI
             currentState = MenuBoxState.Closed;
         }
 
+        public void Toggle()
+        {
+            if (IsOpen) Close();
+            else Open();
+        }
+
         public void Update()
         {
             switch (currentState)
             {
-                case MenuBoxState.Opening:
-                    currentItemIndex = 0;
-                    break;
-
                 case MenuBoxState.WaitingForInput:
                     if (manager.Controls.Move.PressedDown)
                     {
@@ -73,20 +78,25 @@ namespace GameTest1.Game.UI
                         currentItemIndex = 0;
                     }
                     else if (manager.Controls.Action1.ConsumePress() || manager.Controls.Action2.ConsumePress())
-                        currentState = MenuBoxState.PerformingAction;
+                        currentState = MenuBoxState.InitiateAction;
                     break;
 
-                case MenuBoxState.PerformingAction:
+                case MenuBoxState.InitiateAction:
                     if (currentItemIndex >= 0 && currentItemIndex < menuItems.Length && menuItems[currentItemIndex]?.Action is Action<MenuBox> action)
                     {
+                        currentState = MenuBoxState.PerformingAction;
                         action(this);
-                        currentState = MenuBoxState.Closed;
                     }
                     else
                         currentState = MenuBoxState.WaitingForInput;
                     break;
 
+                case MenuBoxState.PerformingAction:
+                    /* Nothing to do; allows MenuBox to stay on-screen while action is performed (ex. changing gamestate w/ fadeout) */
+                    break;
+
                 case MenuBoxState.Closed:
+                    /* Signals that MenuBox is closed; does not render in this state */
                     break;
             }
         }
@@ -95,7 +105,7 @@ namespace GameTest1.Game.UI
         {
             if (Font == null) return;
 
-            if (currentState != MenuBoxState.Opening && currentState != MenuBoxState.Closed)
+            if (IsOpen && menuItems.Length != 0)
             {
                 RenderBackground();
                 RenderText();
