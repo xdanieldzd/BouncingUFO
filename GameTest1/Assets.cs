@@ -19,14 +19,14 @@ namespace GameTest1
 
         public readonly static JsonSerializerOptions SerializerOptions = new() { WriteIndented = true, IncludeFields = true };
 
-        public SpriteFont SmallFont { get; private set; }
-        public SpriteFont LargeFont { get; private set; }
-        public SpriteFont FutureFont { get; private set; }
-        public Dictionary<string, Tileset> Tilesets { get; private set; } = [];
-        public Dictionary<string, Map> Maps { get; private set; } = [];
-        public Dictionary<string, Sprite> Sprites { get; private set; } = [];
-        public Dictionary<string, GraphicsSheet> UI { get; private set; } = [];
-        public Dictionary<string, Dictionary<string, DialogText>> DialogText { get; private set; } = [];
+        public readonly SpriteFont SmallFont;
+        public readonly SpriteFont LargeFont;
+        public readonly SpriteFont FutureFont;
+        public readonly Dictionary<string, Tileset> Tilesets = [];
+        public readonly Dictionary<string, Map> Maps = [];
+        public readonly Dictionary<string, Sprite> Sprites = [];
+        public readonly Dictionary<string, GraphicsSheet> UI = [];
+        public readonly Dictionary<string, Dictionary<string, DialogText>> DialogText = [];
 
         public Assets(GraphicsDevice graphicsDevice)
         {
@@ -60,47 +60,23 @@ namespace GameTest1
                 firstChara: 0x20,
                 spaceWidth: 16);
 
-            foreach (var tilesetFile in Directory.EnumerateFiles(Path.Join(AssetsFolderName, TilesetFolderName), "*.json", SearchOption.AllDirectories))
+            LoadAssets(TilesetFolderName, ref Tilesets, (obj) => obj.CreateTextures(graphicsDevice));
+            LoadAssets(MapFolderName, ref Maps);
+            LoadAssets(SpriteFolderName, ref Sprites, (obj) => obj.CreateTextures(graphicsDevice));
+            LoadAssets(UIFolderName, ref UI, (obj) => obj.CreateTextures(graphicsDevice));
+            LoadAssets(DialogTextFolderName, ref DialogText);
+        }
+
+        private static void LoadAssets<T>(string folderName, ref Dictionary<string, T> assetDictionary, Action<T>? afterLoadAction = null)
+        {
+            var path = Path.Join(AssetsFolderName, folderName);
+            foreach (var file in Directory.EnumerateFiles(path, "*.json", SearchOption.AllDirectories))
             {
-                var tileset = JsonSerializer.Deserialize<Tileset>(File.ReadAllText(tilesetFile), SerializerOptions);
-                if (tileset == null) continue;
+                var instance = JsonSerializer.Deserialize<T>(File.ReadAllText(file), SerializerOptions);
+                if (instance == null) continue;
 
-                tileset.CreateTextures(graphicsDevice);
-                Tilesets.Add(Path.GetFileNameWithoutExtension(tilesetFile), tileset);
-            }
-
-            foreach (var mapFile in Directory.EnumerateFiles(Path.Join(AssetsFolderName, MapFolderName), "*.json", SearchOption.AllDirectories))
-            {
-                var map = JsonSerializer.Deserialize<Map>(File.ReadAllText(mapFile), SerializerOptions);
-                if (map == null) continue;
-
-                Maps.Add(Path.GetFileNameWithoutExtension(mapFile), map);
-            }
-
-            foreach (var spriteFile in Directory.EnumerateFiles(Path.Join(AssetsFolderName, SpriteFolderName), "*.json", SearchOption.AllDirectories))
-            {
-                var sprite = JsonSerializer.Deserialize<Sprite>(File.ReadAllText(spriteFile), SerializerOptions);
-                if (sprite == null) continue;
-
-                sprite.CreateTextures(graphicsDevice);
-                Sprites.Add(Path.GetFileNameWithoutExtension(spriteFile), sprite);
-            }
-
-            foreach (var uiElementsFiles in Directory.EnumerateFiles(Path.Join(AssetsFolderName, UIFolderName), "*.json", SearchOption.AllDirectories))
-            {
-                var uiElements = JsonSerializer.Deserialize<GraphicsSheet>(File.ReadAllText(uiElementsFiles), SerializerOptions);
-                if (uiElements == null) continue;
-
-                uiElements.CreateTextures(graphicsDevice);
-                UI.Add(Path.GetFileNameWithoutExtension(uiElementsFiles), uiElements);
-            }
-
-            foreach (var dialogTextFiles in Directory.EnumerateFiles(Path.Join(AssetsFolderName, DialogTextFolderName), "*.json", SearchOption.AllDirectories))
-            {
-                var dialogText = JsonSerializer.Deserialize<Dictionary<string, DialogText>>(File.ReadAllText(dialogTextFiles), SerializerOptions);
-                if (dialogText == null) continue;
-
-                DialogText.Add(Path.GetFileNameWithoutExtension(dialogTextFiles), dialogText);
+                afterLoadAction?.Invoke(instance);
+                assetDictionary.Add(Path.ChangeExtension(file.Replace(path, null).TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar), null), instance);
             }
         }
     }
