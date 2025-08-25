@@ -9,6 +9,7 @@ namespace GameTest1.Game
         private ActorBase? followedActor;
         private Vector2 position;
 
+        public Point2 Position => position.FloorToPoint2();
         public Matrix3x2 Matrix => Matrix3x2.CreateTranslation(position);
 
         public void FollowActor(ActorBase? actor)

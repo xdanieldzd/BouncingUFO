@@ -1,7 +1,6 @@
 ﻿using Foster.Framework;
 using GameTest1.Game.Levels;
 using GameTest1.Game.Sprites;
-using GameTest1.Game.States;
 using System.Numerics;
 
 namespace GameTest1.Game.Actors
@@ -17,12 +16,10 @@ namespace GameTest1.Game.Actors
         Collectible = 1 << 2
     }
 
-    public abstract class ActorBase(Manager manager, InGame gameState, Map map, Tileset tileset, int mapLayer = 0, int argument = 0)
+    public abstract class ActorBase(Manager manager, LevelManager level, int mapLayer = 0, int argument = 0)
     {
         protected Manager manager = manager;
-        protected InGame gameState = gameState;
-        protected Map map = map;
-        protected Tileset tileset = tileset;
+        protected LevelManager level = level;
         protected int argument = argument;
 
         public ActorClass Class = ActorClass.None;
@@ -83,7 +80,7 @@ namespace GameTest1.Game.Actors
             CalcShadow();
         }
 
-        public Point2[] GetMapCells() => GetMapCells(Position, Hitbox.Rectangle, tileset, map);
+        public Point2[] GetMapCells() => GetMapCells(Position, Hitbox.Rectangle, level.Tileset, level.Map);
 
         public static Point2[] GetMapCells(Point2 position, RectInt hitboxRect, Tileset tileset, Map map)
         {
@@ -165,13 +162,13 @@ namespace GameTest1.Game.Actors
                 {
                     var destMatch = match + sign;
 
-                    var nextCellRect = new RectInt(destMatch * tileset.CellSize, tileset.CellSize);
-                    if (nextCellRect.Left < 0 || nextCellRect.Top < 0 || nextCellRect.Right >= map.Size.X * tileset.CellSize.X || nextCellRect.Bottom >= map.Size.Y * tileset.CellSize.Y) continue;
+                    var nextCellRect = new RectInt(destMatch * level.Tileset.CellSize, level.Tileset.CellSize);
+                    if (nextCellRect.Left < 0 || nextCellRect.Top < 0 || nextCellRect.Right >= level.Map.Size.X * level.Tileset.CellSize.X || nextCellRect.Bottom >= level.Map.Size.Y * level.Tileset.CellSize.Y) continue;
 
                     foreach (var layer in layers)
                     {
-                        var nextCellType = layer.Tiles[destMatch.Y * map.Size.X + destMatch.X];
-                        var nextCellFlags = tileset.CellFlags[nextCellType];
+                        var nextCellType = layer.Tiles[destMatch.Y * level.Map.Size.X + destMatch.X];
+                        var nextCellFlags = level.Tileset.CellFlags[nextCellType];
                         if (nextCellRect.Overlaps(destRect) &&
                             nextCellFlags != CellFlag.Empty &&
                             (!nextCellFlags.Has(CellFlag.Ground) || nextCellFlags.Has(CellFlag.Wall))) return false;
@@ -180,13 +177,13 @@ namespace GameTest1.Game.Actors
                 return true;
             }
 
-            var layers = map.Layers.Where((_, i) => i <= MapLayer).Reverse().ToArray();
+            var layers = level.Map.Layers.Where((_, i) => i <= MapLayer).Reverse().ToArray();
             var cells = GetMapCells();
             var destRect = Position + Hitbox.Rectangle + sign;
 
-            if (destRect.Left < 0 || destRect.Right >= map.Size.X * tileset.CellSize.X)
+            if (destRect.Left < 0 || destRect.Right >= level.Map.Size.X * level.Tileset.CellSize.X)
                 return false;
-            if (destRect.Top < 0 || destRect.Bottom >= map.Size.Y * tileset.CellSize.Y)
+            if (destRect.Top < 0 || destRect.Bottom >= level.Map.Size.Y * level.Tileset.CellSize.Y)
                 return false;
 
             if (!checkMatches(getMatches(cells, sign.OnlyX()), layers, sign.OnlyX(), destRect))

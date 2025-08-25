@@ -4,7 +4,7 @@ using System.Numerics;
 
 namespace GameTest1.Game.States
 {
-    public class Test(Manager manager) : GameStateBase(manager)
+    public class Test(Manager manager, params object[] args) : GameStateBase(manager, args)
     {
         private const float waitDuration = 5f;
 

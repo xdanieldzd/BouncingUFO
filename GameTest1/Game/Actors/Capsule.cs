@@ -1,11 +1,8 @@
-﻿using GameTest1.Game.Levels;
-using GameTest1.Game.States;
-
-namespace GameTest1.Game.Actors
+﻿namespace GameTest1.Game.Actors
 {
     public class Capsule : ActorBase
     {
-        public Capsule(Manager manager, InGame gameState, Map map, Tileset tileset, int mapLayer = 0, int argument = 0) : base(manager, gameState, map, tileset, mapLayer, argument)
+        public Capsule(Manager manager, LevelManager level, int mapLayer = 0, int argument = 0) : base(manager, level, mapLayer, argument)
         {
             Class = ActorClass.Collectible;
             Sprite = manager.Assets.Sprites["Capsule"];

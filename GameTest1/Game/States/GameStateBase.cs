@@ -3,13 +3,14 @@ using GameTest1.Utilities;
 
 namespace GameTest1.Game.States
 {
-    public abstract class GameStateBase(Manager manager) : IGameState
+    public abstract class GameStateBase(Manager manager, params object[] args) : IGameState
     {
         public virtual Color ClearColor => Color.DarkGray;
         public virtual float ScreenFadeDuration => 0.75f;
         public virtual Color ScreenFadeInitialColor => Color.Black;
 
         protected readonly Manager manager = manager;
+        protected readonly object[] args = args;
         protected readonly ScreenFader screenFader = new(manager);
 
         enum BaseState { Enter, FadeIn, Main, FadeOut }

@@ -1,6 +1,5 @@
 ﻿using Foster.Framework;
 using GameTest1.Game.Actors;
-using GameTest1.Game.Levels;
 using GameTest1.Game.UI;
 using GameTest1.Utilities;
 using System.Numerics;
@@ -10,36 +9,21 @@ namespace GameTest1.Game.States
     public class InGame : IGameState
     {
         private const float screenFadeDuration = 0.75f;
-        private const string defaultMapName = "TestMaps\\SmallTest2";
         private const string levelsDialogFile = "Levels";
 
-        private enum State { Initialize, LoadMap, ResetMap, FadeIn, GameIntroduction, GameStartCountdown, MainLogic, GameOver, ShowGameOverMenu, Restart, ExitToMenu }
+        private enum State { Initialize, FadeIn, GameIntroduction, GameStartCountdown, MainLogic, GameOver, ShowGameOverMenu, Restart, ExitToMenu, LoadNextLevel }
 
         private readonly Manager manager;
+        private readonly object[] args;
 
         private readonly ScreenFader screenFader;
         private readonly Camera camera;
         private readonly DialogBox dialogBox;
         private readonly MenuBox menuBox;
-
-        private readonly MapRenderer mapRenderer;
-
-        private readonly Dictionary<string, Type> actorTypeDictionary = new()
-        {
-            { "Player", typeof(Player) },
-            { "Capsule", typeof(Capsule) },
-            { "CapsuleSpawner", typeof(CapsuleSpawner) }
-        };
+        private readonly LevelManager levelManager;
 
         private readonly List<MenuBoxItem> pauseMenuItems = [];
         private readonly List<MenuBoxItem> gameOverMenuItems = [];
-
-        private readonly List<ActorBase> actors = [];
-        private readonly List<ActorBase> actorsToDestroy = [];
-
-        private string currentMapName = defaultMapName;
-        private Map? currentMap;
-        private Tileset? currentTileset;
 
         private DialogText? currentDialogText = null;
 
@@ -51,9 +35,10 @@ namespace GameTest1.Game.States
 
         private float gameOverWaitTimer;
 
-        public InGame(Manager manager)
+        public InGame(Manager manager, params object[] args)
         {
             this.manager = manager;
+            this.args = args;
 
             screenFader = new(manager);
             camera = new(manager);
@@ -78,7 +63,7 @@ namespace GameTest1.Game.States
                 HighlightTextColor = Color.Lerp(Color.Green, Color.White, 0.35f)
             };
 
-            mapRenderer = new(manager);
+            levelManager = new(manager);
 
             pauseMenuItems.AddRange(
             [
@@ -92,51 +77,45 @@ namespace GameTest1.Game.States
                 new() { Label = "Retry", Action = (m) => { screenFader.Begin(ScreenFadeType.FadeOut, screenFadeDuration, Color.White); currentState = State.Restart; } },
                 new() { Label = "Exit to Menu", Action = (m) => { screenFader.Begin(ScreenFadeType.FadeOut, screenFadeDuration, Color.Black); currentState = State.ExitToMenu; } }
             ]);
+
+            if (this.args.Length != 0 && this.args[0] is string mapName)
+                levelManager.Load(mapName);
         }
 
         public void Update()
         {
-            var player = GetFirstActor<Player>();
+            var player = levelManager.GetFirstActor<Player>();
 
             switch (currentState)
             {
                 case State.Initialize:
-                    currentState = State.LoadMap;
-
-                    if (Globals.QuickStart)
+                    if (!Globals.QuickStart)
                     {
-                        LoadMap(currentMapName);
-                        ResetMap();
+                        levelManager.Reset();
+                        camera.FollowActor(levelManager.GetFirstActor<Player>());
+
+                        gameDuration = TimeSpan.Zero;
+                        gameStartCountdown = 5f;
+
+                        screenFader.Begin(ScreenFadeType.FadeIn, screenFadeDuration, ScreenFader.PreviousColor);
+                        currentState = State.FadeIn;
+                    }
+                    else
+                    {
+                        levelManager.Load(@"TestMaps\SmallTest2");
+                        camera.FollowActor(levelManager.GetFirstActor<Player>());
                         gameDuration = TimeSpan.Zero;
                         screenFader.Cancel();
                         currentState = State.MainLogic;
                         gameStartCountdown = 0f;
-                        if (GetFirstActor<Player>() is Player p) p.CurrentState = Player.State.Normal;
+                        if (levelManager.GetFirstActor<Player>() is Player p) p.CurrentState = Player.State.Normal;
                     }
-                    break;
-
-                case State.LoadMap:
-                    if (currentMap == null || currentTileset == null)
-                        LoadMap(currentMapName);
-
-                    currentState = State.ResetMap;
-                    break;
-
-                case State.ResetMap:
-                    ResetMap();
-                    gameDuration = TimeSpan.Zero;
-
-                    screenFader.Begin(ScreenFadeType.FadeIn, screenFadeDuration, ScreenFader.PreviousColor);
-
-                    gameStartCountdown = 5f;
-
-                    currentState = State.FadeIn;
                     break;
 
                 case State.FadeIn:
                     if (screenFader.Update())
                     {
-                        if (!string.IsNullOrWhiteSpace(currentMap?.IntroID) && manager.Assets.DialogText[levelsDialogFile].TryGetValue(currentMap.IntroID, out DialogText? dialogText))
+                        if (!string.IsNullOrWhiteSpace(levelManager.Map?.IntroID) && manager.Assets.DialogText[levelsDialogFile].TryGetValue(levelManager.Map.IntroID, out DialogText? dialogText))
                             currentDialogText = dialogText;
 
                         currentState = State.GameIntroduction;
@@ -158,7 +137,6 @@ namespace GameTest1.Game.States
                     if (gameStartCountdown <= 0f)
                     {
                         if (player != null) player.CurrentState = Player.State.Normal;
-
                         currentState = State.MainLogic;
                     }
                     break;
@@ -202,9 +180,8 @@ namespace GameTest1.Game.States
                 case State.Restart:
                     if (screenFader.Update())
                     {
-                        actorsToDestroy.AddRange(actors);
-
-                        currentState = State.ResetMap;
+                        levelManager.DestroyAllActors();
+                        currentState = State.Initialize;
                     }
                     break;
 
@@ -215,6 +192,15 @@ namespace GameTest1.Game.States
                         manager.GameStates.Push(new MainMenu(manager));
                     }
                     break;
+
+                case State.LoadNextLevel:
+                    if (screenFader.Update())
+                    {
+                        // TODO: game progression!
+                        levelManager.Load(@"TestMaps\BigTestMap");
+                        currentState = State.Initialize;
+                    }
+                    break;
             }
 
             if (manager.Controls.DebugEditors.ConsumePress())
@@ -222,66 +208,33 @@ namespace GameTest1.Game.States
 
             if (!menuBox.IsOpen)
             {
-                for (var i = 0; i < actorsToDestroy.Count; i++)
-                {
-                    actorsToDestroy[i].Destroyed();
-                    actors.Remove(actorsToDestroy[i]);
-                }
-                actorsToDestroy.Clear();
+                levelManager.Update();
 
-                foreach (var actor in actors)
-                    actor.Update();
-
-                capsuleCount = actors.Count(x => x is Capsule);
+                capsuleCount = levelManager.Actors.Count(x => x is Capsule);
             }
 
-            camera.Update(Globals.ShowDebugInfo ? Point2.Zero : currentMap?.Size * currentTileset?.CellSize ?? Point2.Zero);
+            camera.Update(Globals.ShowDebugInfo ? Point2.Zero : levelManager.SizeInPixels);
 
             menuBox.Update();
-        }
-
-        public void LoadMap(string mapName)
-        {
-            currentMap = manager.Assets.Maps[currentMapName = mapName];
-            currentTileset = manager.Assets.Tilesets[currentMap.Tileset];
-        }
-
-        private void ResetMap()
-        {
-            if (currentMap == null) return;
-
-            actors.Clear();
-            actorsToDestroy.Clear();
-
-            camera.FollowActor(null);
-
-            foreach (var spawn in currentMap.Spawns)
-                SpawnActor(spawn.ActorType, spawn.Position, spawn.MapLayer, spawn.Argument);
         }
 
         public void Render()
         {
             manager.Screen.Clear(0x3E4F65);
 
-            manager.Batcher.PushMatrix(camera.Matrix);
-            mapRenderer.Render(currentMap, currentTileset, actors, Globals.ShowDebugInfo);
-            manager.Batcher.PopMatrix();
-
+            RenderMap();
             RenderHUD();
 
             if (Globals.ShowDebugInfo)
             {
-                if (GetFirstActor<Player>() is Player player)
+                if (levelManager.GetFirstActor<Player>() is Player player)
                 {
                     manager.Batcher.Text(manager.Assets.SmallFont, $"Current hitbox == {player.Position + player.Hitbox.Rectangle}", Vector2.Zero, Color.White);
                     manager.Batcher.Text(manager.Assets.SmallFont, $"{manager.Controls.Move.Name}:{manager.Controls.Move.IntValue} {manager.Controls.Action1.Name}:{manager.Controls.Action1.Down} {manager.Controls.Action2.Name}:{manager.Controls.Action2.Down} {manager.Controls.Menu.Name}:{manager.Controls.Menu.Down} {manager.Controls.DebugDisplay.Name}:{manager.Controls.DebugDisplay.Down}", new Vector2(0f, manager.Screen.Height - manager.Assets.SmallFont.LineHeight), Color.White);
 
-                    if (currentMap != null && currentTileset != null)
-                    {
-                        var cells = player.GetMapCells();
-                        for (var i = 0; i < cells.Length; i++)
-                            manager.Batcher.Text(manager.Assets.SmallFont, cells[i].ToString(), new(0f, 60f + i * manager.Assets.SmallFont.LineHeight), Color.CornflowerBlue);
-                    }
+                    var cells = player.GetMapCells();
+                    for (var i = 0; i < cells.Length; i++)
+                        manager.Batcher.Text(manager.Assets.SmallFont, cells[i].ToString(), new(0f, 60f + i * manager.Assets.SmallFont.LineHeight), Color.CornflowerBlue);
 
                     manager.Batcher.Text(manager.Assets.SmallFont, $"Camera {camera.Matrix.Translation:0.0000}", new(0f, 25f), Color.Yellow);
                 }
@@ -293,6 +246,15 @@ namespace GameTest1.Game.States
             menuBox.Render();
 
             screenFader.Render();
+        }
+
+        private void RenderMap()
+        {
+            manager.Batcher.PushMatrix(camera.Matrix);
+            manager.Batcher.PushScissor(Globals.ShowDebugInfo ? null : new(camera.Position, levelManager.SizeInPixels));
+            levelManager.Render(Globals.ShowDebugInfo);
+            manager.Batcher.PopScissor();
+            manager.Batcher.PopMatrix();
         }
 
         private void RenderHUD()
@@ -327,57 +289,8 @@ namespace GameTest1.Game.States
 
             manager.Batcher.Text(manager.Assets.FutureFont, $"TIME {gameDuration:mm\\:ss\\:ff}", new(8f), capsuleCount == 0 ? Color.Green : Color.White);
             manager.Batcher.Text(manager.Assets.FutureFont, $"LEFT {capsuleCount:00}", new Vector2(manager.Screen.Bounds.Right - 8f, 8f), new Vector2(1f, 0f), Color.White);
-            if (GetFirstActor<Player>() is Player player)
+            if (levelManager.GetFirstActor<Player>() is Player player)
                 manager.Batcher.Text(manager.Assets.FutureFont, $"ENERGY {player?.energy:00}", new Vector2(manager.Screen.Bounds.Right - 8f, manager.Screen.Bounds.Bottom - 8f - manager.Assets.FutureFont.Size), new Vector2(1f, 1f), blinkEnergy && player?.energy <= 25 && manager.Time.BetweenInterval(0.5) ? Color.Red : Color.White);
         }
-
-        public ActorBase CreateActor(string actorType, Point2? position = null, int mapLayer = 0, int argument = 0)
-        {
-            if (actorTypeDictionary.TryGetValue(actorType, out Type? type))
-                return CreateActor(type, position, mapLayer, argument);
-            else
-                throw new ActorException($"Actor type '{actorType}' not recognized");
-        }
-
-        public ActorBase CreateActor(Type type, Point2? position = null, int mapLayer = 0, int argument = 0)
-        {
-            var actor = Activator.CreateInstance(type, manager, this, currentMap, currentTileset, mapLayer, argument) as ActorBase ??
-                throw new ActorException(type, "Failed to create actor instance");
-            actor.Position = position * currentTileset?.CellSize ?? Point2.One;
-            actor.Created();
-            return actor;
-        }
-
-        public void SpawnActor(ActorBase actor) => actors.Add(actor);
-        public void SpawnActor(string actorType, Point2? position = null, int mapLayer = 0, int argument = 0) => actors.Add(CreateActor(actorType, position, mapLayer, argument));
-        public void SpawnActor(Type type, Point2? position = null, int mapLayer = 0, int argument = 0) => actors.Add(CreateActor(type, position, mapLayer, argument));
-
-        public void DestroyActor(ActorBase actor)
-        {
-            if (!actorsToDestroy.Contains(actor))
-                actorsToDestroy.Add(actor);
-        }
-
-        public IEnumerable<T> GetActors<T>() where T : ActorBase => actors.Where(x => x is T && !actorsToDestroy.Contains(x)).Cast<T>();
-        public IEnumerable<ActorBase> GetActors(ActorClass actorClass) => actors.Where(x => x.Class.Has(actorClass) && !actorsToDestroy.Contains(x));
-
-        public T? GetFirstActor<T>() where T : ActorBase => actors.FirstOrDefault(x => x is T && !actorsToDestroy.Contains(x)) as T;
-        public ActorBase? GetFirstActor(ActorClass actorClass) => actors.FirstOrDefault(x => x.Class.Has(actorClass) && !actorsToDestroy.Contains(x));
-
-        public ActorBase? GetFirstOverlapActor(Point2 position, RectInt hitboxRect, ActorClass actorClass) => GetFirstOverlapActor(position, hitboxRect, actorClass, actors);
-        public ActorBase? GetFirstOverlapActor(ActorBase actor, ActorClass actorClass) => GetFirstOverlapActor(actor.Position, actor.Hitbox.Rectangle, actorClass, actors.Where(x => x != actor));
-
-        private static ActorBase? GetFirstOverlapActor(Point2 position, RectInt hitboxRect, ActorClass actorClass, IEnumerable<ActorBase> actorsToCheck)
-        {
-            foreach (var other in actorsToCheck)
-            {
-                if (other.Class.HasFlag(actorClass) &&
-                    (hitboxRect + position).Overlaps(other.Hitbox.Rectangle + other.Position))
-                    return other;
-            }
-            return null;
-        }
-
-        public void SetCameraFollowActor(ActorBase? actor) => camera.FollowActor(actor);
     }
 }

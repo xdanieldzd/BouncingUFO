@@ -4,7 +4,7 @@ using GameTest1.Utilities;
 
 namespace GameTest1.Game.States
 {
-    public class MainMenu(Manager manager) : GameStateBase(manager)
+    public class MainMenu(Manager manager, params object[] args) : GameStateBase(manager, args)
     {
         private readonly MenuBox menuBox = new(manager)
         {
@@ -38,11 +38,8 @@ namespace GameTest1.Game.States
 
         public override void OnExit()
         {
-            var inGameState = new InGame(manager);
-            inGameState.LoadMap(selectedMapName);
-
             manager.GameStates.Pop();
-            manager.GameStates.Push(inGameState);
+            manager.GameStates.Push(new InGame(manager, selectedMapName));
         }
 
         private void MenuAction(MenuBox menuBox)

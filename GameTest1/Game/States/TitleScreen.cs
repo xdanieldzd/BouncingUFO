@@ -3,7 +3,7 @@ using System.Numerics;
 
 namespace GameTest1.Game.States
 {
-    public class TitleScreen(Manager manager) : GameStateBase(manager)
+    public class TitleScreen(Manager manager, params object[] args) : GameStateBase(manager, args)
     {
         private const float waitDuration = 5f;
 

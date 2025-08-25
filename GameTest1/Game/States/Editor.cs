@@ -1,20 +1,18 @@
 ﻿using Foster.Framework;
 using GameTest1.Editors;
 using ImGuiNET;
-using System.Numerics;
 
 namespace GameTest1.Game.States
 {
-    public class Editor(Manager manager) : GameStateBase(manager), IGameState
+    public class Editor(Manager manager, params object[] args) : GameStateBase(manager, args), IGameState
     {
+        public override Color ClearColor => Color.Black;
         public override float ScreenFadeDuration => 0f;
 
         private readonly TilesetEditor tilesetEditor = new(manager);
         private readonly MapEditor mapEditor = new(manager);
         private readonly SpriteEditor spriteEditor = new(manager);
         private readonly JsonEditor jsonEditor = new(manager);
-
-        private readonly MapRenderer mapRenderer = new(manager);
 
         private IEditor[]? editors;
 
@@ -49,28 +47,7 @@ namespace GameTest1.Game.States
 
         public override void OnUpdateMain() { }
 
-        public override void OnRenderMain()
-        {
-            var focusedEditor = editors?.FirstOrDefault(x => x.IsFocused) ?? null;
-            if (focusedEditor == tilesetEditor)
-            {
-                manager.Batcher.Text(manager.Assets.SmallFont, "Tileset editor preview here", Vector2.Zero, Color.White);
-            }
-            else if (focusedEditor == mapEditor)
-            {
-                mapRenderer.Render(mapEditor.CurrentMapAndTileset.Map, mapEditor.CurrentMapAndTileset.Tileset, []);
-            }
-            else if (focusedEditor == spriteEditor)
-            {
-                manager.Batcher.Text(manager.Assets.SmallFont, "Sprite editor preview here", Vector2.Zero, Color.White);
-            }
-            else if (focusedEditor == jsonEditor)
-            {
-                manager.Batcher.Text(manager.Assets.SmallFont, "No preview for JSON editor.", Vector2.Zero, Color.White);
-            }
-            else
-                manager.Batcher.Text(manager.Assets.SmallFont, "No editor selected.", 1024f, new(0f, manager.Screen.Height), new(0f, 1.5f), Color.White);
-        }
+        public override void OnRenderMain() { }
 
         public override void OnExit()
         {

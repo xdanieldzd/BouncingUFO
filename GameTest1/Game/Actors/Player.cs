@@ -1,6 +1,4 @@
 ﻿using Foster.Framework;
-using GameTest1.Game.Levels;
-using GameTest1.Game.States;
 using System.Numerics;
 
 namespace GameTest1.Game.Actors
@@ -21,7 +19,7 @@ namespace GameTest1.Game.Actors
 
         public int energy = 0;
 
-        public Player(Manager manager, InGame gameState, Map map, Tileset tileset, int mapLayer = 0, int argument = 0) : base(manager, gameState, map, tileset, mapLayer, argument)
+        public Player(Manager manager, LevelManager level, int mapLayer = 0, int argument = 0) : base(manager, level, mapLayer, argument)
         {
             Class = ActorClass.Solid | ActorClass.Player;
             Sprite = manager.Assets.Sprites["Player"];
@@ -42,7 +40,6 @@ namespace GameTest1.Game.Actors
         public override void Created()
         {
             Position -= Hitbox.Rectangle.Center / 2 + Point2.UnitY * 8;
-            gameState.SetCameraFollowActor(this);
         }
 
         public override void OnCollisionX(ActorBase? other)
@@ -71,13 +68,13 @@ namespace GameTest1.Game.Actors
         {
             base.Update();
 
-            var actorHit = gameState.GetFirstOverlapActor(this, ActorClass.None);
+            var actorHit = level.GetFirstOverlapActor(this, ActorClass.None);
             if (actorHit != null)
             {
                 OnCollisionX(actorHit);
                 OnCollisionY(actorHit);
 
-                gameState.DestroyActor(actorHit);
+                level.DestroyActor(actorHit);
             }
 
             energy = Math.Clamp(energy, 0, maxEnergy);
