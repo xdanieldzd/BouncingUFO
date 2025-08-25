@@ -1,9 +1,9 @@
 ﻿/* Based on https://github.com/FosterFramework/Samples/blob/5b97ca5329e61768f85a45d655da5df7f882519d/ImGui/Renderer.cs */
 
-using System.Diagnostics;
-using System.Numerics;
 using Foster.Framework;
 using ImGuiNET;
+using System.Diagnostics;
+using System.Numerics;
 
 namespace GameTest1.Utilities
 {
