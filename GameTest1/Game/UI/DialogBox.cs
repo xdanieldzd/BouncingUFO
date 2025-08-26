@@ -95,7 +95,7 @@ namespace GameTest1.Game.UI
                                 currentMaxLine++;
                         }
                     }
-                    if (manager.Controls.Action1.ConsumePress() || manager.Controls.Action2.ConsumePress())
+                    if (manager.Controls.Confirm.ConsumePress() || manager.Controls.Cancel.ConsumePress())
                     {
                         /* Skippa, skippa */
                         for (var i = 0; i < currentTextWrapPositions.Length; i++)
@@ -106,7 +106,7 @@ namespace GameTest1.Game.UI
                     break;
 
                 case DialogBoxState.WaitingForInput:
-                    if (manager.Controls.Action1.ConsumePress() || manager.Controls.Action2.ConsumePress())
+                    if (manager.Controls.Confirm.ConsumePress() || manager.Controls.Cancel.ConsumePress())
                     {
                         currentState = DialogBoxState.AdvancingText;
                     }

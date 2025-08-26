@@ -163,7 +163,7 @@ namespace GameTest1.Game.States
                             gameDuration += TimeSpan.FromSeconds(manager.Time.Delta);
                             if (levelManager.GetFirstActor<Player>() is Player player && (capsuleCount <= 0 || player.energy <= 0))
                             {
-                                gameOverWaitTimer = 2.5f;
+                                gameOverWaitTimer = 2f;
                                 currentState = State.GameOver;
                             }
                         }
@@ -183,7 +183,7 @@ namespace GameTest1.Game.States
                         }
 
                         gameOverWaitTimer = Calc.Approach(gameOverWaitTimer, 0f, manager.Time.Delta);
-                        if (gameOverWaitTimer <= 0f || manager.Controls.Action1.ConsumePress() || manager.Controls.Action2.ConsumePress())
+                        if (gameOverWaitTimer <= 0f)
                             currentState = State.ShowGameOverMenu;
                     }
                     break;
@@ -271,7 +271,7 @@ namespace GameTest1.Game.States
                 if (levelManager.GetFirstActor<Player>() is Player player)
                 {
                     manager.Batcher.Text(manager.Assets.SmallFont, $"Current hitbox == {player.Position + player.Hitbox.Rectangle}", Vector2.Zero, Color.White);
-                    manager.Batcher.Text(manager.Assets.SmallFont, $"{manager.Controls.Move.Name}:{manager.Controls.Move.IntValue} {manager.Controls.Action1.Name}:{manager.Controls.Action1.Down} {manager.Controls.Action2.Name}:{manager.Controls.Action2.Down} {manager.Controls.Menu.Name}:{manager.Controls.Menu.Down} {manager.Controls.DebugDisplay.Name}:{manager.Controls.DebugDisplay.Down}", new Vector2(0f, manager.Screen.Height - manager.Assets.SmallFont.LineHeight), Color.White);
+                    manager.Batcher.Text(manager.Assets.SmallFont, $"{manager.Controls.Move.Name}:{manager.Controls.Move.IntValue} {manager.Controls.Confirm.Name}:{manager.Controls.Confirm.Down} {manager.Controls.Cancel.Name}:{manager.Controls.Cancel.Down} {manager.Controls.Menu.Name}:{manager.Controls.Menu.Down} {manager.Controls.DebugDisplay.Name}:{manager.Controls.DebugDisplay.Down}", new Vector2(0f, manager.Screen.Height - manager.Assets.SmallFont.LineHeight), Color.White);
 
                     var cells = player.GetMapCells();
                     for (var i = 0; i < cells.Length; i++)

@@ -114,7 +114,7 @@ namespace GameTest1.Game.UI
                     {
                         currentItemIndex = 0;
                     }
-                    else if (manager.Controls.Action1.ConsumePress() || manager.Controls.Action2.ConsumePress())
+                    else if (manager.Controls.Confirm.ConsumePress())
                         currentState = MenuBoxState.InitiateAction;
 
                     if (Globals.ShowDebugInfo && manager.Controls.Menu.ConsumePress())

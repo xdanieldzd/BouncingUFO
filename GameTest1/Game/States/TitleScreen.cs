@@ -55,7 +55,7 @@ namespace GameTest1.Game.States
                 case State.WaitingForTimeout:
                     {
                         mainStateTimer = Calc.Approach(mainStateTimer, waitDuration, manager.Time.Delta);
-                        if (mainStateTimer >= waitDuration || manager.Controls.Action1.Down || manager.Controls.Action2.Down)
+                        if (mainStateTimer >= waitDuration || manager.Controls.Confirm.Down || manager.Controls.Cancel.Down)
                         {
                             menuBox.Open();
                             currentState = State.InMainMenu;

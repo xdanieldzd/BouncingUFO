@@ -82,7 +82,7 @@ namespace GameTest1.Game.Actors
             switch (CurrentState)
             {
                 case State.Normal:
-                    CalcPlayerVelocityAndRotation(manager.Controls.Move.IntValue, manager.Controls.Action1.Down, manager.Controls.Action2.Down);
+                    CalcPlayerVelocityAndRotation(manager.Controls.Move.IntValue, manager.Controls.Confirm.Down, manager.Controls.Cancel.Down);
                     break;
 
                 case State.InputDisabled:
@@ -92,22 +92,22 @@ namespace GameTest1.Game.Actors
             CalcBounceCooldown();
         }
 
-        private void CalcPlayerVelocityAndRotation(Point2 direction, bool action1, bool action2)
+        private void CalcPlayerVelocityAndRotation(Point2 direction, bool buttonConfirm, bool buttonCancel)
         {
-            var accel = acceleration * (action1 ? 2f : 1f) * manager.Time.Delta;
+            var accel = acceleration * (buttonConfirm ? 2f : 1f) * manager.Time.Delta;
 
             if (currentBounceCooldown.X == 0f) Velocity.X += direction.X * accel;
             if (currentBounceCooldown.Y == 0f) Velocity.Y += direction.Y * accel;
 
             var maxRotation = 0f;
-            if (Velocity.X < 0f) maxRotation = -spriteRotation * (action1 ? 3f : 1f);
-            else if (Velocity.X > 0f) maxRotation = spriteRotation * (action1 ? 3f : 1f);
-            Rotation = Calc.Approach(Rotation, maxRotation, manager.Time.Delta * (action1 ? 100f : 25f));
+            if (Velocity.X < 0f) maxRotation = -spriteRotation * (buttonConfirm ? 3f : 1f);
+            else if (Velocity.X > 0f) maxRotation = spriteRotation * (buttonConfirm ? 3f : 1f);
+            Rotation = Calc.Approach(Rotation, maxRotation, manager.Time.Delta * (buttonConfirm ? 100f : 25f));
 
             if (MathF.Abs(Velocity.X) > maxSpeed) Velocity.X = Calc.Approach(Velocity.X, MathF.Sign(Velocity.X) * maxSpeed, 2000f * manager.Time.Delta);
             if (MathF.Abs(Velocity.Y) > maxSpeed) Velocity.Y = Calc.Approach(Velocity.Y, MathF.Sign(Velocity.Y) * maxSpeed, 2000f * manager.Time.Delta);
 
-            var fric = friction * (action2 ? 20f : 1f) * manager.Time.Delta;
+            var fric = friction * (buttonCancel ? 20f : 1f) * manager.Time.Delta;
 
             if (direction.X == 0)
             {
