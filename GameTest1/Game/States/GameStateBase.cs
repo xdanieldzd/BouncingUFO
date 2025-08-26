@@ -37,7 +37,10 @@ namespace GameTest1.Game.States
 
                 case BaseState.FadeOut:
                     if (screenFader.Update())
+                    {
                         OnExit();
+                        currentState = BaseState.Enter;
+                    }
                     break;
             }
         }
@@ -49,7 +52,7 @@ namespace GameTest1.Game.States
             screenFader.Render();
         }
 
-        protected void ExitState()
+        public void LeaveState()
         {
             screenFader.Begin(ScreenFadeType.FadeOut, ScreenFadeDuration, ScreenFader.PreviousColor);
             currentState = BaseState.FadeOut;

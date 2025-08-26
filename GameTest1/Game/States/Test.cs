@@ -15,7 +15,7 @@ namespace GameTest1.Game.States
         {
             continueToIntroTimer = Calc.Approach(continueToIntroTimer, waitDuration, manager.Time.Delta);
             if (continueToIntroTimer >= waitDuration)
-                ExitState();
+                LeaveState();
         }
 
         public override void OnRenderMain()

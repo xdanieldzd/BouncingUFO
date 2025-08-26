@@ -14,7 +14,7 @@ namespace GameTest1
         private const string windowTitle = "Game Test #1 - Bouncing UFO (REWRITE)";
 
         private const int defaultScreenWidth = 480;
-        private const int defaultScreenHeight = 272;
+        private const int defaultScreenHeight = 270;
         private const int defaultWindowScale = 2;
 
         public readonly Batcher Batcher;
@@ -65,6 +65,8 @@ namespace GameTest1
         protected override void Update()
         {
             if (Input.Keyboard.Pressed(Keys.Escape)) Exit();
+            if (Input.Keyboard.Alt && Input.Keyboard.Pressed(Keys.Enter)) Window.Fullscreen = !Window.Fullscreen;
+
             if (Controls.DebugDisplay.ConsumePress()) Globals.ShowDebugInfo = !Globals.ShowDebugInfo;
 
             if (GameStates.TryPeek(out IGameState? gameState))

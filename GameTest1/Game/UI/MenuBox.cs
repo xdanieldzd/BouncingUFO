@@ -116,6 +116,17 @@ namespace GameTest1.Game.UI
                     }
                     else if (manager.Controls.Confirm.ConsumePress())
                         currentState = MenuBoxState.InitiateAction;
+                    else if (manager.Controls.Cancel.ConsumePress())
+                    {
+                        var cancelIndex = Array.IndexOf(MenuItems, MenuItems.FirstOrDefault(x => x.IsCancelAction));
+                        if (cancelIndex != -1)
+                        {
+                            if (currentItemIndex == cancelIndex)
+                                currentState = MenuBoxState.InitiateAction;
+                            else
+                                currentItemIndex = cancelIndex;
+                        }
+                    }
 
                     if (Globals.ShowDebugInfo && manager.Controls.Menu.ConsumePress())
                     {

@@ -38,7 +38,7 @@ namespace GameTest1.Game.States
                 }
                 ImGui.Separator();
                 if (ImGui.Button("Exit", new(150f, 0f)))
-                    ExitState();
+                    LeaveState();
             }
             ImGui.End();
         }

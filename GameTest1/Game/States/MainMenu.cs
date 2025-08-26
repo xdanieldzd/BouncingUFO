@@ -21,17 +21,18 @@ namespace GameTest1.Game.States
         private MenuBoxItem[] modeSelectMenuItems = [];
         private MenuBoxItem[] levelSelectMenuItems = [];
 
-        private string[] mapNamesToQueue = [];
+        private IGameState? nextGameState = null;
 
         public override void OnEnter()
         {
             gameSelectMenuItems =
             [
                 new() { Label = "Arcade Mode", Action = MenuArcadeModeSelectAction },
-                new() { Label = "Play Single Level", Action = MenuSingleLevelSelectAction }
+                new() { Label = "Play Single Level", Action = MenuSingleLevelSelectAction },
+                new() { Label = "Cancel", Action = MenuCancelAction, IsCancelAction = true }
             ];
-            modeSelectMenuItems = [.. manager.Assets.Progression.Select(x => new MenuBoxItem() { Label = x.Value.Title, Action = MenuArcadeModeStartAction }), new() { Label = "Cancel", Action = MenuEnterMainMenuAction }];
-            levelSelectMenuItems = [.. manager.Assets.Maps.Select(x => new MenuBoxItem() { Label = $"{x.Value.Title} ({x.Key})", Action = MenuSingleLevelStartAction }), new() { Label = "Cancel", Action = MenuEnterMainMenuAction }];
+            modeSelectMenuItems = [.. manager.Assets.Progression.Select(x => new MenuBoxItem() { Label = x.Value.Title, Action = MenuArcadeModeStartAction }), new() { Label = "Cancel", Action = MenuEnterMainMenuAction, IsCancelAction = true }];
+            levelSelectMenuItems = [.. manager.Assets.Maps.Select(x => new MenuBoxItem() { Label = $"{x.Value.Title} ({x.Key})", Action = MenuSingleLevelStartAction }), new() { Label = "Cancel", Action = MenuEnterMainMenuAction, IsCancelAction = true }];
 
             MenuEnterMainMenuAction(menuBox);
         }
@@ -50,12 +51,14 @@ namespace GameTest1.Game.States
         {
             menuBox.Close();
 
-            manager.GameStates.Pop();
-            manager.GameStates.Push(new InGame(manager, mapNamesToQueue));
+            if (nextGameState == null) manager.GameStates.Pop();
+            else manager.GameStates.Push(nextGameState);
         }
 
         private void MenuEnterMainMenuAction(MenuBox menuBox)
         {
+            nextGameState = null;
+
             menuBox.TextAlignment = MenuBoxTextAlignment.Center;
             menuBox.MenuTitle = "Select Mode";
             menuBox.MenuItems = gameSelectMenuItems;
@@ -72,10 +75,10 @@ namespace GameTest1.Game.States
 
         private void MenuArcadeModeStartAction(MenuBox menuBox)
         {
-            mapNamesToQueue = [.. manager.Assets.Progression.ElementAt(menuBox.SelectedIndex).Value.MapNames];
+            nextGameState = new InGame(manager, [.. manager.Assets.Progression.ElementAt(menuBox.SelectedIndex).Value.MapNames]);
 
             screenFader.Begin(ScreenFadeType.FadeOut, ScreenFadeDuration, ScreenFader.PreviousColor);
-            ExitState();
+            LeaveState();
         }
 
         private void MenuSingleLevelSelectAction(MenuBox menuBox)
@@ -88,10 +91,18 @@ namespace GameTest1.Game.States
 
         private void MenuSingleLevelStartAction(MenuBox menuBox)
         {
-            mapNamesToQueue = [manager.Assets.Maps.ElementAt(menuBox.SelectedIndex).Key];
+            nextGameState = new InGame(manager, [manager.Assets.Maps.ElementAt(menuBox.SelectedIndex).Key]);
 
             screenFader.Begin(ScreenFadeType.FadeOut, ScreenFadeDuration, ScreenFader.PreviousColor);
-            ExitState();
+            LeaveState();
+        }
+
+        private void MenuCancelAction(MenuBox menuBox)
+        {
+            nextGameState = null;
+
+            screenFader.Begin(ScreenFadeType.FadeOut, ScreenFadeDuration, ScreenFader.PreviousColor);
+            LeaveState();
         }
     }
 }

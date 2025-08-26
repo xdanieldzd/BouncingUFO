@@ -7,8 +7,6 @@ namespace GameTest1.Game.States
 {
     public class TitleScreen(Manager manager, params object[] args) : GameStateBase(manager, args)
     {
-        private const float waitDuration = 5f;
-
         private readonly MenuBox menuBox = new(manager)
         {
             Font = manager.Assets.LargeFont,
@@ -26,10 +24,8 @@ namespace GameTest1.Game.States
         private MenuBoxItem[] mainMenuItems = [];
         private MenuBoxItem[] optionsMenuItems = [];
 
-        private enum State { WaitingForTimeout, InMainMenu }
-        private State currentState = State.WaitingForTimeout;
-
-        private float mainStateTimer = 0f;
+        private enum State { WaitingForMenuButton, InMainMenu }
+        private State currentState = State.WaitingForMenuButton;
 
         public override void OnEnter()
         {
@@ -37,12 +33,13 @@ namespace GameTest1.Game.States
             [
                 new MenuBoxItem() { Label = "Start Game", Action = MenuMainStartGameAction },
                 new MenuBoxItem() { Label = "Options", Action = MenuMainOptionsAction },
-                new MenuBoxItem() { Label = "Exit Game", Action = MenuMainExitAction },
+                new MenuBoxItem() { Label = "Exit Game", Action = MenuMainExitAction, IsCancelAction = true }
             ];
             optionsMenuItems =
             [
+                new MenuBoxItem() { Label = "Toggle Fullscreen", Action = (m) => { manager.Window.Fullscreen = !manager.Window.Fullscreen; m.Open(); } },
                 new MenuBoxItem() { Label = "Toggle Debug Info", Action = (m) => { Globals.ShowDebugInfo = !Globals.ShowDebugInfo; m.Open(); } },
-                new MenuBoxItem() { Label = "Return", Action = MenuOptionsReturnAction },
+                new MenuBoxItem() { Label = "Return", Action = MenuOptionsReturnAction, IsCancelAction = true }
             ];
 
             menuBox.MenuItems = mainMenuItems;
@@ -52,10 +49,9 @@ namespace GameTest1.Game.States
         {
             switch (currentState)
             {
-                case State.WaitingForTimeout:
+                case State.WaitingForMenuButton:
                     {
-                        mainStateTimer = Calc.Approach(mainStateTimer, waitDuration, manager.Time.Delta);
-                        if (mainStateTimer >= waitDuration || manager.Controls.Confirm.Down || manager.Controls.Cancel.Down)
+                        if (manager.Controls.Menu.ConsumePress())
                         {
                             menuBox.Open();
                             currentState = State.InMainMenu;
@@ -91,21 +87,32 @@ namespace GameTest1.Game.States
                 manager.Screen.Bounds.BottomCenter - manager.Assets.SmallFont.SizeOf(bottomText) / 2f - new Vector2(0f, manager.Assets.SmallFont.Size * 2f),
                 Color.White);
 
+            if (currentState == State.WaitingForMenuButton && manager.Time.BetweenInterval(0.5))
+            {
+                var buttonText = "Press Menu Button!";
+                manager.Batcher.Text(
+                    manager.Assets.LargeFont,
+                    buttonText,
+                    manager.Screen.Bounds.Center - manager.Assets.LargeFont.SizeOf(buttonText) / 2f + new Vector2(0f, manager.Assets.LargeFont.Size * 2f),
+                    Color.White);
+            }
+
             menuBox.Render();
         }
 
         public override void OnExit()
         {
+            currentState = State.WaitingForMenuButton;
+
             menuBox.Close();
 
-            manager.GameStates.Pop();
             manager.GameStates.Push(new MainMenu(manager));
         }
 
         private void MenuMainStartGameAction(MenuBox menuBox)
         {
             screenFader.Begin(ScreenFadeType.FadeOut, ScreenFadeDuration, ScreenFader.PreviousColor);
-            ExitState();
+            LeaveState();
         }
 
         private void MenuMainOptionsAction(MenuBox menuBox)

@@ -193,7 +193,7 @@ namespace GameTest1.Game.States
                         if (!menuBox.IsOpen)
                         {
                             menuBox.MenuTitle = string.Empty;
-                            if (capsuleCount == 0)
+                            if (capsuleCount == 0 && levelManager.QueuedMaps.Count > 0)
                                 menuBox.MenuItems = [nextLevelMenuItem, .. gameOverMenuItems];
                             else
                                 menuBox.MenuItems = [.. gameOverMenuItems];
@@ -221,7 +221,6 @@ namespace GameTest1.Game.States
                             menuBox.Close();
 
                             manager.GameStates.Pop();
-                            manager.GameStates.Push(new MainMenu(manager));
                         }
                     }
                     break;
@@ -235,10 +234,7 @@ namespace GameTest1.Game.States
                             if (levelManager.Advance())
                                 currentState = State.Initialize;
                             else
-                            {
                                 manager.GameStates.Pop();
-                                manager.GameStates.Push(new MainMenu(manager));
-                            }
                         }
                     }
                     break;
