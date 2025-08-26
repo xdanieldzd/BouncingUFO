@@ -22,8 +22,8 @@ namespace GameTest1.Game.States
         private readonly MenuBox menuBox;
         private readonly LevelManager levelManager;
 
-        private readonly List<MenuBoxItem> pauseMenuItems = [];
-        private readonly List<MenuBoxItem> gameOverMenuItems = [];
+        private readonly MenuBoxItem[] pauseMenuItems = [];
+        private readonly MenuBoxItem[] gameOverMenuItems = [];
 
         private DialogText? currentDialogText = null;
 
@@ -48,9 +48,9 @@ namespace GameTest1.Game.States
                 GraphicsSheet = manager.Assets.UI["DialogBox"],
                 FramePaddingTopLeft = (10, 10),
                 FramePaddingBottomRight = (12, 12),
-                BackgroundColor = new(0x3E4F65)
+                BackgroundColor = new(0x3E4F65),
+                NumTextLines = 2
             };
-            dialogBox.Resize(2);
 
             menuBox = new(manager)
             {
@@ -65,18 +65,18 @@ namespace GameTest1.Game.States
 
             levelManager = new(manager);
 
-            pauseMenuItems.AddRange(
+            pauseMenuItems =
             [
                 new() { Label = "Continue", Action = (m) => { m.Close(); } },
                 new() { Label = "Restart", Action = (m) => { screenFader.Begin(ScreenFadeType.FadeOut, screenFadeDuration, Color.White); currentState = State.Restart; } },
                 new() { Label = "Exit to Menu", Action = (m) => { screenFader.Begin(ScreenFadeType.FadeOut, screenFadeDuration, Color.Black); currentState = State.ExitToMenu; } }
-            ]);
+            ];
 
-            gameOverMenuItems.AddRange(
+            gameOverMenuItems =
             [
                 new() { Label = "Retry", Action = (m) => { screenFader.Begin(ScreenFadeType.FadeOut, screenFadeDuration, Color.White); currentState = State.Restart; } },
                 new() { Label = "Exit to Menu", Action = (m) => { screenFader.Begin(ScreenFadeType.FadeOut, screenFadeDuration, Color.Black); currentState = State.ExitToMenu; } }
-            ]);
+            ];
 
             if (this.args.Length != 0 && this.args[0] is string mapName)
                 levelManager.Load(mapName);
@@ -108,7 +108,9 @@ namespace GameTest1.Game.States
                             currentState = State.MainLogic;
                         }
 
-                        menuBox.Initialize("Paused", pauseMenuItems);
+                        menuBox.MenuTitle = "Paused";
+                        menuBox.MenuItems = pauseMenuItems;
+
                         camera.FollowActor(levelManager.GetFirstActor<Player>());
 
                         gameDuration = TimeSpan.Zero;
@@ -189,7 +191,8 @@ namespace GameTest1.Game.States
                     {
                         if (!menuBox.IsOpen)
                         {
-                            menuBox.Initialize(string.Empty, gameOverMenuItems);
+                            menuBox.MenuTitle = string.Empty;
+                            menuBox.MenuItems = gameOverMenuItems;
                             menuBox.Open();
                         }
                     }

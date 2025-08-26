@@ -14,14 +14,16 @@ namespace GameTest1.Game.States
             FramePaddingBottomRight = (12, 12),
             LinePadding = 4,
             BackgroundColor = new(0x3E4F65),
-            HighlightTextColor = Color.Lerp(Color.Green, Color.White, 0.35f)
+            HighlightTextColor = Color.Lerp(Color.Green, Color.White, 0.35f),
+            TextAlignment = MenuBoxTextAlignment.Left,
+            MenuTitle = "Select Level"
         };
 
         private string selectedMapName = string.Empty;
 
         public override void OnEnter()
         {
-            menuBox.Initialize("Select Map", manager.Assets.Maps.Select(x => new MenuBoxItem() { Label = $"{x.Value.Title} ({x.Key})", Action = MenuAction }));
+            menuBox.MenuItems = [.. manager.Assets.Maps.Select(x => new MenuBoxItem() { Label = $"{x.Value.Title} ({x.Key})", Action = MenuAction })];
             menuBox.Open();
 
             selectedMapName = manager.Assets.Maps.ElementAt(0).Key;

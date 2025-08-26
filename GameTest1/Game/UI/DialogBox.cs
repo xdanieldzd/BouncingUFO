@@ -5,6 +5,11 @@ namespace GameTest1.Game.UI
 {
     public class DialogBox : UserInterfaceWindow
     {
+        public override Point2 Size => new((int)(manager.Screen.Width / 1.25f), (int)((Font?.LineHeight ?? 8) * NumTextLines) + LinePadding * (NumTextLines - 1) + FramePaddingTopLeft.Y + FramePaddingBottomRight.Y);
+        public override Point2 Position => new(manager.Screen.Bounds.Center.X - Size.X / 2, manager.Screen.Bounds.Bottom - Size.Y - 16);
+
+        public int NumTextLines = 3;
+
         private string currentSpeaker = string.Empty;
         private List<string> currentText = [];
         private int currentTextIndex = 0;
@@ -21,17 +26,9 @@ namespace GameTest1.Game.UI
             FramePaddingTopLeft = (8, 8);
             FramePaddingBottomRight = (10, 10);
             LinePadding = 6;
-
-            Resize(3);
         }
 
         public bool IsOpen => currentState != DialogBoxState.Closed;
-
-        public void Resize(int numTextLines)
-        {
-            Size = new((int)(manager.Screen.Width / 1.25f), (int)((Font?.LineHeight ?? 8) * numTextLines) + LinePadding * (numTextLines - 1) + FramePaddingTopLeft.Y + FramePaddingBottomRight.Y);
-            Position = new(manager.Screen.Bounds.Center.X - Size.X / 2, manager.Screen.Bounds.Bottom - Size.Y - 16);
-        }
 
         public void Print(string speaker, List<string> text)
         {

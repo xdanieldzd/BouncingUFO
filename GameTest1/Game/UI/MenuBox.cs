@@ -3,15 +3,69 @@ using System.Numerics;
 
 namespace GameTest1.Game.UI
 {
+    public enum MenuBoxWindowAlignment { Manual, TopLeft, TopCenter, TopRight, CenterLeft, Center, CenterRight, BottomLeft, BottomCenter, BottomRight }
+    public enum MenuBoxWindowSizing { Manual, Automatic }
+    public enum MenuBoxTextAlignment { Left, Center }
+
     public class MenuBox(Manager manager) : UserInterfaceWindow(manager)
     {
         private const float titleGap = 6f;
 
+        private Point2 manualPosition = Point2.Zero;
+        private Point2 manualSize = Point2.One * 64;
+
+        public override Point2 Size
+        {
+            get
+            {
+                if (WindowSizing == MenuBoxWindowSizing.Automatic && Font != null)
+                {
+                    var totalWidth = Font.SizeOf(MenuItems.Append(new() { Label = MenuTitle }).MaxBy(x => x.Label.Length)?.Label).X + FramePaddingTopLeft.X + FramePaddingBottomRight.X;
+                    var totalHeight = MenuItems.Where(x => !string.IsNullOrWhiteSpace(x.Label)).Count() * (Font.LineHeight + LinePadding) + FramePaddingTopLeft.Y + FramePaddingBottomRight.Y - LinePadding;
+                    if (!string.IsNullOrWhiteSpace(MenuTitle)) totalHeight += Font.LineHeight + LinePadding + titleGap;
+
+                    return new Vector2(totalWidth, totalHeight).CeilingToPoint2();
+                }
+                else
+                    return manualSize;
+            }
+            set => manualSize = value;
+        }
+        public override Point2 Position
+        {
+            get
+            {
+                return WindowAlignment switch
+                {
+                    MenuBoxWindowAlignment.TopLeft => manager.Screen.Bounds.TopLeft + WindowAlignmentPadding,
+                    MenuBoxWindowAlignment.TopCenter => manager.Screen.Bounds.TopCenter - Size.OnlyX() / 2 + WindowAlignmentPadding.OnlyY(),
+                    MenuBoxWindowAlignment.TopRight => manager.Screen.Bounds.TopRight - Size.OnlyX() + WindowAlignmentPadding.OnlyY() - WindowAlignmentPadding.OnlyX(),
+
+                    MenuBoxWindowAlignment.CenterLeft => manager.Screen.Bounds.CenterLeft - Size.OnlyY() / 2 + WindowAlignmentPadding.OnlyX(),
+                    MenuBoxWindowAlignment.Center => manager.Screen.Bounds.Center - Size / 2,
+                    MenuBoxWindowAlignment.CenterRight => manager.Screen.Bounds.CenterRight - Size.OnlyY() / 2 - Size.OnlyX() - WindowAlignmentPadding.OnlyX(),
+
+                    MenuBoxWindowAlignment.BottomLeft => manager.Screen.Bounds.BottomLeft - Size.OnlyY() - WindowAlignmentPadding.OnlyY() + WindowAlignmentPadding.OnlyX(),
+                    MenuBoxWindowAlignment.BottomCenter => manager.Screen.Bounds.BottomCenter - Size.OnlyX() / 2 - Size.OnlyY() - WindowAlignmentPadding.OnlyY(),
+                    MenuBoxWindowAlignment.BottomRight => manager.Screen.Bounds.BottomRight - Size - WindowAlignmentPadding,
+
+                    MenuBoxWindowAlignment.Manual => manualPosition,
+                    _ => manualPosition,
+                };
+            }
+            set => manualPosition = value;
+        }
+
         public Color NormalTextColor = Color.White;
         public Color HighlightTextColor = Color.Green;
+        public MenuBoxWindowAlignment WindowAlignment = MenuBoxWindowAlignment.Center;
+        public Point2 WindowAlignmentPadding = new(40, 40);
+        public MenuBoxWindowSizing WindowSizing = MenuBoxWindowSizing.Automatic;
+        public MenuBoxTextAlignment TextAlignment = MenuBoxTextAlignment.Center;
 
-        private string menuTitle = string.Empty;
-        private MenuBoxItem[] menuItems = [];
+        public string MenuTitle = string.Empty;
+        public MenuBoxItem[] MenuItems = [];
+
         private int currentItemIndex = 0;
 
         enum MenuBoxState { WaitingForInput, InitiateAction, PerformingAction, Closed }
@@ -19,27 +73,10 @@ namespace GameTest1.Game.UI
 
         public bool IsOpen => currentState != MenuBoxState.Closed;
         public int SelectedIndex => currentItemIndex;
-        public IEnumerable<MenuBoxItem> MenuItems => menuItems;
-
-        public void Initialize(string title, IEnumerable<MenuBoxItem> items)
-        {
-            menuTitle = title;
-            menuItems = [.. items];
-            currentItemIndex = 0;
-
-            if (Font != null)
-            {
-                var totalWidth = Font.SizeOf(menuItems.Append(new() { Label = menuTitle }).MaxBy(x => x.Label.Length)?.Label).X + FramePaddingTopLeft.X + FramePaddingBottomRight.X;
-                var totalHeight = menuItems.Where(x => !string.IsNullOrWhiteSpace(x.Label)).Count() * (Font.LineHeight + LinePadding) + FramePaddingTopLeft.Y + FramePaddingBottomRight.Y - LinePadding;
-                if (!string.IsNullOrWhiteSpace(menuTitle)) totalHeight += Font.LineHeight + LinePadding + titleGap;
-
-                Size = new Vector2(totalWidth, totalHeight).CeilingToPoint2();
-                Position = new(manager.Screen.Bounds.Center.X - Size.X / 2, manager.Screen.Bounds.Center.Y - Size.Y / 2);
-            }
-        }
 
         public void Open()
         {
+            currentItemIndex = 0;
             currentState = MenuBoxState.WaitingForInput;
         }
 
@@ -62,16 +99,16 @@ namespace GameTest1.Game.UI
                     if (manager.Controls.Move.PressedDown)
                     {
                         currentItemIndex++;
-                        if (currentItemIndex > menuItems.Length - 1) currentItemIndex = 0;
+                        if (currentItemIndex > MenuItems.Length - 1) currentItemIndex = 0;
                     }
                     else if (manager.Controls.Move.PressedUp)
                     {
                         currentItemIndex--;
-                        if (currentItemIndex < 0) currentItemIndex = menuItems.Length - 1;
+                        if (currentItemIndex < 0) currentItemIndex = MenuItems.Length - 1;
                     }
                     else if (manager.Controls.Move.PressedRight)
                     {
-                        currentItemIndex = menuItems.Length - 1;
+                        currentItemIndex = MenuItems.Length - 1;
                     }
                     else if (manager.Controls.Move.PressedLeft)
                     {
@@ -79,10 +116,27 @@ namespace GameTest1.Game.UI
                     }
                     else if (manager.Controls.Action1.ConsumePress() || manager.Controls.Action2.ConsumePress())
                         currentState = MenuBoxState.InitiateAction;
+
+                    if (Globals.ShowDebugInfo && manager.Controls.Menu.ConsumePress())
+                    {
+                        WindowAlignment++;
+                        if (WindowAlignment > MenuBoxWindowAlignment.BottomRight)
+                        {
+                            WindowAlignment = 0;
+                            WindowSizing++;
+                            if (WindowSizing > MenuBoxWindowSizing.Automatic)
+                            {
+                                WindowSizing = 0;
+                                TextAlignment++;
+                                if (TextAlignment > MenuBoxTextAlignment.Center)
+                                    TextAlignment = 0;
+                            }
+                        }
+                    }
                     break;
 
                 case MenuBoxState.InitiateAction:
-                    if (currentItemIndex >= 0 && currentItemIndex < menuItems.Length && menuItems[currentItemIndex]?.Action is Action<MenuBox> action)
+                    if (currentItemIndex >= 0 && currentItemIndex < MenuItems.Length && MenuItems[currentItemIndex]?.Action is Action<MenuBox> action)
                     {
                         currentState = MenuBoxState.PerformingAction;
                         action(this);
@@ -105,16 +159,33 @@ namespace GameTest1.Game.UI
         {
             if (Font == null) return;
 
-            if (IsOpen && menuItems.Length != 0)
+            if (IsOpen && MenuItems.Length != 0)
             {
+                var menuRect = new Rect(Position, Size);
+
+                manager.Batcher.PushScissor(menuRect.Int());
                 RenderBackground();
                 RenderText();
+                manager.Batcher.PopScissor();
 
                 if (Globals.ShowDebugInfo)
                 {
-                    manager.Batcher.RectLine(new(Position, Size), 1f, Color.Red);
-                    manager.Batcher.Circle(manager.Screen.Bounds.Center, 2f, 5, Color.Magenta);
-                    manager.Batcher.Text(manager.Assets.SmallFont, $"== MENU BOX DEBUG ==\nState:{currentState}\nIndex:{currentItemIndex}\nPosition:{Position}\nSize:{Size}\n", manager.Screen.Bounds.BottomRight - Point2.One, Vector2.One, Color.Yellow);
+                    manager.Batcher.RectLine(menuRect, 1f, Color.Red);
+                    manager.Batcher.Circle(menuRect.Center, 2f, 5, Color.Magenta);
+                    manager.Batcher.Text(
+                        manager.Assets.SmallFont,
+                        "== MENU BOX DEBUG ==\n" +
+                        $"State:{currentState}\n" +
+                        $"Index:{currentItemIndex}\n" +
+                        $"Position:{Position}\n" +
+                        $"Size:{Size}\n" +
+                        $"WindowAlignment:{WindowAlignment}\n" +
+                        $"WindowAlignmentPadding:{WindowAlignmentPadding}\n" +
+                        $"WindowSizing:{WindowSizing}\n" +
+                        $"TextAlignment:{TextAlignment}\n",
+                        manager.Screen.Bounds.BottomRight - Point2.One,
+                        Vector2.One,
+                        Color.Yellow);
                 }
             }
         }
@@ -152,10 +223,10 @@ namespace GameTest1.Game.UI
             var textPos = new Vector2(Position.X + FramePaddingTopLeft.X, Position.Y + FramePaddingTopLeft.Y);
             var itemSize = (Size - FramePaddingBottomRight - FramePaddingTopLeft).OnlyX() + new Vector2(0f, Font.LineHeight);
 
-            if (!string.IsNullOrWhiteSpace(menuTitle))
+            if (!string.IsNullOrWhiteSpace(MenuTitle))
             {
-                var offset = (Size - FramePaddingBottomRight - FramePaddingTopLeft).OnlyX() / 2f - Font.SizeOf(menuTitle).ZeroY() / 2f;
-                manager.Batcher.Text(Font, menuTitle, textPos + offset, NormalTextColor);
+                var offset = (Size - FramePaddingBottomRight - FramePaddingTopLeft).OnlyX() / 2f - Font.SizeOf(MenuTitle).ZeroY() / 2f;
+                manager.Batcher.Text(Font, MenuTitle, textPos + offset, NormalTextColor);
                 textPos.Y += Font.LineHeight + LinePadding;
 
                 var lineFrom = textPos - new Vector2(LinePadding / 1.75f, 0f);
@@ -165,11 +236,12 @@ namespace GameTest1.Game.UI
                 textPos.Y += titleGap;
             }
 
-            for (var i = 0; i < menuItems.Length; i++)
+            for (var i = 0; i < MenuItems.Length; i++)
             {
+                var offset = TextAlignment == MenuBoxTextAlignment.Center ? (Size - FramePaddingBottomRight - FramePaddingTopLeft).OnlyX() / 2f - Font.SizeOf(MenuItems[i].Label).ZeroY() / 2f : Vector2.Zero;
                 var textColor = currentItemIndex == i ? HighlightTextColor : NormalTextColor;
                 if (currentItemIndex == i) manager.Batcher.Rect(textPos - new Vector2(LinePadding / 1.75f), itemSize + new Vector2(LinePadding / 1.75f) * 2f, Color.Lerp(BackgroundColor, Color.Black, 0.35f));
-                manager.Batcher.Text(Font, menuItems[i].Label, textPos, textColor);
+                manager.Batcher.Text(Font, MenuItems[i].Label, textPos + offset, textColor);
                 textPos.Y += Font.LineHeight + LinePadding;
             }
         }

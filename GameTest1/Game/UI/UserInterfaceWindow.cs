@@ -6,9 +6,10 @@ namespace GameTest1.Game.UI
     {
         protected Manager manager = manager;
 
+        public virtual Point2 Position { get; set; }
+        public virtual Point2 Size { get; set; }
+
         public SpriteFont? Font = null;
-        public Point2 Position = new(0, 0);
-        public Point2 Size = new(64, 64);
         public Point2 FramePaddingTopLeft = new(0, 0);
         public Point2 FramePaddingBottomRight = new(0, 0);
         public int LinePadding = 8;
