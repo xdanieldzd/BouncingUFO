@@ -24,6 +24,7 @@ namespace GameTest1.Game.States
 
         private readonly MenuBoxItem[] pauseMenuItems = [];
         private readonly MenuBoxItem[] gameOverMenuItems = [];
+        private readonly MenuBoxItem nextLevelMenuItem;
 
         private DialogText? currentDialogText = null;
 
@@ -77,9 +78,9 @@ namespace GameTest1.Game.States
                 new() { Label = "Retry", Action = (m) => { screenFader.Begin(ScreenFadeType.FadeOut, screenFadeDuration, Color.White); currentState = State.Restart; } },
                 new() { Label = "Exit to Menu", Action = (m) => { screenFader.Begin(ScreenFadeType.FadeOut, screenFadeDuration, Color.Black); currentState = State.ExitToMenu; } }
             ];
+            nextLevelMenuItem = new() { Label = "Next Level", Action = (m) => { screenFader.Begin(ScreenFadeType.FadeOut, screenFadeDuration, Color.White); currentState = State.LoadNextLevel; } };
 
-            if (this.args.Length != 0 && this.args[0] is string mapName)
-                levelManager.Load(mapName);
+            levelManager.Load([.. this.args.Where(x => x is string).Cast<string>()]);
         }
 
         public void Update()
@@ -192,7 +193,10 @@ namespace GameTest1.Game.States
                         if (!menuBox.IsOpen)
                         {
                             menuBox.MenuTitle = string.Empty;
-                            menuBox.MenuItems = gameOverMenuItems;
+                            if (capsuleCount == 0)
+                                menuBox.MenuItems = [nextLevelMenuItem, .. gameOverMenuItems];
+                            else
+                                menuBox.MenuItems = [.. gameOverMenuItems];
                             menuBox.Open();
                         }
                     }
@@ -226,9 +230,15 @@ namespace GameTest1.Game.States
                     {
                         if (screenFader.Update())
                         {
-                            // TODO: game progression!
-                            levelManager.Load(@"TestMaps\BigTestMap");
-                            currentState = State.Initialize;
+                            menuBox.Close();
+
+                            if (levelManager.Advance())
+                                currentState = State.Initialize;
+                            else
+                            {
+                                manager.GameStates.Pop();
+                                manager.GameStates.Push(new MainMenu(manager));
+                            }
                         }
                     }
                     break;

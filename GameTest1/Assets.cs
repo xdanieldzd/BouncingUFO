@@ -10,7 +10,11 @@ namespace GameTest1
     public class Assets
     {
         public const string AssetsFolderName = "Assets";
+
         public const string FontsFolderName = "Fonts";
+        public const string DataFolderName = "Data";
+        public const string ProgressionFolder = DataFolderName + "\\Progression";
+
         public const string TilesetFolderName = "Tilesets";
         public const string MapFolderName = "Maps";
         public const string SpriteFolderName = "Sprites";
@@ -22,6 +26,9 @@ namespace GameTest1
         public readonly SpriteFont SmallFont;
         public readonly SpriteFont LargeFont;
         public readonly SpriteFont FutureFont;
+
+        public readonly Dictionary<string, Progression> Progression = [];
+
         public readonly Dictionary<string, Tileset> Tilesets = [];
         public readonly Dictionary<string, Map> Maps = [];
         public readonly Dictionary<string, Sprite> Sprites = [];
@@ -60,6 +67,8 @@ namespace GameTest1
                 firstChara: 0x20,
                 spaceWidth: 16);
 
+            LoadAssets(ProgressionFolder, ref Progression);
+
             LoadAssets(TilesetFolderName, ref Tilesets, (obj) => obj.CreateTextures(graphicsDevice));
             LoadAssets(MapFolderName, ref Maps);
             LoadAssets(SpriteFolderName, ref Sprites, (obj) => obj.CreateTextures(graphicsDevice));
@@ -70,6 +79,8 @@ namespace GameTest1
         private static void LoadAssets<T>(string folderName, ref Dictionary<string, T> assetDictionary, Action<T>? afterLoadAction = null)
         {
             var path = Path.Join(AssetsFolderName, folderName);
+            if (!Directory.Exists(path)) return;
+
             foreach (var file in Directory.EnumerateFiles(path, "*.json", SearchOption.AllDirectories))
             {
                 var instance = JsonSerializer.Deserialize<T>(File.ReadAllText(file), SerializerOptions);

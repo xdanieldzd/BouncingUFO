@@ -14,6 +14,7 @@ namespace GameTest1.Game
             { "CapsuleSpawner", typeof(CapsuleSpawner) }
         };
 
+        public Queue<string> QueuedMaps = [];
         public Map? Map;
         public Tileset? Tileset;
 
@@ -23,12 +24,27 @@ namespace GameTest1.Game
         public bool IsLevelLoaded => Map != null && Tileset != null;
         public Point2 SizeInPixels => Map?.Size * Tileset?.CellSize ?? Point2.Zero;
 
-        public void Load(string mapName)
+        public bool Load(params string[] mapNames)
         {
-            Map = manager.Assets.Maps[mapName];
-            Tileset = manager.Assets.Tilesets[Map.Tileset];
+            foreach (var mapName in mapNames)
+                QueuedMaps.Enqueue(mapName);
 
-            Reset();
+            return Advance();
+        }
+
+        public bool Advance()
+        {
+            if (QueuedMaps.TryDequeue(out string? nextMapName))
+            {
+                Map = manager.Assets.Maps[nextMapName];
+                Tileset = manager.Assets.Tilesets[Map.Tileset];
+
+                Reset();
+
+                return true;
+            }
+            else
+                return false;
         }
 
         public void Reset()

@@ -20,7 +20,7 @@ namespace GameTest1.Game.States
             HighlightTextColor = Color.Lerp(Color.Green, Color.White, 0.35f),
             WindowAlignment = MenuBoxWindowAlignment.BottomCenter,
             WindowSizing = MenuBoxWindowSizing.Automatic,
-            MenuTitle = string.Empty,
+            MenuTitle = string.Empty
         };
 
         private MenuBoxItem[] mainMenuItems = [];
