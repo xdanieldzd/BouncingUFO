@@ -77,7 +77,7 @@ namespace GameTest1.Editors
                             if (r == FileSystem.DialogResult.Success && s.Length > 0 && s[0] != null)
                             {
                                 currentSpritePath = s[0];
-                                sprite = JsonSerializer.Deserialize<Sprite>(File.ReadAllText(currentSpritePath), Assets.SerializerOptions);
+                                sprite = JsonSerializer.Deserialize<Sprite>(File.ReadAllText(currentSpritePath), Manager.SerializerOptions);
                                 sprite?.CreateTextures(manager.GraphicsDevice);
                             }
                         }), [new("JSON files (*.json)", "json")], currentSpritePath);
@@ -90,7 +90,7 @@ namespace GameTest1.Editors
                         manager.FileSystem.SaveFileDialog(new FileSystem.DialogCallbackSingleFile((s, r) =>
                         {
                             if (r == FileSystem.DialogResult.Success)
-                                File.WriteAllText(s, JsonSerializer.Serialize(sprite, Assets.SerializerOptions));
+                                File.WriteAllText(s, JsonSerializer.Serialize(sprite, Manager.SerializerOptions));
                         }), [new("JSON files (*.json)", "json")], currentSpritePath);
                     }
                     if (sprite == null) ImGui.EndDisabled();
@@ -107,7 +107,7 @@ namespace GameTest1.Editors
                             if (r == FileSystem.DialogResult.Success && s.Length > 0 && s[0] != null)
                             {
                                 sprite.SpritesheetFile = relativeSpritesheetFilePath;
-                                File.WriteAllText(Path.Join(s[0], jsonFilename), JsonSerializer.Serialize(sprite, Assets.SerializerOptions));
+                                File.WriteAllText(Path.Join(s[0], jsonFilename), JsonSerializer.Serialize(sprite, Manager.SerializerOptions));
                                 File.Copy(spritesheetFullPath, Path.Join(s[0], Path.GetFileName(spritesheetFullPath)), true);
                                 sprite.SpritesheetFile = spritesheetFullPath;
                             }

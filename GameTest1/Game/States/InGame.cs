@@ -250,7 +250,7 @@ namespace GameTest1.Game.States
                 capsuleCount = levelManager.Actors.Count(x => x is Capsule);
             }
 
-            camera.Update(Globals.ShowDebugInfo ? Point2.Zero : levelManager.SizeInPixels);
+            camera.Update(manager.Settings.ShowDebugInfo ? Point2.Zero : levelManager.SizeInPixels);
 
             menuBox.Update();
         }
@@ -262,7 +262,7 @@ namespace GameTest1.Game.States
             RenderMap();
             RenderHUD();
 
-            if (Globals.ShowDebugInfo)
+            if (manager.Settings.ShowDebugInfo)
             {
                 if (levelManager.GetFirstActor<Player>() is Player player)
                 {
@@ -288,8 +288,8 @@ namespace GameTest1.Game.States
         private void RenderMap()
         {
             manager.Batcher.PushMatrix(camera.Matrix);
-            manager.Batcher.PushScissor(Globals.ShowDebugInfo ? null : new(camera.Position, levelManager.SizeInPixels));
-            levelManager.Render(Globals.ShowDebugInfo);
+            manager.Batcher.PushScissor(manager.Settings.ShowDebugInfo ? null : new(camera.Position, levelManager.SizeInPixels));
+            levelManager.Render(manager.Settings.ShowDebugInfo);
             manager.Batcher.PopScissor();
             manager.Batcher.PopMatrix();
         }

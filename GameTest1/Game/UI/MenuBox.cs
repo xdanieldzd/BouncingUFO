@@ -128,7 +128,7 @@ namespace GameTest1.Game.UI
                         }
                     }
 
-                    if (Globals.ShowDebugInfo && manager.Controls.Menu.ConsumePress())
+                    if (manager.Settings.ShowDebugInfo && manager.Controls.Menu.ConsumePress())
                     {
                         WindowAlignment++;
                         if (WindowAlignment > MenuBoxWindowAlignment.BottomRight)
@@ -179,7 +179,7 @@ namespace GameTest1.Game.UI
                 RenderText();
                 manager.Batcher.PopScissor();
 
-                if (Globals.ShowDebugInfo)
+                if (manager.Settings.ShowDebugInfo)
                 {
                     manager.Batcher.RectLine(menuRect, 1f, Color.Red);
                     manager.Batcher.Circle(menuRect.Center, 2f, 5, Color.Magenta);

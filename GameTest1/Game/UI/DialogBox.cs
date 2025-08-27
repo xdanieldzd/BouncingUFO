@@ -124,7 +124,7 @@ namespace GameTest1.Game.UI
                 if (currentTextIndex < currentText.Count)
                     Render(currentText[currentTextIndex], BackgroundColor);
 
-                if (Globals.ShowDebugInfo)
+                if (manager.Settings.ShowDebugInfo)
                 {
                     manager.Batcher.RectLine(new RectInt(TopLeft.X + FramePaddingTopLeft.X, TopLeft.Y + FramePaddingTopLeft.Y, Size.X - FramePaddingBottomRight.X - FramePaddingTopLeft.X, Size.Y - FramePaddingBottomRight.Y - FramePaddingTopLeft.Y), 2f, Color.Red);
                     manager.Batcher.Text(manager.Assets.SmallFont, $"{currentState}, {currentMaxLine}", new(0f, manager.Assets.SmallFont.LineHeight), Color.White);

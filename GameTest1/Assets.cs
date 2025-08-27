@@ -21,8 +21,6 @@ namespace GameTest1
         public const string UIFolderName = "UI";
         public const string DialogTextFolderName = "DialogText";
 
-        public readonly static JsonSerializerOptions SerializerOptions = new() { WriteIndented = true, IncludeFields = true };
-
         public readonly SpriteFont SmallFont;
         public readonly SpriteFont LargeFont;
         public readonly SpriteFont FutureFont;
@@ -83,7 +81,7 @@ namespace GameTest1
 
             foreach (var file in Directory.EnumerateFiles(path, "*.json", SearchOption.AllDirectories))
             {
-                var instance = JsonSerializer.Deserialize<T>(File.ReadAllText(file), SerializerOptions);
+                var instance = JsonSerializer.Deserialize<T>(File.ReadAllText(file), Manager.SerializerOptions);
                 if (instance == null) continue;
 
                 afterLoadAction?.Invoke(instance);

@@ -1,8 +1,11 @@
-﻿using Foster.Framework;
+﻿//TODO rename to BouncingUFO
+
+using Foster.Framework;
 using GameTest1.Game.States;
 using GameTest1.Utilities;
 using System.Numerics;
 using System.Reflection;
+using System.Text.Json;
 
 using var manager = new GameTest1.Manager();
 manager.Run();
@@ -11,7 +14,8 @@ namespace GameTest1
 {
     public class Manager : App
     {
-        public static readonly DateTime BuildDate = Assembly.GetEntryAssembly()?.GetCustomAttribute<BuildDateAttribute>()?.DateTime ?? default;
+        public readonly static DateTime BuildDate = Assembly.GetEntryAssembly()?.GetCustomAttribute<BuildDateAttribute>()?.DateTime ?? default;
+        public readonly static JsonSerializerOptions SerializerOptions = new() { WriteIndented = true, IncludeFields = true };
 
         private const string applicationName = nameof(GameTest1);
         private const string windowTitle = "Game Test #1 - Bouncing UFO (REWRITE)";
@@ -29,6 +33,8 @@ namespace GameTest1
 
         public readonly Stack<IGameState> GameStates = [];
 
+        public Settings Settings = new();
+
         public Manager() : base(new AppConfig()
         {
             ApplicationName = applicationName,
@@ -39,6 +45,12 @@ namespace GameTest1
         })
         {
             GraphicsDevice.VSync = true;
+
+            FileSystem.OpenUserStorage((s) =>
+            {
+                if (s.FileExists(Settings.Filename) && JsonSerializer.Deserialize<Settings>(s.ReadAllText(Settings.Filename)) is Settings loadedSettings)
+                    Settings = loadedSettings;
+            });
 
             Batcher = new(GraphicsDevice);
             Screen = new(GraphicsDevice, defaultScreenWidth, defaultScreenHeight, "Screen");
@@ -63,14 +75,21 @@ namespace GameTest1
         protected override void Shutdown()
         {
             ImGuiRenderer.Dispose();
+
+            FileSystem.OpenUserStorage((s) =>
+            {
+                s.WriteAllText(Settings.Filename, JsonSerializer.Serialize(Settings, SerializerOptions));
+            });
         }
 
         protected override void Update()
         {
+            Window.Fullscreen = Settings.Fullscreen;
+
             if (Input.Keyboard.Pressed(Keys.Escape)) Exit();
             if (Input.Keyboard.Alt && Input.Keyboard.Pressed(Keys.Enter)) Window.Fullscreen = !Window.Fullscreen;
 
-            if (Controls.DebugDisplay.ConsumePress()) Globals.ShowDebugInfo = !Globals.ShowDebugInfo;
+            if (Controls.DebugDisplay.ConsumePress()) Settings.ShowDebugInfo = !Settings.ShowDebugInfo;
 
             if (GameStates.TryPeek(out IGameState? gameState))
                 gameState.Update();

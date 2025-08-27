@@ -78,7 +78,7 @@ namespace GameTest1.Editors
                         if (r == FileSystem.DialogResult.Success && s.Length > 0 && s[0] != null)
                         {
                             currentMapPath = s[0];
-                            map = JsonSerializer.Deserialize<Map>(File.ReadAllText(currentMapPath), Assets.SerializerOptions);
+                            map = JsonSerializer.Deserialize<Map>(File.ReadAllText(currentMapPath), Manager.SerializerOptions);
                             tileset = null;
                         }
                     }), [new("JSON files (*.json)", "json")], currentMapPath);
@@ -91,7 +91,7 @@ namespace GameTest1.Editors
                     manager.FileSystem.SaveFileDialog(new FileSystem.DialogCallbackSingleFile((s, r) =>
                     {
                         if (r == FileSystem.DialogResult.Success)
-                            File.WriteAllText(currentMapPath = s, JsonSerializer.Serialize(map, Assets.SerializerOptions));
+                            File.WriteAllText(currentMapPath = s, JsonSerializer.Serialize(map, Manager.SerializerOptions));
                     }), [new("JSON files (*.json)", "json")], currentMapPath);
                 }
                 if (map == null) ImGui.EndDisabled();

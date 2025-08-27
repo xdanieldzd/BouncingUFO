@@ -32,7 +32,7 @@ namespace GameTest1.Editors
                             if (r == FileSystem.DialogResult.Success && s.Length > 0 && s[0] != null)
                             {
                                 currentJsonPath = s[0];
-                                jsonObject = JsonSerializer.Deserialize<JsonObject>(File.ReadAllText(currentJsonPath), Assets.SerializerOptions);
+                                jsonObject = JsonSerializer.Deserialize<JsonObject>(File.ReadAllText(currentJsonPath), Manager.SerializerOptions);
                             }
                         }), [new("JSON files (*.json)", "json")], currentJsonPath);
                     }
@@ -44,7 +44,7 @@ namespace GameTest1.Editors
                         manager.FileSystem.SaveFileDialog(new FileSystem.DialogCallbackSingleFile((s, r) =>
                         {
                             if (r == FileSystem.DialogResult.Success)
-                                File.WriteAllText(s, JsonSerializer.Serialize(jsonObject, Assets.SerializerOptions));
+                                File.WriteAllText(s, JsonSerializer.Serialize(jsonObject, Manager.SerializerOptions));
                         }), [new("JSON files (*.json)", "json")], currentJsonPath);
                     }
                     if (jsonObject == null) ImGui.EndDisabled();

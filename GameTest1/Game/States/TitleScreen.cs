@@ -36,8 +36,8 @@ namespace GameTest1.Game.States
             ];
             optionsMenuItems =
             [
-                new MenuBoxItem() { Label = "Toggle Fullscreen", Action = (m) => { manager.Window.Fullscreen = !manager.Window.Fullscreen; m.Open(); } },
-                new MenuBoxItem() { Label = "Toggle Debug Info", Action = (m) => { Globals.ShowDebugInfo = !Globals.ShowDebugInfo; m.Open(); } },
+                new MenuBoxItem() { Label = "Toggle Fullscreen", Action = (m) => { manager.Settings.Fullscreen = !manager.Settings.Fullscreen; m.Open(); } },
+                new MenuBoxItem() { Label = "Toggle Debug Info", Action = (m) => { manager.Settings.ShowDebugInfo = !manager.Settings.ShowDebugInfo; m.Open(); } },
                 new MenuBoxItem() { Label = "Return", Action = MenuOptionsReturnAction, IsCancelAction = true }
             ];
 
