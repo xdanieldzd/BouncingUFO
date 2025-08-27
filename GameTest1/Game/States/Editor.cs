@@ -7,7 +7,7 @@ namespace GameTest1.Game.States
     public class Editor(Manager manager, params object[] args) : GameStateBase(manager, args), IGameState
     {
         public override Color ClearColor => Color.Black;
-        public override float ScreenFadeDuration => 0f;
+        public override float FadeDuration => 0f;
 
         private readonly TilesetEditor tilesetEditor = new(manager);
         private readonly MapEditor mapEditor = new(manager);
@@ -43,13 +43,17 @@ namespace GameTest1.Game.States
             ImGui.End();
         }
 
-        public override void OnEnter() { }
+        public override void OnEnterState() { }
 
-        public override void OnUpdateMain() { }
+        public override void OnFadeInComplete() { }
 
-        public override void OnRenderMain() { }
+        public override void OnUpdate() { }
 
-        public override void OnExit()
+        public override void OnRender() { }
+
+        public override void OnBeginFadeOut() { }
+
+        public override void OnLeaveState()
         {
             manager.GameStates.Pop();
             if (manager.GameStates.Count == 0) manager.GameStates.Push(new TitleScreen(manager));

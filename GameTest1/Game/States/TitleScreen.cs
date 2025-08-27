@@ -1,6 +1,5 @@
 ﻿using Foster.Framework;
 using GameTest1.Game.UI;
-using GameTest1.Utilities;
 using System.Numerics;
 
 namespace GameTest1.Game.States
@@ -27,7 +26,7 @@ namespace GameTest1.Game.States
         private enum State { WaitingForMenuButton, InMainMenu }
         private State currentState = State.WaitingForMenuButton;
 
-        public override void OnEnter()
+        public override void OnEnterState()
         {
             mainMenuItems =
             [
@@ -45,7 +44,9 @@ namespace GameTest1.Game.States
             menuBox.MenuItems = mainMenuItems;
         }
 
-        public override void OnUpdateMain()
+        public override void OnFadeInComplete() { }
+
+        public override void OnUpdate()
         {
             switch (currentState)
             {
@@ -67,7 +68,7 @@ namespace GameTest1.Game.States
             }
         }
 
-        public override void OnRenderMain()
+        public override void OnRender()
         {
             var titleText =
                 "GAME TEST PROJECT #1\n" +
@@ -100,7 +101,9 @@ namespace GameTest1.Game.States
             menuBox.Render();
         }
 
-        public override void OnExit()
+        public override void OnBeginFadeOut() { }
+
+        public override void OnLeaveState()
         {
             currentState = State.WaitingForMenuButton;
 
@@ -111,7 +114,6 @@ namespace GameTest1.Game.States
 
         private void MenuMainStartGameAction(MenuBox menuBox)
         {
-            screenFader.Begin(ScreenFadeType.FadeOut, ScreenFadeDuration, ScreenFader.PreviousColor);
             LeaveState();
         }
 

@@ -6,40 +6,43 @@ namespace GameTest1.Game.States
     public abstract class GameStateBase(Manager manager, params object[] args) : IGameState
     {
         public virtual Color ClearColor => Color.DarkGray;
-        public virtual float ScreenFadeDuration => 0.75f;
-        public virtual Color ScreenFadeInitialColor => Color.Black;
+        public virtual float FadeDuration => 0.75f;
+        public virtual Color FadeColor => ScreenFader.PreviousColor;
 
         protected readonly Manager manager = manager;
         protected readonly object[] args = args;
-        protected readonly ScreenFader screenFader = new(manager);
 
-        enum BaseState { Enter, FadeIn, Main, FadeOut }
-        private BaseState currentState = BaseState.Enter;
+        private readonly ScreenFader screenFader = new(manager);
+        private enum BaseState { EnterState, FadeIn, Main, FadeOut }
+        private BaseState currentState = BaseState.EnterState;
 
         public void Update()
         {
             switch (currentState)
             {
-                case BaseState.Enter:
-                    OnEnter();
-                    screenFader.Begin(ScreenFadeType.FadeIn, ScreenFadeDuration, ScreenFadeInitialColor);
+                case BaseState.EnterState:
+                    OnEnterState();
+                    screenFader.Begin(ScreenFadeType.FadeIn, FadeDuration, FadeColor);
                     currentState = BaseState.FadeIn;
                     break;
 
                 case BaseState.FadeIn:
                     if (screenFader.Update())
+                    {
+                        OnFadeInComplete();
                         currentState = BaseState.Main;
+                    }
                     break;
 
                 case BaseState.Main:
-                    OnUpdateMain();
+                    OnUpdate();
                     break;
 
                 case BaseState.FadeOut:
                     if (screenFader.Update())
                     {
-                        OnExit();
-                        currentState = BaseState.Enter;
+                        OnLeaveState();
+                        currentState = BaseState.EnterState;
                     }
                     break;
             }
@@ -48,19 +51,24 @@ namespace GameTest1.Game.States
         public void Render()
         {
             manager.Screen.Clear(ClearColor);
-            OnRenderMain();
+            OnRender();
             screenFader.Render();
         }
 
         public void LeaveState()
         {
-            screenFader.Begin(ScreenFadeType.FadeOut, ScreenFadeDuration, ScreenFader.PreviousColor);
+            OnBeginFadeOut();
+
+            screenFader.Begin(ScreenFadeType.FadeOut, FadeDuration, ScreenFader.PreviousColor);
             currentState = BaseState.FadeOut;
         }
 
-        public abstract void OnEnter();
-        public abstract void OnUpdateMain();
-        public abstract void OnRenderMain();
-        public abstract void OnExit();
+        public abstract void OnEnterState();
+        public abstract void OnFadeInComplete();
+        public abstract void OnUpdate();
+        public abstract void OnBeginFadeOut();
+        public abstract void OnLeaveState();
+
+        public abstract void OnRender();
     }
 }

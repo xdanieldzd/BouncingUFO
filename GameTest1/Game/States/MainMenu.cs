@@ -1,6 +1,5 @@
 ﻿using Foster.Framework;
 using GameTest1.Game.UI;
-using GameTest1.Utilities;
 
 namespace GameTest1.Game.States
 {
@@ -23,7 +22,7 @@ namespace GameTest1.Game.States
 
         private IGameState? nextGameState = null;
 
-        public override void OnEnter()
+        public override void OnEnterState()
         {
             gameSelectMenuItems =
             [
@@ -37,17 +36,21 @@ namespace GameTest1.Game.States
             MenuEnterMainMenuAction(menuBox);
         }
 
-        public override void OnUpdateMain()
+        public override void OnFadeInComplete() { }
+
+        public override void OnUpdate()
         {
             menuBox.Update();
         }
 
-        public override void OnRenderMain()
+        public override void OnRender()
         {
             menuBox.Render();
         }
 
-        public override void OnExit()
+        public override void OnBeginFadeOut() { }
+
+        public override void OnLeaveState()
         {
             menuBox.Close();
 
@@ -76,8 +79,6 @@ namespace GameTest1.Game.States
         private void MenuArcadeModeStartAction(MenuBox menuBox)
         {
             nextGameState = new InGame(manager, [.. manager.Assets.Progression.ElementAt(menuBox.SelectedIndex).Value.MapNames]);
-
-            screenFader.Begin(ScreenFadeType.FadeOut, ScreenFadeDuration, ScreenFader.PreviousColor);
             LeaveState();
         }
 
@@ -92,16 +93,12 @@ namespace GameTest1.Game.States
         private void MenuSingleLevelStartAction(MenuBox menuBox)
         {
             nextGameState = new InGame(manager, [manager.Assets.Maps.ElementAt(menuBox.SelectedIndex).Key]);
-
-            screenFader.Begin(ScreenFadeType.FadeOut, ScreenFadeDuration, ScreenFader.PreviousColor);
             LeaveState();
         }
 
         private void MenuCancelAction(MenuBox menuBox)
         {
             nextGameState = null;
-
-            screenFader.Begin(ScreenFadeType.FadeOut, ScreenFadeDuration, ScreenFader.PreviousColor);
             LeaveState();
         }
     }

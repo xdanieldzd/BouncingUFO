@@ -6,12 +6,14 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-
-		<!-- TODO -->
-		<PublishAot>false</PublishAot>
-
 		<InvariantGlobalization>true</InvariantGlobalization>
 	</PropertyGroup>
+
+	<ItemGroup>
+		<AssemblyAttribute Include="$(RootNamespace).BuildDateAttribute">
+			<_Parameter1>$([System.DateTime]::UtcNow.ToString("yyyy-MM-ddTHH:mm:ss:fffZ"))</_Parameter1>
+		</AssemblyAttribute>
+	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="FosterFramework" Version="0.2.2" />

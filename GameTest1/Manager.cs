@@ -2,6 +2,7 @@
 using GameTest1.Game.States;
 using GameTest1.Utilities;
 using System.Numerics;
+using System.Reflection;
 
 using var manager = new GameTest1.Manager();
 manager.Run();
@@ -10,6 +11,8 @@ namespace GameTest1
 {
     public class Manager : App
     {
+        public static readonly DateTime BuildDate = Assembly.GetEntryAssembly()?.GetCustomAttribute<BuildDateAttribute>()?.DateTime ?? default;
+
         private const string applicationName = nameof(GameTest1);
         private const string windowTitle = "Game Test #1 - Bouncing UFO (REWRITE)";
 
@@ -54,7 +57,7 @@ namespace GameTest1
             else if (Globals.QuickStart)
                 GameStates.Push(new InGame(this));
             else
-                GameStates.Push(new TitleScreen(this));
+                GameStates.Push(new Intro(this));
         }
 
         protected override void Shutdown()
