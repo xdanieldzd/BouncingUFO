@@ -145,7 +145,7 @@ namespace BouncingUFO.Utilities
         /// </summary>
         public bool WantsTextInput { get; private set; }
 
-        public ImGuiRenderer(App app, string? customFontPath = null)
+        public ImGuiRenderer(App app)
         {
             this.app = app;
 
@@ -158,17 +158,7 @@ namespace BouncingUFO.Utilities
             io.ConfigFlags = ImGuiConfigFlags.DockingEnable;
 
             // load ImGui Font
-            {
-                if (customFontPath != null && File.Exists(customFontPath))
-                {
-                    io.Fonts.AddFontFromFileTTF(customFontPath, 64);
-                    io.FontGlobalScale = 16.0f / 64.0f;
-                }
-                else
-                {
-                    io.Fonts.AddFontDefault();
-                }
-            }
+            io.Fonts.AddFontDefault();
 
             // create font texture
             unsafe
