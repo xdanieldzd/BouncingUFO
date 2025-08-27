@@ -21,67 +21,75 @@ namespace BouncingUFO
         public const string UIFolderName = "UI";
         public const string DialogTextFolderName = "DialogText";
 
-        public readonly SpriteFont SmallFont;
-        public readonly SpriteFont LargeFont;
-        public readonly SpriteFont FutureFont;
+        private readonly SpriteFont dummyFont;
 
-        public readonly Dictionary<string, Progression> Progression = [];
+        private SpriteFont? smallFont, largeFont, futureFont;
+        public SpriteFont SmallFont => smallFont ?? dummyFont;
+        public SpriteFont LargeFont => largeFont ?? dummyFont;
+        public SpriteFont FutureFont => futureFont ?? dummyFont;
 
-        public readonly Dictionary<string, Tileset> Tilesets = [];
-        public readonly Dictionary<string, Map> Maps = [];
-        public readonly Dictionary<string, Sprite> Sprites = [];
-        public readonly Dictionary<string, GraphicsSheet> UI = [];
-        public readonly Dictionary<string, Dictionary<string, DialogText>> DialogText = [];
+        public Dictionary<string, Progression> Progression = [];
 
-        public Assets(GraphicsDevice graphicsDevice)
+        public Dictionary<string, Tileset> Tilesets = [];
+        public Dictionary<string, Map> Maps = [];
+        public Dictionary<string, Sprite> Sprites = [];
+        public Dictionary<string, GraphicsSheet> UI = [];
+        public Dictionary<string, Dictionary<string, DialogText>> DialogText = [];
+
+        public Assets(Manager manager)
         {
-            SmallFont = SpriteFontHelper.GenerateFromImage(
-                graphicsDevice,
-                "SmallFont",
-                Path.Join(AssetsFolderName, FontsFolderName, "SmallFont.png"),
-                new(8, 8),
-                SpriteFontSetting.None,
-                SpriteFontHighlightType.Outline,
-                Color.Black);
+            dummyFont = new(manager.GraphicsDevice);
 
-            LargeFont = SpriteFontHelper.GenerateFromImage(
-                graphicsDevice,
-                "LargeFont",
-                Path.Join(AssetsFolderName, FontsFolderName, "LargeFont.png"),
-                new(16, 16),
-                SpriteFontSetting.None,
-                SpriteFontHighlightType.DropShadowThin,
-                Color.Black,
-                charaSpacing: 1);
+            manager.FileSystem.OpenTitleStorage((s) =>
+            {
+                smallFont = SpriteFontHelper.GenerateFromImage(
+                   manager.GraphicsDevice,
+                   "SmallFont",
+                   s.ReadAllBytes(Path.Join(AssetsFolderName, FontsFolderName, "SmallFont.png")),
+                   new(8, 8),
+                   SpriteFontSetting.None,
+                   SpriteFontHighlightType.Outline,
+                   Color.Black);
 
-            FutureFont = SpriteFontHelper.GenerateFromImage(
-                graphicsDevice,
-                "FutureFont",
-                Path.Join(AssetsFolderName, FontsFolderName, "FutureFont.png"),
-                new(16, 16),
-                SpriteFontSetting.Gradient | SpriteFontSetting.FixedWidth,
-                SpriteFontHighlightType.DropShadowThick,
-                Color.Black,
-                firstChara: 0x20,
-                spaceWidth: 16);
+                largeFont = SpriteFontHelper.GenerateFromImage(
+                    manager.GraphicsDevice,
+                    "LargeFont",
+                    s.ReadAllBytes(Path.Join(AssetsFolderName, FontsFolderName, "LargeFont.png")),
+                    new(16, 16),
+                    SpriteFontSetting.None,
+                    SpriteFontHighlightType.DropShadowThin,
+                    Color.Black,
+                    charaSpacing: 1);
 
-            LoadAssets(ProgressionFolder, ref Progression);
+                futureFont = SpriteFontHelper.GenerateFromImage(
+                    manager.GraphicsDevice,
+                    "FutureFont",
+                    s.ReadAllBytes(Path.Join(AssetsFolderName, FontsFolderName, "FutureFont.png")),
+                    new(16, 16),
+                    SpriteFontSetting.Gradient | SpriteFontSetting.FixedWidth,
+                    SpriteFontHighlightType.DropShadowThick,
+                    Color.Black,
+                    firstChara: 0x20,
+                    spaceWidth: 16);
 
-            LoadAssets(TilesetFolderName, ref Tilesets, (obj) => obj.CreateTextures(graphicsDevice));
-            LoadAssets(MapFolderName, ref Maps);
-            LoadAssets(SpriteFolderName, ref Sprites, (obj) => obj.CreateTextures(graphicsDevice));
-            LoadAssets(UIFolderName, ref UI, (obj) => obj.CreateTextures(graphicsDevice));
-            LoadAssets(DialogTextFolderName, ref DialogText);
+                LoadAssets(s, ProgressionFolder, ref Progression);
+
+                LoadAssets(s, TilesetFolderName, ref Tilesets, (obj) => obj.CreateTextures(manager.GraphicsDevice));
+                LoadAssets(s, MapFolderName, ref Maps);
+                LoadAssets(s, SpriteFolderName, ref Sprites, (obj) => obj.CreateTextures(manager.GraphicsDevice));
+                LoadAssets(s, UIFolderName, ref UI, (obj) => obj.CreateTextures(manager.GraphicsDevice));
+                LoadAssets(s, DialogTextFolderName, ref DialogText);
+            });
         }
 
-        private static void LoadAssets<T>(string folderName, ref Dictionary<string, T> assetDictionary, Action<T>? afterLoadAction = null)
+        private static void LoadAssets<T>(Storage storage, string folderName, ref Dictionary<string, T> assetDictionary, Action<T>? afterLoadAction = null)
         {
-            var path = Path.Join(AssetsFolderName, folderName);
-            if (!Directory.Exists(path)) return;
+            var path = Path.Join(AssetsFolderName, folderName).Replace(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            if (!storage.DirectoryExists(path)) return;
 
-            foreach (var file in Directory.EnumerateFiles(path, "*.json", SearchOption.AllDirectories))
+            foreach (var file in storage.EnumerateDirectory(path, "*.json", SearchOption.AllDirectories))
             {
-                var instance = JsonSerializer.Deserialize<T>(File.ReadAllText(file), Manager.SerializerOptions);
+                var instance = JsonSerializer.Deserialize<T>(storage.ReadAllText(file), Manager.SerializerOptions);
                 if (instance == null) continue;
 
                 afterLoadAction?.Invoke(instance);

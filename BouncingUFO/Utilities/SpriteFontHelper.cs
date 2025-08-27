@@ -54,7 +54,7 @@ namespace BouncingUFO.Utilities
 
         /* Developed using font image with 16 lines of 16 characters in Windows-1252 encoding, total 256 characters, from 0x00 (space character) to 0xFF (ÿ, lowercase y with diaeresis) */
 
-        public static SpriteFont GenerateFromImage(GraphicsDevice graphicsDevice, string name, string path, Point2 charaSize, SpriteFontSetting settings, SpriteFontHighlightType highlightType = SpriteFontHighlightType.None, Color highlightColor = default, int firstChara = defaultFirstCharacter, int charaSpacing = defaultCharaSpacing, int spaceWidth = defaultSpaceCharaWidth)
+        public static SpriteFont GenerateFromImage(GraphicsDevice graphicsDevice, string name, byte[] data, Point2 charaSize, SpriteFontSetting settings, SpriteFontHighlightType highlightType = SpriteFontHighlightType.None, Color highlightColor = default, int firstChara = defaultFirstCharacter, int charaSpacing = defaultCharaSpacing, int spaceWidth = defaultSpaceCharaWidth)
         {
             var (charaGap, highlightOffsets) = highlightType switch
             {
@@ -64,7 +64,7 @@ namespace BouncingUFO.Utilities
                 _ => (2, []),
             };
 
-            var fontImage = new Image(path);
+            var fontImage = new Image(data);
 
             if (settings.Has(SpriteFontSetting.Gradient))
                 ApplyGradient(fontImage, charaSize);

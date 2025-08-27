@@ -54,7 +54,7 @@ namespace BouncingUFO
             Screen = new(GraphicsDevice, defaultScreenWidth, defaultScreenHeight, "Screen");
 
             ImGuiRenderer = new(this);
-            Assets = new(GraphicsDevice);
+            Assets = new(this);
             Controls = new(Input);
         }
 
