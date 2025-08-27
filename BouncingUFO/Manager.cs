@@ -12,9 +12,6 @@ namespace BouncingUFO
 {
     public class Manager : App
     {
-        public readonly static DateTime BuildDate = Assembly.GetEntryAssembly()?.GetCustomAttribute<BuildDateAttribute>()?.DateTime ?? default;
-        public readonly static JsonSerializerOptions SerializerOptions = new() { WriteIndented = true, IncludeFields = true };
-
         private const string applicationName = nameof(BouncingUFO);
         private const string windowTitle = "Bouncing UFO";
 
@@ -140,5 +137,10 @@ namespace BouncingUFO
             Batcher.Render(Window);
             Batcher.Clear();
         }
+
+        public readonly static DateTime BuildDate = Assembly.GetEntryAssembly()?.GetCustomAttribute<BuildInformationAttribute>()?.DateTime ?? default;
+        public readonly static string BuildUserName = Assembly.GetEntryAssembly()?.GetCustomAttribute<BuildInformationAttribute>()?.UserName ?? string.Empty;
+        public readonly static string BuildMachineName = Assembly.GetEntryAssembly()?.GetCustomAttribute<BuildInformationAttribute>()?.MachineName ?? string.Empty;
+        public readonly static JsonSerializerOptions SerializerOptions = new() { WriteIndented = true, IncludeFields = true };
     }
 }

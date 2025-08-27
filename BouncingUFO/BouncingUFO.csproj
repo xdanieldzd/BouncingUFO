@@ -10,8 +10,10 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<AssemblyAttribute Include="$(RootNamespace).BuildDateAttribute">
-			<_Parameter1>$([System.DateTime]::UtcNow.ToString("yyyy-MM-ddTHH:mm:ss:fffZ"))</_Parameter1>
+		<AssemblyAttribute Include="$(RootNamespace).BuildInformationAttribute">
+			<_Parameter1>$([System.DateTime]::UtcNow.ToString("o"))</_Parameter1>
+			<_Parameter2>$([System.Environment]::UserName)</_Parameter2>
+			<_Parameter3>$([System.Environment]::MachineName)</_Parameter3>
 		</AssemblyAttribute>
 	</ItemGroup>
 

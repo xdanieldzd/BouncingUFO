@@ -1,4 +1,5 @@
 ﻿using Foster.Framework;
+using System.Numerics;
 
 namespace BouncingUFO.Game.States
 {
@@ -6,7 +7,7 @@ namespace BouncingUFO.Game.States
     {
         public override Color ClearColor => Color.Black;
 
-        private const float waitDuration = 5f;
+        private const float waitDuration = 8f;
 
         private float continueToTitleScreenTimer = 0f;
 
@@ -30,8 +31,13 @@ namespace BouncingUFO.Game.States
                 "\n" +
                 "Suggestions for improvements, bug reports, etc. are very welcome and much appreciated.\n" +
                 "\n" +
-                $"Build {Manager.BuildDate:yyyy-MM-ddTHH:mm:ss:fffZ}",
+                $"Build {Manager.BuildDate:yyyy-MM-dd HH:mm:ss 'UTC'zzz}",
                 manager.Assets.LargeFont, manager.Screen.Bounds, Color.White);
+
+            if (manager.Settings.ShowDebugInfo)
+            {
+                manager.Batcher.Text(manager.Assets.SmallFont, $"Built {Manager.BuildDate:o} by {Manager.BuildUserName} on {Manager.BuildMachineName}", Vector2.Zero, Color.White);
+            }
         }
 
         public override void OnBeginFadeOut() { }

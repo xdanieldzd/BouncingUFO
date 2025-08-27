@@ -11,7 +11,7 @@ namespace BouncingUFO
             foreach (var wrap in wrappedLines)
             {
                 var textSegment = text.AsSpan(wrap.Value.Start, wrap.Value.Length);
-                var position = bounds.Center - new Vector2(font.WidthOf(textSegment), font.LineHeight * wrappedLines.Length) / 2f + (Vector2.One * font.LineHeight * wrap.Index).ZeroX();
+                var position = bounds.Center - new Vector2(font.WidthOf(textSegment), font.Size * wrappedLines.Length) / 2f + (Vector2.One * font.Size * wrap.Index).ZeroX();
                 batcher.Text(font, textSegment, bounds.Width, position, color);
             }
         }
