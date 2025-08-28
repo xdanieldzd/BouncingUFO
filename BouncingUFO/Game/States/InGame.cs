@@ -64,7 +64,7 @@ namespace BouncingUFO.Game.States
                 HighlightTextColor = Color.Lerp(Color.Green, Color.White, 0.35f)
             };
 
-            levelManager = new(manager);
+            levelManager = new(manager, camera);
 
             pauseMenuItems =
             [
@@ -99,14 +99,14 @@ namespace BouncingUFO.Game.States
                         }
                         else
                         {
-                            levelManager.Load(@"TestMaps\SmallTest2");
+                            levelManager.Load(@"TestMaps/BigTestMap");
                             gameStartCountdown = 0f;
 
                             if (levelManager.GetFirstActor<Player>() is Player player)
                                 player.CurrentState = Player.State.Normal;
 
-                            screenFader.Cancel();
-                            currentState = State.MainLogic;
+                            screenFader.Begin(ScreenFadeType.FadeIn, screenFadeDuration, ScreenFader.PreviousColor);
+                            currentState = State.FadeIn;
                         }
 
                         menuBox.MenuTitle = "Paused";
@@ -124,8 +124,16 @@ namespace BouncingUFO.Game.States
                         {
                             if (!string.IsNullOrWhiteSpace(levelManager.Map?.IntroID) &&
                                 manager.Assets.DialogText[levelsDialogFile].TryGetValue(levelManager.Map.IntroID, out DialogText? dialogText))
+                            {
                                 currentDialogText = dialogText;
 
+                                if (!currentDialogText.HasBeenShownOnce)
+                                {
+                                    dialogBox.TextStrings = currentDialogText.TextStrings;
+                                    dialogBox.SpeakerName = currentDialogText.SpeakerName;
+                                    dialogBox.Open();
+                                }
+                            }
                             currentState = State.GameIntroduction;
                         }
                     }
@@ -243,15 +251,15 @@ namespace BouncingUFO.Game.States
             if (manager.Controls.DebugEditors.ConsumePress())
                 manager.GameStates.Push(new Editor(manager));
 
+            camera.Update(manager.Settings.ShowDebugInfo ? Point2.Zero : levelManager.SizeInPixels);
+
             if (!menuBox.IsOpen)
             {
                 levelManager.Update();
-
                 capsuleCount = levelManager.Actors.Count(x => x is Capsule);
             }
 
-            camera.Update(manager.Settings.ShowDebugInfo ? Point2.Zero : levelManager.SizeInPixels);
-
+            dialogBox.Update();
             menuBox.Update();
         }
 
@@ -278,7 +286,7 @@ namespace BouncingUFO.Game.States
             }
 
             if (currentDialogText is DialogText dialogText && !dialogText.HasBeenShownOnce)
-                dialogBox.Print(dialogText.SpeakerName, dialogText.TextStrings);
+                dialogBox.Render();
 
             menuBox.Render();
 

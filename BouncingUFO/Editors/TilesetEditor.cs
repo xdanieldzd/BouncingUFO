@@ -29,7 +29,7 @@ namespace BouncingUFO.Editors
             if (selectedHighlightColor.RGBA == 0) selectedHighlightColor = ImGuiUtilities.GetFosterColor(ImGuiCol.TextSelectedBg, 128);
         }
 
-        public override void Run()
+        public override void Run(float delta)
         {
             if (!isOpen) return;
 

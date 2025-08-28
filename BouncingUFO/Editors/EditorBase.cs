@@ -16,6 +16,6 @@
         public abstract string Name { get; }
 
         public virtual void Setup() { }
-        public abstract void Run();
+        public abstract void Run(float delta);
     }
 }

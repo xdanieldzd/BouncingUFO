@@ -40,7 +40,7 @@ namespace BouncingUFO.Editors
             if (inactiveSpawnColor.RGBA == 0) inactiveSpawnColor = new(32, 32, 0, 32);
         }
 
-        public override void Run()
+        public override void Run(float delta)
         {
             if (!isOpen) return;
 

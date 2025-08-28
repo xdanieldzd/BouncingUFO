@@ -14,7 +14,7 @@ namespace BouncingUFO.Editors
 
         public override void Setup() { }
 
-        public override void Run()
+        public override void Run(float delta)
         {
             if (!isOpen) return;
 

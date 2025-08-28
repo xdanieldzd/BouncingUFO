@@ -9,6 +9,6 @@
         abstract string Name { get; }
 
         virtual void Setup() { }
-        abstract void Run();
+        abstract void Run(float delta);
     }
 }

@@ -19,6 +19,7 @@ namespace BouncingUFO
         private const int defaultScreenHeight = 270;
         private const int defaultWindowScale = 2;
 
+        public readonly FrameCounter FrameCounter;
         public readonly Batcher Batcher;
         public readonly Target Screen;
 
@@ -36,7 +37,8 @@ namespace BouncingUFO
             WindowTitle = windowTitle,
             Width = !Globals.StartInEditorMode ? defaultScreenWidth * defaultWindowScale : 1600,
             Height = !Globals.StartInEditorMode ? defaultScreenHeight * defaultWindowScale : 900,
-            Resizable = Globals.StartInEditorMode
+            Resizable = Globals.StartInEditorMode,
+            UpdateMode = UpdateMode.FixedStep(60, false)
         })
         {
             GraphicsDevice.VSync = true;
@@ -47,6 +49,7 @@ namespace BouncingUFO
                     Settings = loadedSettings;
             });
 
+            FrameCounter = new(this);
             Batcher = new(GraphicsDevice);
             Screen = new(GraphicsDevice, defaultScreenWidth, defaultScreenHeight, "Screen");
 
@@ -101,6 +104,8 @@ namespace BouncingUFO
 
         protected override void Render()
         {
+            FrameCounter.Update();
+
             ClearWindow();
 
             if (GameStates.TryPeek(out IGameState? gameState))
@@ -110,6 +115,9 @@ namespace BouncingUFO
                 Screen.Clear(Color.DarkGray);
                 Batcher.Text(Assets.SmallFont, "Error: GameState stack is empty!", Vector2.Zero, Color.Red);
             }
+
+            if (Settings.ShowFramerate)
+                FrameCounter.Render(Vector2.Zero, Assets.SmallFont);
 
             Batcher.Render(Screen);
             Batcher.Clear();

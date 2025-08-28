@@ -5,7 +5,7 @@ using System.Numerics;
 
 namespace BouncingUFO.Game
 {
-    public class LevelManager(Manager manager)
+    public class LevelManager(Manager manager, Camera camera)
     {
         private readonly Dictionary<string, Type> actorTypeDictionary = new()
         {
@@ -20,6 +20,9 @@ namespace BouncingUFO.Game
 
         public readonly List<ActorBase> Actors = [];
         public readonly List<ActorBase> ActorsToDestroy = [];
+
+        private RectInt visibleArea = default;
+        private readonly Dictionary<(int layer, int y), List<ActorBase>> actorsToRender = [];
 
         public bool IsLevelLoaded => Map != null && Tileset != null;
         public Point2 SizeInPixels => Map?.Size * Tileset?.CellSize ?? Point2.Zero;
@@ -69,24 +72,40 @@ namespace BouncingUFO.Game
 
             foreach (var actor in Actors)
                 actor.Update();
+
+            if (Map != null && Tileset != null)
+            {
+                visibleArea = (manager.Screen.Bounds.Translate(-camera.Position) / Tileset.CellSize).Inflate(2);
+
+                var actorsVisible = Actors.Where(x => x.IsVisible).OrderBy(x => x.DrawPriority).ToList();
+
+                actorsToRender.Clear();
+                for (var i = 0; i < Map.Layers.Count; i++)
+                {
+                    for (var y = visibleArea.Top; y < visibleArea.Bottom; y++)
+                    {
+                        var actorsInRange = actorsVisible.Where(x => x.MapLayer == i && (x.Position + x.Offset).Y < y * Tileset.CellSize.Y && (visibleArea * Tileset.CellSize).Contains(x.Position + x.Offset)).ToList();
+                        if (actorsInRange.Count > 0)
+                        {
+                            actorsToRender.Add((i, y), actorsInRange);
+                            actorsVisible.RemoveAll(actorsInRange.Contains);
+                        }
+                    }
+                }
+            }
         }
 
         public void Render(bool debug = false)
         {
             if (Map == null || Tileset == null || Tileset.CellTextures == null) return;
 
-            var actorsToRender = Actors
-                .Where(x => x.IsVisible)
-                .OrderBy(x => x.DrawPriority)
-                .ToList();
-
             manager.Batcher.PushBlend(BlendMode.NonPremultiplied);
 
             for (var i = 0; i < Map.Layers.Count; i++)
             {
-                for (var y = 0; y < Map.Size.Y; y++)
+                for (var y = Math.Max(0, visibleArea.Top); y < Math.Min(Map.Size.Y, visibleArea.Bottom); y++)
                 {
-                    for (var x = 0; x < Map.Size.X; x++)
+                    for (var x = Math.Max(0, visibleArea.Left); x < Math.Min(Map.Size.X, visibleArea.Right); x++)
                     {
                         var cellPos = new Vector2(x, y) * Tileset.CellSize;
                         var cellOffset = y * Map.Size.X + x;
@@ -99,23 +118,25 @@ namespace BouncingUFO.Game
                             manager.Batcher.RectLine(new(cellPos, Tileset.CellSize), 1f, new(0, 0, 0, 64));
                     }
 
-                    var actorsInRange = actorsToRender.Where(x => x.MapLayer == i && (x.Position + x.Offset).Y <= y * Tileset.CellSize.Y);
-
-                    foreach (var actor in actorsInRange)
-                        actor.RenderShadow();
-
-                    foreach (var actor in actorsInRange)
+                    if (actorsToRender.ContainsKey((i, y)))
                     {
-                        actor.RenderSprite();
+                        var actorsInRange = actorsToRender[(i, y)];
 
-                        if (debug)
+                        foreach (var actor in actorsInRange)
+                            actor.RenderShadow();
+
+                        foreach (var actor in actorsInRange)
                         {
-                            manager.Batcher.RectLine(new(actor.Position + actor.Offset, actor.Frame?.Size ?? Vector2.Zero), 2f, Color.White);
-                            actor.Hitbox.Render(manager.Batcher, actor.Position, Color.Red);
-                            manager.Batcher.Circle(actor.Position + actor.Sprite?.Origin ?? Vector2.Zero, 2f, 5, Color.Magenta);
+                            actor.RenderSprite();
+
+                            if (debug)
+                            {
+                                manager.Batcher.RectLine(new(actor.Position + actor.Offset, actor.Frame?.Size ?? Vector2.Zero), 2f, Color.White);
+                                actor.Hitbox.Render(manager.Batcher, actor.Position, Color.Red);
+                                manager.Batcher.Circle(actor.Position + actor.Sprite?.Origin ?? Vector2.Zero, 2f, 5, Color.Magenta);
+                            }
                         }
                     }
-                    actorsToRender.RemoveAll(x => actorsInRange.Contains(x));
                 }
             }
 

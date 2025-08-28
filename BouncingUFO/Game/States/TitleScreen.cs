@@ -37,6 +37,7 @@ namespace BouncingUFO.Game.States
             optionsMenuItems =
             [
                 new MenuBoxItem() { Label = "Toggle Fullscreen", Action = (m) => { manager.Settings.Fullscreen = !manager.Settings.Fullscreen; m.Open(); } },
+                new MenuBoxItem() { Label = "Toggle FPS Display", Action = (m) => { manager.Settings.ShowFramerate = !manager.Settings.ShowFramerate; m.Open(); } },
                 new MenuBoxItem() { Label = "Toggle Debug Info", Action = (m) => { manager.Settings.ShowDebugInfo = !manager.Settings.ShowDebugInfo; m.Open(); } },
                 new MenuBoxItem() { Label = "Return", Action = MenuOptionsReturnAction, IsCancelAction = true }
             ];

@@ -16,6 +16,8 @@ namespace BouncingUFO.Game.States
 
         private IEditor[]? editors;
 
+        private float deltaTime = 0f;
+
         public void RenderImGui()
         {
             if (editors == null)
@@ -34,7 +36,7 @@ namespace BouncingUFO.Game.States
                         ImGui.SetWindowFocus(editor.Name);
                         ImGui.SetWindowCollapsed(editor.Name, false);
                     }
-                    editor.Run();
+                    editor.Run(deltaTime);
                 }
                 ImGui.Separator();
                 if (ImGui.Button("Exit", new(150f, 0f)))
@@ -47,7 +49,7 @@ namespace BouncingUFO.Game.States
 
         public override void OnFadeInComplete() { }
 
-        public override void OnUpdate() { }
+        public override void OnUpdate() => deltaTime = manager.Time.Delta;
 
         public override void OnRender() { }
 

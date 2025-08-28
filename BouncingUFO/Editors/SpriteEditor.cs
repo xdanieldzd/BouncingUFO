@@ -30,7 +30,7 @@ namespace BouncingUFO.Editors
 
         public override void Setup() { }
 
-        public override void Run()
+        public override void Run(float delta)
         {
             if (!isOpen) return;
 
@@ -149,15 +149,15 @@ namespace BouncingUFO.Editors
                     }
                     ImGui.EndGroup();
 
-                    RunFrameEditor();
-                    RunAnimEditor();
+                    RunFrameEditor(delta);
+                    RunAnimEditor(delta);
                 }
             }
             isCollapsed = ImGui.IsWindowCollapsed();
             ImGui.End();
         }
 
-        private void RunFrameEditor()
+        private void RunFrameEditor(float _)
         {
             if (!isFrameEditorOpen || sprite == null) return;
 
@@ -275,7 +275,7 @@ namespace BouncingUFO.Editors
             ImGui.End();
         }
 
-        private void RunAnimEditor()
+        private void RunAnimEditor(float delta)
         {
             if (!isAnimEditorOpen || sprite == null) return;
 
@@ -372,7 +372,7 @@ namespace BouncingUFO.Editors
 
                                 var frame = sprite.GetFrameAt(animation, animTimer, animAutoloop);
 
-                                if (animAutoplay) animTimer += manager.Time.Delta;
+                                if (animAutoplay) animTimer += delta;
                                 if (animTimer >= animation.Duration) animTimer = animAutoloop ? 0f : animation.Duration;
 
                                 if (manager.ImGuiRenderer.BeginBatch(new(sprite.SpritesheetTexture.Width * zoomAnimSheet, sprite.SpritesheetTexture.Height * zoomAnimSheet), out var batcher, out var bounds))
