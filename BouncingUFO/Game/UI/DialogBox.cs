@@ -49,6 +49,8 @@ namespace BouncingUFO.Game.UI
 
         public void Update()
         {
+            if (Font == null) return;
+
             switch (currentState)
             {
                 case DialogBoxState.Opening:
