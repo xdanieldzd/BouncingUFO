@@ -1,8 +1,12 @@
-﻿namespace BouncingUFO.Editors
+﻿using System.Text.Json;
+
+namespace BouncingUFO.Editors
 {
     public abstract class EditorBase(Manager manager) : IEditor
     {
         protected readonly Manager manager = manager;
+
+        protected static readonly JsonSerializerOptions serializerOptions = new() { WriteIndented = true, IncludeFields = true };
 
         protected bool isOpen;
         public bool IsOpen { get => isOpen; set => isOpen = value; }

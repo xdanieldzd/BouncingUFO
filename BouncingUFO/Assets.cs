@@ -3,7 +3,6 @@ using BouncingUFO.Game.Sprites;
 using BouncingUFO.Game.UI;
 using BouncingUFO.Utilities;
 using Foster.Framework;
-using System.Text.Json;
 
 namespace BouncingUFO
 {
@@ -40,12 +39,12 @@ namespace BouncingUFO
         {
             dummyFont = new(manager.GraphicsDevice);
 
-            manager.FileSystem.OpenTitleStorage((s) =>
+            manager.FileSystem.OpenTitleStorage((storage) =>
             {
                 smallFont = SpriteFontHelper.GenerateFromImage(
                    manager.GraphicsDevice,
                    "SmallFont",
-                   s.ReadAllBytes(Path.Join(AssetsFolderName, FontsFolderName, "SmallFont.png")),
+                   storage.ReadAllBytes(Path.Join(AssetsFolderName, FontsFolderName, "SmallFont.png")),
                    new(8, 8),
                    SpriteFontSetting.None,
                    SpriteFontHighlightType.Outline,
@@ -54,7 +53,7 @@ namespace BouncingUFO
                 largeFont = SpriteFontHelper.GenerateFromImage(
                     manager.GraphicsDevice,
                     "LargeFont",
-                    s.ReadAllBytes(Path.Join(AssetsFolderName, FontsFolderName, "LargeFont.png")),
+                    storage.ReadAllBytes(Path.Join(AssetsFolderName, FontsFolderName, "LargeFont.png")),
                     new(16, 16),
                     SpriteFontSetting.None,
                     SpriteFontHighlightType.DropShadowThin,
@@ -64,7 +63,7 @@ namespace BouncingUFO
                 futureFont = SpriteFontHelper.GenerateFromImage(
                     manager.GraphicsDevice,
                     "FutureFont",
-                    s.ReadAllBytes(Path.Join(AssetsFolderName, FontsFolderName, "FutureFont.png")),
+                    storage.ReadAllBytes(Path.Join(AssetsFolderName, FontsFolderName, "FutureFont.png")),
                     new(16, 16),
                     SpriteFontSetting.Gradient | SpriteFontSetting.FixedWidth,
                     SpriteFontHighlightType.DropShadowThick,
@@ -72,24 +71,24 @@ namespace BouncingUFO
                     firstChara: 0x20,
                     spaceWidth: 16);
 
-                LoadAssets(s, ProgressionFolder, ref Progression);
+                LoadAssets(storage, ProgressionFolder, ref Progression);
 
-                LoadAssets(s, TilesetFolderName, ref Tilesets, (obj) => obj.CreateTextures(manager.GraphicsDevice));
-                LoadAssets(s, MapFolderName, ref Maps);
-                LoadAssets(s, SpriteFolderName, ref Sprites, (obj) => obj.CreateTextures(manager.GraphicsDevice));
-                LoadAssets(s, UIFolderName, ref UI, (obj) => obj.CreateTextures(manager.GraphicsDevice));
-                LoadAssets(s, DialogTextFolderName, ref DialogText);
+                LoadAssets(storage, TilesetFolderName, ref Tilesets, (obj) => obj.CreateTextures(manager.GraphicsDevice));
+                LoadAssets(storage, MapFolderName, ref Maps);
+                LoadAssets(storage, SpriteFolderName, ref Sprites, (obj) => obj.CreateTextures(manager.GraphicsDevice));
+                LoadAssets(storage, UIFolderName, ref UI, (obj) => obj.CreateTextures(manager.GraphicsDevice));
+                LoadAssets(storage, DialogTextFolderName, ref DialogText);
             });
         }
 
-        private static void LoadAssets<T>(Storage storage, string folderName, ref Dictionary<string, T> assetDictionary, Action<T>? afterLoadAction = null)
+        private static void LoadAssets<T>(Storage storage, string folderName, ref Dictionary<string, T> assetDictionary, Action<T>? afterLoadAction = null) where T : new()
         {
             var path = Path.Join(AssetsFolderName, folderName).Replace(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
             if (!storage.DirectoryExists(path)) return;
 
             foreach (var file in storage.EnumerateDirectory(path, "*.json", SearchOption.AllDirectories))
             {
-                var instance = JsonSerializer.Deserialize<T>(storage.ReadAllText(file), Manager.SerializerOptions);
+                var instance = storage.DeserializeFromStorage<T>(file);
                 if (instance == null) continue;
 
                 afterLoadAction?.Invoke(instance);

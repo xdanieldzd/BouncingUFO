@@ -1,9 +1,9 @@
 ﻿using BouncingUFO.Game.States;
 using BouncingUFO.Utilities;
 using Foster.Framework;
+using System.Globalization;
 using System.Numerics;
 using System.Reflection;
-using System.Text.Json;
 
 using var manager = new BouncingUFO.Manager();
 manager.Run();
@@ -18,6 +18,8 @@ namespace BouncingUFO
         private const int defaultScreenWidth = 480;
         private const int defaultScreenHeight = 270;
         private const int defaultWindowScale = 2;
+
+        public readonly static (DateTime DateTime, string UserName, string MachineName) BuildInfo = default;
 
         public readonly FrameCounter FrameCounter;
         public readonly Batcher Batcher;
@@ -43,11 +45,7 @@ namespace BouncingUFO
         {
             GraphicsDevice.VSync = true;
 
-            FileSystem.OpenUserStorage((s) =>
-            {
-                if (s.FileExists(Settings.Filename) && JsonSerializer.Deserialize<Settings>(s.ReadAllText(Settings.Filename)) is Settings loadedSettings)
-                    Settings = loadedSettings;
-            });
+            FileSystem.OpenUserStorage((storage) => Settings = storage.DeserializeFromStorage<Settings>(Settings.Filename) ?? new());
 
             FrameCounter = new(this);
             Batcher = new(GraphicsDevice);
@@ -56,6 +54,14 @@ namespace BouncingUFO
             ImGuiRenderer = new(this);
             Assets = new(this);
             Controls = new(Input);
+        }
+
+        static Manager()
+        {
+            var metadata = Assembly.GetEntryAssembly()?.GetCustomAttributes<AssemblyMetadataAttribute>().ToDictionary(x => x.Key, x => x.Value ?? string.Empty) ?? [];
+            BuildInfo.DateTime = metadata.TryGetValue("BuildDate", out var dateTime) ? DateTime.ParseExact(dateTime, "o", CultureInfo.InvariantCulture, DateTimeStyles.None) : default;
+            BuildInfo.UserName = metadata.TryGetValue("BuildUserName", out var userName) ? userName : string.Empty;
+            BuildInfo.MachineName = metadata.TryGetValue("BuildMachineName", out var machineName) ? machineName : string.Empty;
         }
 
         protected override void Startup()
@@ -74,10 +80,7 @@ namespace BouncingUFO
         {
             ImGuiRenderer.Dispose();
 
-            FileSystem.OpenUserStorage((s) =>
-            {
-                s.WriteAllText(Settings.Filename, JsonSerializer.Serialize(Settings, SerializerOptions));
-            });
+            FileSystem.OpenUserStorage((storage) => storage.SerializeToStorage(Settings, Settings.Filename));
         }
 
         protected override void Update()
@@ -145,10 +148,5 @@ namespace BouncingUFO
             Batcher.Render(Window);
             Batcher.Clear();
         }
-
-        public readonly static DateTime BuildDate = Assembly.GetEntryAssembly()?.GetCustomAttribute<BuildInformationAttribute>()?.DateTime ?? default;
-        public readonly static string BuildUserName = Assembly.GetEntryAssembly()?.GetCustomAttribute<BuildInformationAttribute>()?.UserName ?? string.Empty;
-        public readonly static string BuildMachineName = Assembly.GetEntryAssembly()?.GetCustomAttribute<BuildInformationAttribute>()?.MachineName ?? string.Empty;
-        public readonly static JsonSerializerOptions SerializerOptions = new() { WriteIndented = true, IncludeFields = true };
     }
 }

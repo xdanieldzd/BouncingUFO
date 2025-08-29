@@ -78,7 +78,7 @@ namespace BouncingUFO.Editors
                         if (r == FileSystem.DialogResult.Success && s.Length > 0 && s[0] != null)
                         {
                             currentMapPath = s[0];
-                            map = JsonSerializer.Deserialize<Map>(File.ReadAllText(currentMapPath), Manager.SerializerOptions);
+                            map = JsonSerializer.Deserialize<Map>(File.ReadAllText(currentMapPath), serializerOptions);
                             tileset = null;
                         }
                     }), [new("JSON files (*.json)", "json")], currentMapPath);
@@ -91,7 +91,7 @@ namespace BouncingUFO.Editors
                     manager.FileSystem.SaveFileDialog(new FileSystem.DialogCallbackSingleFile((s, r) =>
                     {
                         if (r == FileSystem.DialogResult.Success)
-                            File.WriteAllText(currentMapPath = s, JsonSerializer.Serialize(map, Manager.SerializerOptions));
+                            File.WriteAllText(currentMapPath = s, JsonSerializer.Serialize(map, serializerOptions));
                     }), [new("JSON files (*.json)", "json")], currentMapPath);
                 }
                 if (map == null) ImGui.EndDisabled();

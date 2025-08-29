@@ -31,12 +31,12 @@ namespace BouncingUFO.Game.States
                 "\n" +
                 "Suggestions for improvements, bug reports, etc. are very welcome and much appreciated.\n" +
                 "\n" +
-                $"Build {Manager.BuildDate:yyyy-MM-dd HH:mm:ss 'UTC'zzz}",
+                $"Build {Manager.BuildInfo.DateTime:yyyy-MM-dd HH:mm:ss 'UTC'zzz}",
                 manager.Assets.LargeFont, manager.Screen.Bounds, Color.White);
 
             if (manager.Settings.ShowDebugInfo)
             {
-                manager.Batcher.Text(manager.Assets.SmallFont, $"Built {Manager.BuildDate:o} by {Manager.BuildUserName} on {Manager.BuildMachineName}", Vector2.Zero, Color.White);
+                manager.Batcher.Text(manager.Assets.SmallFont, $"Built {Manager.BuildInfo.DateTime:o} by {Manager.BuildInfo.UserName} on {Manager.BuildInfo.MachineName}", Vector2.Zero, Color.White);
             }
         }
 

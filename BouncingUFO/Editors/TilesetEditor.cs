@@ -65,7 +65,7 @@ namespace BouncingUFO.Editors
                         if (r == FileSystem.DialogResult.Success && s.Length > 0 && s[0] != null)
                         {
                             currentTilesetPath = s[0];
-                            tileset = JsonSerializer.Deserialize<Tileset>(File.ReadAllText(currentTilesetPath), Manager.SerializerOptions);
+                            tileset = JsonSerializer.Deserialize<Tileset>(File.ReadAllText(currentTilesetPath), serializerOptions);
                         }
                     }), [new("JSON files (*.json)", "json")], currentTilesetPath);
                 }
@@ -77,7 +77,7 @@ namespace BouncingUFO.Editors
                     manager.FileSystem.SaveFileDialog(new FileSystem.DialogCallbackSingleFile((s, r) =>
                     {
                         if (r == FileSystem.DialogResult.Success)
-                            File.WriteAllText(currentTilesetPath = s, JsonSerializer.Serialize(tileset, Manager.SerializerOptions));
+                            File.WriteAllText(currentTilesetPath = s, JsonSerializer.Serialize(tileset, serializerOptions));
                     }), [new("JSON files (*.json)", "json")], currentTilesetPath);
                 }
                 if (tileset == null) ImGui.EndDisabled();
@@ -94,7 +94,7 @@ namespace BouncingUFO.Editors
                         if (r == FileSystem.DialogResult.Success && s.Length > 0 && s[0] != null)
                         {
                             tileset.TilesheetFile = relativeTilesheetFilePath;
-                            File.WriteAllText(Path.Join(s[0], jsonFilename), JsonSerializer.Serialize(tileset, Manager.SerializerOptions));
+                            File.WriteAllText(Path.Join(s[0], jsonFilename), JsonSerializer.Serialize(tileset, serializerOptions));
                             File.Copy(tilesheetFullPath, Path.Join(s[0], Path.GetFileName(tilesheetFullPath)), true);
                             tileset.TilesheetFile = tilesheetFullPath;
                         }
