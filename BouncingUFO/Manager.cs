@@ -60,8 +60,8 @@ namespace BouncingUFO
         {
             var metadata = Assembly.GetEntryAssembly()?.GetCustomAttributes<AssemblyMetadataAttribute>().ToDictionary(x => x.Key, x => x.Value ?? string.Empty) ?? [];
             BuildInfo.DateTime = metadata.TryGetValue("BuildDate", out var dateTime) ? DateTime.ParseExact(dateTime, "o", CultureInfo.InvariantCulture, DateTimeStyles.None) : default;
-            BuildInfo.UserName = metadata.TryGetValue("BuildUserName", out var userName) ? userName : string.Empty;
-            BuildInfo.MachineName = metadata.TryGetValue("BuildMachineName", out var machineName) ? machineName : string.Empty;
+            BuildInfo.UserName = metadata.TryGetValue("BuildUserName", out var userName) ? userName : "Unknown";
+            BuildInfo.MachineName = metadata.TryGetValue("BuildMachineName", out var machineName) ? machineName : "Unknown";
         }
 
         protected override void Startup()
@@ -88,7 +88,7 @@ namespace BouncingUFO
             Window.Fullscreen = Settings.Fullscreen;
 
             if (Input.Keyboard.Pressed(Keys.Escape)) Exit();
-            if (Input.Keyboard.Alt && Input.Keyboard.Pressed(Keys.Enter)) Window.Fullscreen = !Window.Fullscreen;
+            if (Input.Keyboard.Alt && Input.Keyboard.Pressed(Keys.Enter)) Settings.Fullscreen = !Settings.Fullscreen;
 
             if (Controls.DebugDisplay.ConsumePress()) Settings.ShowDebugInfo = !Settings.ShowDebugInfo;
 
