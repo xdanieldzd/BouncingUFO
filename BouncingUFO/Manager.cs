@@ -85,7 +85,7 @@ namespace BouncingUFO
 
         protected override void Update()
         {
-            Window.Fullscreen = Settings.Fullscreen;
+            if (Settings.Fullscreen != Window.Fullscreen) Window.Fullscreen = Settings.Fullscreen;
 
             if (Input.Keyboard.Pressed(Keys.Escape)) Exit();
             if (Input.Keyboard.Alt && Input.Keyboard.Pressed(Keys.Enter)) Settings.Fullscreen = !Settings.Fullscreen;

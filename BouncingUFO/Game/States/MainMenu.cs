@@ -9,9 +9,10 @@ namespace BouncingUFO.Game.States
         {
             Font = manager.Assets.LargeFont,
             GraphicsSheet = manager.Assets.UI["DialogBox"],
-            FramePaddingTopLeft = (10, 10),
-            FramePaddingBottomRight = (12, 12),
-            LinePadding = 4,
+            FramePaddingTopLeft = (12, 12),
+            FramePaddingBottomRight = (14, 14),
+            LinePadding = 6,
+            SmallFont = manager.Assets.SmallFont,
             BackgroundColor = new(0x3E4F65),
             HighlightTextColor = Color.Lerp(Color.Green, Color.White, 0.35f)
         };
@@ -33,7 +34,9 @@ namespace BouncingUFO.Game.States
             modeSelectMenuItems = [.. manager.Assets.Progression.Select(x => new MenuBoxItem() { Label = x.Value.Title, Action = MenuArcadeModeStartAction }), new() { Label = "Cancel", Action = MenuEnterMainMenuAction, IsCancelAction = true }];
             levelSelectMenuItems = [.. manager.Assets.Maps.Select(x => new MenuBoxItem() { Label = $"{x.Value.Title} ({x.Key})", Action = MenuSingleLevelStartAction }), new() { Label = "Cancel", Action = MenuEnterMainMenuAction, IsCancelAction = true }];
 
-            MenuEnterMainMenuAction(menuBox);
+            MenuEnterMainMenuAction();
+
+            menuBox.Open();
         }
 
         public override void OnFadeInComplete() { }
@@ -58,45 +61,42 @@ namespace BouncingUFO.Game.States
             else manager.GameStates.Push(nextGameState);
         }
 
-        private void MenuEnterMainMenuAction(MenuBox menuBox)
+        private void MenuEnterMainMenuAction()
         {
             nextGameState = null;
 
             menuBox.TextAlignment = MenuBoxTextAlignment.Center;
             menuBox.MenuTitle = "Select Mode";
             menuBox.MenuItems = gameSelectMenuItems;
-            menuBox.Open();
         }
 
-        private void MenuArcadeModeSelectAction(MenuBox menuBox)
+        private void MenuArcadeModeSelectAction()
         {
             menuBox.TextAlignment = MenuBoxTextAlignment.Center;
             menuBox.MenuTitle = "Select Difficulty";
             menuBox.MenuItems = modeSelectMenuItems;
-            menuBox.Open();
         }
 
-        private void MenuArcadeModeStartAction(MenuBox menuBox)
+        private void MenuArcadeModeStartAction()
         {
             nextGameState = new InGame(manager, [.. manager.Assets.Progression.ElementAt(menuBox.SelectedIndex).Value.MapNames]);
             LeaveState();
         }
 
-        private void MenuSingleLevelSelectAction(MenuBox menuBox)
+        private void MenuSingleLevelSelectAction()
         {
             menuBox.TextAlignment = MenuBoxTextAlignment.Left;
             menuBox.MenuTitle = "Select Level";
             menuBox.MenuItems = levelSelectMenuItems;
-            menuBox.Open();
         }
 
-        private void MenuSingleLevelStartAction(MenuBox menuBox)
+        private void MenuSingleLevelStartAction()
         {
             nextGameState = new InGame(manager, [manager.Assets.Maps.ElementAt(menuBox.SelectedIndex).Key]);
             LeaveState();
         }
 
-        private void MenuCancelAction(MenuBox menuBox)
+        private void MenuCancelAction()
         {
             nextGameState = null;
             LeaveState();

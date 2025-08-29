@@ -6,7 +6,7 @@ namespace BouncingUFO.Game.States
     public abstract class GameStateBase(Manager manager, params object[] args) : IGameState
     {
         public virtual Color ClearColor => Color.DarkGray;
-        public virtual float FadeDuration => 0.75f;
+        public virtual float FadeDuration => 0.5f;
         public virtual Color FadeColor => ScreenFader.PreviousColor;
 
         protected readonly Manager manager = manager;

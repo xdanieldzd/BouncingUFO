@@ -20,8 +20,8 @@ namespace BouncingUFO.Game.UI
             {
                 if (WindowSizing == MenuBoxWindowSizing.Automatic && Font != null)
                 {
-                    var totalWidth = Font.SizeOf(MenuItems.Append(new() { Label = MenuTitle }).MaxBy(x => x.Label.Length)?.Label).X + FramePaddingTopLeft.X + FramePaddingBottomRight.X;
-                    var totalHeight = MenuItems.Where(x => !string.IsNullOrWhiteSpace(x.Label)).Count() * (Font.LineHeight + LinePadding) + FramePaddingTopLeft.Y + FramePaddingBottomRight.Y - LinePadding;
+                    var totalWidth = Font.SizeOf(menuItems.Append(new() { Label = MenuTitle }).MaxBy(x => x.Label.Length)?.Label).X + FramePaddingTopLeft.X + FramePaddingBottomRight.X;
+                    var totalHeight = menuItems.Where(x => !string.IsNullOrWhiteSpace(x.Label)).Count() * (Font.LineHeight + LinePadding) + FramePaddingTopLeft.Y + FramePaddingBottomRight.Y - LinePadding;
                     if (!string.IsNullOrWhiteSpace(MenuTitle)) totalHeight += Font.LineHeight + LinePadding + titleGap;
 
                     return new Vector2(totalWidth, totalHeight).CeilingToPoint2();
@@ -56,19 +56,30 @@ namespace BouncingUFO.Game.UI
             set => manualPosition = value;
         }
 
+        public SpriteFont? SmallFont = null;
         public Color NormalTextColor = Color.White;
         public Color HighlightTextColor = Color.Green;
         public MenuBoxWindowAlignment WindowAlignment = MenuBoxWindowAlignment.Center;
         public Point2 WindowAlignmentPadding = new(40, 40);
         public MenuBoxWindowSizing WindowSizing = MenuBoxWindowSizing.Automatic;
         public MenuBoxTextAlignment TextAlignment = MenuBoxTextAlignment.Center;
+        public bool ShowLegend = true;
 
         public string MenuTitle = string.Empty;
-        public MenuBoxItem[] MenuItems = [];
+        public MenuBoxItem[] MenuItems
+        {
+            get => menuItems;
+            set
+            {
+                menuItems = value;
+                currentItemIndex = 0;
+            }
+        }
 
+        private MenuBoxItem[] menuItems = [];
         private int currentItemIndex = 0;
 
-        enum MenuBoxState { WaitingForInput, InitiateAction, PerformingAction, Closed }
+        enum MenuBoxState { WaitingForInput, InitiateAction, Closed }
         private MenuBoxState currentState = MenuBoxState.Closed;
 
         public bool IsOpen => currentState != MenuBoxState.Closed;
@@ -96,68 +107,77 @@ namespace BouncingUFO.Game.UI
             switch (currentState)
             {
                 case MenuBoxState.WaitingForInput:
-                    if (manager.Controls.Move.PressedDown)
                     {
-                        currentItemIndex++;
-                        if (currentItemIndex > MenuItems.Length - 1) currentItemIndex = 0;
-                    }
-                    else if (manager.Controls.Move.PressedUp)
-                    {
-                        currentItemIndex--;
-                        if (currentItemIndex < 0) currentItemIndex = MenuItems.Length - 1;
-                    }
-                    else if (manager.Controls.Move.PressedRight)
-                    {
-                        currentItemIndex = MenuItems.Length - 1;
-                    }
-                    else if (manager.Controls.Move.PressedLeft)
-                    {
-                        currentItemIndex = 0;
-                    }
-                    else if (manager.Controls.Confirm.ConsumePress())
-                        currentState = MenuBoxState.InitiateAction;
-                    else if (manager.Controls.Cancel.ConsumePress())
-                    {
-                        var cancelIndex = Array.IndexOf(MenuItems, MenuItems.FirstOrDefault(x => x.IsCancelAction));
-                        if (cancelIndex != -1)
+                        /* Wait for any input to come in and process it */
+                        if (manager.Controls.Move.PressedDown)
                         {
-                            if (currentItemIndex == cancelIndex)
-                                currentState = MenuBoxState.InitiateAction;
-                            else
-                                currentItemIndex = cancelIndex;
+                            /* Go down one item, wrap back to start if needed */
+                            currentItemIndex++;
+                            if (currentItemIndex > menuItems.Length - 1) currentItemIndex = 0;
                         }
-                    }
-
-                    if (manager.Settings.ShowDebugInfo && manager.Controls.Menu.ConsumePress())
-                    {
-                        WindowAlignment++;
-                        if (WindowAlignment > MenuBoxWindowAlignment.BottomRight)
+                        else if (manager.Controls.Move.PressedUp)
                         {
-                            WindowAlignment = 0;
-                            WindowSizing++;
-                            if (WindowSizing > MenuBoxWindowSizing.Automatic)
+                            /* Go up one item, wrap down to end if needed */
+                            currentItemIndex--;
+                            if (currentItemIndex < 0) currentItemIndex = menuItems.Length - 1;
+                        }
+                        else if (manager.Controls.Move.PressedRight)
+                        {
+                            /* Skip to end */
+                            currentItemIndex = menuItems.Length - 1;
+                        }
+                        else if (manager.Controls.Move.PressedLeft)
+                        {
+                            /* Back to start */
+                            currentItemIndex = 0;
+                        }
+                        else if (manager.Controls.Confirm.ConsumePress())
+                        {
+                            /* Initiate action associated with selected item */
+                            currentState = MenuBoxState.InitiateAction;
+                        }
+                        else if (manager.Controls.Cancel.ConsumePress())
+                        {
+                            /* Find first item assigned cancel */
+                            var cancelIndex = Array.IndexOf(menuItems, menuItems.FirstOrDefault(x => x.IsCancelAction));
+                            if (cancelIndex != -1)
                             {
-                                WindowSizing = 0;
-                                TextAlignment++;
-                                if (TextAlignment > MenuBoxTextAlignment.Center)
-                                    TextAlignment = 0;
+                                /* If a cancel item was found, either select it, or if it's already selected, initiate its action */
+                                if (currentItemIndex == cancelIndex)
+                                    currentState = MenuBoxState.InitiateAction;
+                                else
+                                    currentItemIndex = cancelIndex;
+                            }
+                        }
+
+                        /* Debug feature; to be removed */
+                        if (manager.Settings.ShowDebugInfo && manager.Controls.Menu.ConsumePress())
+                        {
+                            WindowAlignment++;
+                            if (WindowAlignment > MenuBoxWindowAlignment.BottomRight)
+                            {
+                                WindowAlignment = 0;
+                                WindowSizing++;
+                                if (WindowSizing > MenuBoxWindowSizing.Automatic)
+                                {
+                                    WindowSizing = 0;
+                                    TextAlignment++;
+                                    if (TextAlignment > MenuBoxTextAlignment.Center)
+                                        TextAlignment = 0;
+                                }
                             }
                         }
                     }
                     break;
 
                 case MenuBoxState.InitiateAction:
-                    if (currentItemIndex >= 0 && currentItemIndex < MenuItems.Length && MenuItems[currentItemIndex]?.Action is Action<MenuBox> action)
                     {
-                        currentState = MenuBoxState.PerformingAction;
-                        action(this);
-                    }
-                    else
+                        /* The action *might* try to close the MenuBox, so set the current state to waiting for input first */
                         currentState = MenuBoxState.WaitingForInput;
-                    break;
 
-                case MenuBoxState.PerformingAction:
-                    /* Nothing to do; allows MenuBox to stay on-screen while action is performed (ex. changing gamestate w/ fadeout) */
+                        if (currentItemIndex >= 0 && currentItemIndex < menuItems.Length && menuItems[currentItemIndex]?.Action is Action action)
+                            action();
+                    }
                     break;
 
                 case MenuBoxState.Closed:
@@ -170,7 +190,7 @@ namespace BouncingUFO.Game.UI
         {
             if (Font == null) return;
 
-            if (IsOpen && MenuItems.Length != 0)
+            if (IsOpen && menuItems.Length != 0)
             {
                 var menuRect = new Rect(Position, Size);
 
@@ -178,6 +198,8 @@ namespace BouncingUFO.Game.UI
                 RenderBackground();
                 RenderText();
                 manager.Batcher.PopScissor();
+
+                if (ShowLegend) RenderLegend();
 
                 if (manager.Settings.ShowDebugInfo)
                 {
@@ -247,14 +269,25 @@ namespace BouncingUFO.Game.UI
                 textPos.Y += titleGap;
             }
 
-            for (var i = 0; i < MenuItems.Length; i++)
+            for (var i = 0; i < menuItems.Length; i++)
             {
-                var offset = TextAlignment == MenuBoxTextAlignment.Center ? (Size - FramePaddingBottomRight - FramePaddingTopLeft).OnlyX() / 2f - Font.SizeOf(MenuItems[i].Label).ZeroY() / 2f : Vector2.Zero;
+                var offset = TextAlignment == MenuBoxTextAlignment.Center ? (Size - FramePaddingBottomRight - FramePaddingTopLeft).OnlyX() / 2f - Font.SizeOf(menuItems[i].Label).ZeroY() / 2f : Vector2.Zero;
                 var textColor = currentItemIndex == i ? HighlightTextColor : NormalTextColor;
                 if (currentItemIndex == i) manager.Batcher.Rect(textPos - new Vector2(LinePadding / 1.75f), itemSize + new Vector2(LinePadding / 1.75f) * 2f, Color.Lerp(BackgroundColor, Color.Black, 0.35f));
-                manager.Batcher.Text(Font, MenuItems[i].Label, textPos + offset, textColor);
+                manager.Batcher.Text(Font, menuItems[i].Label, textPos + offset, textColor);
                 textPos.Y += Font.LineHeight + LinePadding;
             }
+        }
+
+        private void RenderLegend()
+        {
+            var font = SmallFont ?? Font;
+            if (font == null) return;
+
+            manager.Batcher.Text(font,
+                $"{manager.Controls.Confirm.Name} -- {string.Join(',', manager.Controls.Confirm.Entries.Select(x => x.Binding.Descriptor))}\n" +
+                $"{manager.Controls.Cancel.Name} -- {string.Join(',', manager.Controls.Cancel.Entries.Select(x => x.Binding.Descriptor))}",
+                manager.Screen.Bounds.BottomRight - new Vector2(8f, font.LineHeight + 8f), Vector2.One, Color.White);
         }
     }
 }

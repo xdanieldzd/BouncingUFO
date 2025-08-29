@@ -39,8 +39,8 @@ namespace BouncingUFO.Utilities
 
         public void Render(Vector2 position, SpriteFont font)
         {
-            manager.Batcher.Text(font, $"{LastFramerate:0} FPS", position, textColors[Calc.Clamp((int)LastFramerate, 0, textColors.Length - 1)]);
-            manager.Batcher.Text(font, $"{LastFrametime:0.0} ms", position + new Vector2(70f, 0f), textColors[Calc.Clamp((int)LastFramerate, 0, textColors.Length - 1)]);
+            manager.Batcher.Text(font, $"{manager.GraphicsDevice.Driver}   {LastFramerate:0} FPS", position, Color.White);
+            manager.Batcher.Text(font, $"{LastFrametime:0.0} ms", position + new Vector2(120f, 16f), textColors[Calc.Clamp((int)LastFramerate, 0, textColors.Length - 1)]);
 
             var graphPosition = position + new Vector2(0f, 16f);
             var graphData = frametimeQueue.Select((x, i) => (Time: x, Coord: new Vector2(i * 120f / numSamples, Calc.ClampedMap((float)x.TotalMilliseconds, 0f, (float)manager.UpdateMode.FixedMaxTime.TotalMilliseconds, 20f, 0f)))).ToArray();

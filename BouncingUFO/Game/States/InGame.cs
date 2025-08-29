@@ -8,7 +8,7 @@ namespace BouncingUFO.Game.States
 {
     public class InGame : IGameState
     {
-        private const float screenFadeDuration = 0.75f;
+        private const float screenFadeDuration = 0.5f;
         private const string levelsDialogFile = "Levels";
 
         private enum State { Initialize, FadeIn, GameIntroduction, GameStartCountdown, MainLogic, GameOver, ShowGameOverMenu, Restart, ExitToMenu, LoadNextLevel }
@@ -57,28 +57,30 @@ namespace BouncingUFO.Game.States
             {
                 Font = manager.Assets.LargeFont,
                 GraphicsSheet = manager.Assets.UI["DialogBox"],
-                FramePaddingTopLeft = (10, 10),
-                FramePaddingBottomRight = (12, 12),
-                LinePadding = 4,
+                FramePaddingTopLeft = (12, 12),
+                FramePaddingBottomRight = (14, 14),
+                LinePadding = 6,
                 BackgroundColor = new(0x3E4F65),
-                HighlightTextColor = Color.Lerp(Color.Green, Color.White, 0.35f)
+                SmallFont = manager.Assets.SmallFont,
+                HighlightTextColor = Color.Lerp(Color.Green, Color.White, 0.35f),
+                ShowLegend = false
             };
 
             levelManager = new(manager, camera);
 
             pauseMenuItems =
             [
-                new() { Label = "Continue", Action = (m) => { m.Close(); } },
-                new() { Label = "Restart", Action = (m) => { screenFader.Begin(ScreenFadeType.FadeOut, screenFadeDuration, Color.White); currentState = State.Restart; } },
-                new() { Label = "Exit to Menu", Action = (m) => { screenFader.Begin(ScreenFadeType.FadeOut, screenFadeDuration, Color.Black); currentState = State.ExitToMenu; } }
+                new() { Label = "Continue", Action = menuBox.Close },
+                new() { Label = "Restart", Action = () => { screenFader.Begin(ScreenFadeType.FadeOut, screenFadeDuration, Color.White); currentState = State.Restart; } },
+                new() { Label = "Exit to Menu", Action = () => { screenFader.Begin(ScreenFadeType.FadeOut, screenFadeDuration, Color.Black); currentState = State.ExitToMenu; } }
             ];
 
             gameOverMenuItems =
             [
-                new() { Label = "Retry", Action = (m) => { screenFader.Begin(ScreenFadeType.FadeOut, screenFadeDuration, Color.White); currentState = State.Restart; } },
-                new() { Label = "Exit to Menu", Action = (m) => { screenFader.Begin(ScreenFadeType.FadeOut, screenFadeDuration, Color.Black); currentState = State.ExitToMenu; } }
+                new() { Label = "Retry", Action = () => { screenFader.Begin(ScreenFadeType.FadeOut, screenFadeDuration, Color.White); currentState = State.Restart; } },
+                new() { Label = "Exit to Menu", Action = () => { screenFader.Begin(ScreenFadeType.FadeOut, screenFadeDuration, Color.Black); currentState = State.ExitToMenu; } }
             ];
-            nextLevelMenuItem = new() { Label = "Next Level", Action = (m) => { screenFader.Begin(ScreenFadeType.FadeOut, screenFadeDuration, Color.White); currentState = State.LoadNextLevel; } };
+            nextLevelMenuItem = new() { Label = "Next Level", Action = () => { screenFader.Begin(ScreenFadeType.FadeOut, screenFadeDuration, Color.White); currentState = State.LoadNextLevel; } };
 
             levelManager.Load([.. this.args.Where(x => x is string).Cast<string>()]);
         }
