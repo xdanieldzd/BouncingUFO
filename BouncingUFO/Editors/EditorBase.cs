@@ -17,6 +17,8 @@ namespace BouncingUFO.Editors
         protected bool isFocused;
         public bool IsFocused => isOpen && !isCollapsed && isFocused;
 
+        public string CurrentFilePath { get; set; } = string.Empty;
+
         public abstract string Name { get; }
 
         public virtual void Setup() { }

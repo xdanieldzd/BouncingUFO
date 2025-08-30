@@ -23,7 +23,11 @@ namespace BouncingUFO.Game.States
             if (editors == null)
             {
                 editors = [tilesetEditor, mapEditor, spriteEditor, jsonEditor];
-                foreach (var editor in editors) editor.Setup();
+                foreach (var editor in editors)
+                {
+                    editor.CurrentFilePath = @"D:\Programming\UFO\";
+                    editor.Setup();
+                }
             }
 
             if (ImGui.Begin("Editors", ImGuiWindowFlags.AlwaysAutoResize))

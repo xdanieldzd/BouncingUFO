@@ -6,6 +6,8 @@
         bool IsCollapsed { get; }
         bool IsFocused { get; }
 
+        string CurrentFilePath { get; set; }
+
         abstract string Name { get; }
 
         virtual void Setup() { }

@@ -9,7 +9,6 @@ namespace BouncingUFO.Editors
     {
         public override string Name => "JSON Editor";
 
-        private string currentJsonPath = string.Empty;
         private JsonObject? jsonObject = null;
 
         public override void Setup() { }
@@ -31,10 +30,10 @@ namespace BouncingUFO.Editors
                         {
                             if (r == FileSystem.DialogResult.Success && s.Length > 0 && s[0] != null)
                             {
-                                currentJsonPath = s[0];
-                                jsonObject = JsonSerializer.Deserialize<JsonObject>(File.ReadAllText(currentJsonPath), serializerOptions);
+                                CurrentFilePath = s[0];
+                                jsonObject = JsonSerializer.Deserialize<JsonObject>(File.ReadAllText(CurrentFilePath), serializerOptions);
                             }
-                        }), [new("JSON files (*.json)", "json")], currentJsonPath);
+                        }), [new("JSON files (*.json)", "json")], CurrentFilePath);
                     }
 
                     ImGui.SameLine();
@@ -45,118 +44,120 @@ namespace BouncingUFO.Editors
                         {
                             if (r == FileSystem.DialogResult.Success)
                                 File.WriteAllText(s, JsonSerializer.Serialize(jsonObject, serializerOptions));
-                        }), [new("JSON files (*.json)", "json")], currentJsonPath);
+                        }), [new("JSON files (*.json)", "json")], CurrentFilePath);
                     }
                     if (jsonObject == null) ImGui.EndDisabled();
 
-                    var currentFileLabel = $"Current file: {(string.IsNullOrWhiteSpace(currentJsonPath) ? "none" : currentJsonPath)}";
-                    ImGui.SameLine(ImGui.GetContentRegionAvail().X - ImGui.CalcTextSize(currentFileLabel).X);
-                    ImGui.Text(currentFileLabel);
+                    if (jsonObject != null)
+                    {
+                        var currentFileLabel = $"Current file: {(string.IsNullOrWhiteSpace(CurrentFilePath) ? "none" : CurrentFilePath)}";
+                        ImGui.SameLine(ImGui.GetContentRegionAvail().X - ImGui.CalcTextSize(currentFileLabel).X);
+                        ImGui.Text(currentFileLabel);
+                    }
                 }
                 ImGui.EndGroup();
 
+                ImGui.BeginGroup();
                 if (jsonObject != null)
                 {
-                    ImGui.BeginGroup();
+                    ImGui.Separator();
+                    if (ImGui.BeginChild("jsontree", new(600f, 450f)))
                     {
-                        if (ImGui.BeginChild("jsontree", new(600f, 450f), ImGuiChildFlags.Borders))
+                        if (ImGui.BeginTable("##jsontable", 3, ImGuiTableFlags.RowBg | ImGuiTableFlags.PadOuterX))
                         {
-                            if (ImGui.BeginTable("##jsontable", 3, ImGuiTableFlags.RowBg | ImGuiTableFlags.PadOuterX))
+                            ImGui.TableSetupColumn("Key", ImGuiTableColumnFlags.WidthFixed);
+                            ImGui.TableSetupColumn("Kind", ImGuiTableColumnFlags.WidthFixed);
+                            ImGui.TableSetupColumn("Value", ImGuiTableColumnFlags.WidthStretch);
+                            ImGui.TableHeadersRow();
+
+                            processObject(jsonObject);
+
+                            static void processObject(JsonObject? json)
                             {
-                                ImGui.TableSetupColumn("Key", ImGuiTableColumnFlags.WidthFixed);
-                                ImGui.TableSetupColumn("Kind", ImGuiTableColumnFlags.WidthFixed);
-                                ImGui.TableSetupColumn("Value", ImGuiTableColumnFlags.WidthStretch);
-                                ImGui.TableHeadersRow();
+                                if (json == null) return;
 
-                                processObject(jsonObject);
-
-                                static void processObject(JsonObject? json)
+                                foreach (var (key, node) in json)
                                 {
-                                    if (json == null) return;
+                                    if (node == null) continue;
 
-                                    foreach (var (key, node) in json)
+                                    static void generateTreeNode(string propName, JsonNode? node)
                                     {
-                                        if (node == null) continue;
+                                        if (node == null) return;
 
-                                        static void generateTreeNode(string propName, JsonNode? node)
+                                        ImGui.TableNextColumn();
+                                        ImGui.AlignTextToFramePadding();
+                                        if (ImGui.TreeNodeEx($"{propName}##{node.GetPath()}", ImGuiTreeNodeFlags.DefaultOpen | ImGuiTreeNodeFlags.SpanAllColumns))
                                         {
-                                            if (node == null) return;
-
-                                            ImGui.TableNextColumn();
-                                            ImGui.AlignTextToFramePadding();
-                                            if (ImGui.TreeNodeEx($"{propName}##{node.GetPath()}", ImGuiTreeNodeFlags.DefaultOpen | ImGuiTreeNodeFlags.SpanAllColumns))
-                                            {
-                                                ImGui.TableNextRow();
-
-                                                var valueKind = node.GetValueKind();
-                                                if (valueKind == JsonValueKind.Array)
-                                                {
-                                                    var array = node.AsArray();
-                                                    for (var i = 0; i < array.Count; i++)
-                                                        generateTreeNode(i.ToString(), array[i]);
-                                                }
-                                                else if (valueKind == JsonValueKind.Object)
-                                                    processObject(node.AsObject());
-                                                else
-                                                    generateEditor(propName, node);
-
-                                                ImGui.TreePop();
-                                            }
-                                            ImGui.TableSetColumnIndex(0);
                                             ImGui.TableNextRow();
-                                        }
-
-                                        static void generateEditor(string propName, JsonNode? node)
-                                        {
-                                            if (node == null) return;
 
                                             var valueKind = node.GetValueKind();
-
-                                            ImGui.TableNextColumn();
-                                            ImGui.AlignTextToFramePadding();
-                                            ImGui.Text(propName);
-
-                                            ImGui.TableNextColumn();
-                                            ImGui.Text(valueKind.ToString());
-
-                                            ImGui.TableNextColumn();
-                                            ImGui.PushID(node.GetPath());
-                                            ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X);
-                                            switch (valueKind)
+                                            if (valueKind == JsonValueKind.Array)
                                             {
-                                                case JsonValueKind.String:
-                                                    {
-                                                        var valueString = node.GetValue<string>();
-                                                        if (ImGui.InputText(string.Empty, ref valueString, 1024))
-                                                            node.ReplaceWith(valueString);
-                                                    }
-                                                    break;
-
-                                                case JsonValueKind.Number:
-                                                    {
-                                                        var valueNumber = node.GetValue<float>();
-                                                        if (ImGui.InputFloat(string.Empty, ref valueNumber))
-                                                            node.ReplaceWith(valueNumber);
-                                                    }
-                                                    break;
+                                                var array = node.AsArray();
+                                                for (var i = 0; i < array.Count; i++)
+                                                    generateTreeNode(i.ToString(), array[i]);
                                             }
-                                            ImGui.PopID();
+                                            else if (valueKind == JsonValueKind.Object)
+                                                processObject(node.AsObject());
+                                            else
+                                                generateEditor(propName, node);
+
+                                            ImGui.TreePop();
                                         }
+                                        ImGui.TableSetColumnIndex(0);
+                                        ImGui.TableNextRow();
+                                    }
+
+                                    static void generateEditor(string propName, JsonNode? node)
+                                    {
+                                        if (node == null) return;
 
                                         var valueKind = node.GetValueKind();
-                                        if (valueKind == JsonValueKind.Object || valueKind == JsonValueKind.Array)
-                                            generateTreeNode(node.GetPropertyName(), node);
-                                        else
-                                            generateEditor(node.GetPropertyName(), node);
+
+                                        ImGui.TableNextColumn();
+                                        ImGui.AlignTextToFramePadding();
+                                        ImGui.Text(propName);
+
+                                        ImGui.TableNextColumn();
+                                        ImGui.Text(valueKind.ToString());
+
+                                        ImGui.TableNextColumn();
+                                        ImGui.PushID(node.GetPath());
+                                        ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X);
+                                        switch (valueKind)
+                                        {
+                                            case JsonValueKind.String:
+                                                {
+                                                    var valueString = node.GetValue<string>();
+                                                    if (ImGui.InputText(string.Empty, ref valueString, 1024))
+                                                        node.ReplaceWith(valueString);
+                                                }
+                                                break;
+
+                                            case JsonValueKind.Number:
+                                                {
+                                                    var valueNumber = node.GetValue<float>();
+                                                    if (ImGui.InputFloat(string.Empty, ref valueNumber))
+                                                        node.ReplaceWith(valueNumber);
+                                                }
+                                                break;
+                                        }
+                                        ImGui.PopID();
                                     }
+
+                                    var valueKind = node.GetValueKind();
+                                    if (valueKind == JsonValueKind.Object || valueKind == JsonValueKind.Array)
+                                        generateTreeNode(node.GetPropertyName(), node);
+                                    else
+                                        generateEditor(node.GetPropertyName(), node);
                                 }
                             }
-                            ImGui.EndTable();
                         }
-                        ImGui.EndChild();
+                        ImGui.EndTable();
                     }
-                    ImGui.EndGroup();
+                    ImGui.EndChild();
                 }
+                ImGui.EndGroup();
             }
             isCollapsed = ImGui.IsWindowCollapsed();
             ImGui.End();

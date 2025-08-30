@@ -17,7 +17,6 @@ namespace BouncingUFO.Editors
         private Map? map;
         private Tileset? tileset;
 
-        private string currentMapPath = string.Empty;
         private int hoveredMapCell = -1, hoveredTilemapCell = -1, selectedTilemapCell = 0;
         private Color gridColor, inactiveLayerColor, hoveredHighlightColor, selectedHighlightColor, hoveredBorderColor, selectedBorderColor, activeSpawnColor, inactiveSpawnColor;
         private bool drawMapCellGrid = true, drawTilesetCellGrid = true, dimInactiveLayers = true;
@@ -64,7 +63,7 @@ namespace BouncingUFO.Editors
                 {
                     ImGui.Text("A map is currently open; overwrite?");
                     ImGui.Separator();
-                    if (ImGui.Button("Yes")) { map = new(); currentMapPath = string.Empty; ImGui.CloseCurrentPopup(); }
+                    if (ImGui.Button("Yes")) { map = new(); CurrentFilePath = string.Empty; ImGui.CloseCurrentPopup(); }
                     ImGui.SameLine();
                     ImGui.SetItemDefaultFocus();
                     if (ImGui.Button("No")) ImGui.CloseCurrentPopup();
@@ -77,11 +76,11 @@ namespace BouncingUFO.Editors
                     {
                         if (r == FileSystem.DialogResult.Success && s.Length > 0 && s[0] != null)
                         {
-                            currentMapPath = s[0];
-                            map = JsonSerializer.Deserialize<Map>(File.ReadAllText(currentMapPath), serializerOptions);
+                            CurrentFilePath = s[0];
+                            map = JsonSerializer.Deserialize<Map>(File.ReadAllText(CurrentFilePath), serializerOptions);
                             tileset = null;
                         }
-                    }), [new("JSON files (*.json)", "json")], currentMapPath);
+                    }), [new("JSON files (*.json)", "json")], CurrentFilePath);
                 }
                 ImGui.SameLine();
 
@@ -91,8 +90,8 @@ namespace BouncingUFO.Editors
                     manager.FileSystem.SaveFileDialog(new FileSystem.DialogCallbackSingleFile((s, r) =>
                     {
                         if (r == FileSystem.DialogResult.Success)
-                            File.WriteAllText(currentMapPath = s, JsonSerializer.Serialize(map, serializerOptions));
-                    }), [new("JSON files (*.json)", "json")], currentMapPath);
+                            File.WriteAllText(CurrentFilePath = s, JsonSerializer.Serialize(map, serializerOptions));
+                    }), [new("JSON files (*.json)", "json")], CurrentFilePath);
                 }
                 if (map == null) ImGui.EndDisabled();
                 ImGui.SameLine();
@@ -115,7 +114,7 @@ namespace BouncingUFO.Editors
                         "Editing Help",
                         "Tips and Tricks");
 
-                    var currentMapLabel = $"Current map: {(string.IsNullOrWhiteSpace(currentMapPath) ? "unsaved" : currentMapPath)}";
+                    var currentMapLabel = $"Current map: {(string.IsNullOrWhiteSpace(CurrentFilePath) ? "unsaved" : CurrentFilePath)}";
                     ImGui.SameLine(ImGui.GetContentRegionAvail().X - ImGui.CalcTextSize(currentMapLabel).X);
                     ImGui.Text(currentMapLabel);
                 }

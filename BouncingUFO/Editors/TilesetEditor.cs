@@ -15,7 +15,6 @@ namespace BouncingUFO.Editors
 
         private Tileset? tileset;
 
-        private string currentTilesetPath = string.Empty;
         private int hoveredCell = -1, selectedCell = 0;
         private Color gridColor, hoveredHighlightColor, selectedHighlightColor, hoveredBorderColor, selectedBorderColor;
         private bool drawCellGrid = true;
@@ -51,7 +50,7 @@ namespace BouncingUFO.Editors
                 {
                     ImGui.Text("A tileset is currently open; overwrite?");
                     ImGui.Separator();
-                    if (ImGui.Button("Yes")) { tileset = new(); currentTilesetPath = string.Empty; ImGui.CloseCurrentPopup(); }
+                    if (ImGui.Button("Yes")) { tileset = new(); CurrentFilePath = string.Empty; ImGui.CloseCurrentPopup(); }
                     ImGui.SameLine();
                     ImGui.SetItemDefaultFocus();
                     if (ImGui.Button("No")) ImGui.CloseCurrentPopup();
@@ -64,10 +63,10 @@ namespace BouncingUFO.Editors
                     {
                         if (r == FileSystem.DialogResult.Success && s.Length > 0 && s[0] != null)
                         {
-                            currentTilesetPath = s[0];
-                            tileset = JsonSerializer.Deserialize<Tileset>(File.ReadAllText(currentTilesetPath), serializerOptions);
+                            CurrentFilePath = s[0];
+                            tileset = JsonSerializer.Deserialize<Tileset>(File.ReadAllText(CurrentFilePath), serializerOptions);
                         }
-                    }), [new("JSON files (*.json)", "json")], currentTilesetPath);
+                    }), [new("JSON files (*.json)", "json")], CurrentFilePath);
                 }
                 ImGui.SameLine();
 
@@ -77,8 +76,8 @@ namespace BouncingUFO.Editors
                     manager.FileSystem.SaveFileDialog(new FileSystem.DialogCallbackSingleFile((s, r) =>
                     {
                         if (r == FileSystem.DialogResult.Success)
-                            File.WriteAllText(currentTilesetPath = s, JsonSerializer.Serialize(tileset, serializerOptions));
-                    }), [new("JSON files (*.json)", "json")], currentTilesetPath);
+                            File.WriteAllText(CurrentFilePath = s, JsonSerializer.Serialize(tileset, serializerOptions));
+                    }), [new("JSON files (*.json)", "json")], CurrentFilePath);
                 }
                 if (tileset == null) ImGui.EndDisabled();
                 ImGui.SameLine();
@@ -108,7 +107,7 @@ namespace BouncingUFO.Editors
                     ImGui.Separator();
 
                     ImGui.BeginGroup();
-                    ImGui.Text($"Current tileset: {(string.IsNullOrWhiteSpace(currentTilesetPath) ? "unsaved" : currentTilesetPath)}");
+                    ImGui.Text($"Current tileset: {(string.IsNullOrWhiteSpace(CurrentFilePath) ? "unsaved" : CurrentFilePath)}");
                     var needSubtexAndFlags = false;
                     if (tileset.CellTextures == null && File.Exists(tileset.TilesheetFile))
                         needSubtexAndFlags = true;

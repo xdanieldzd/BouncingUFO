@@ -15,8 +15,6 @@ namespace BouncingUFO.Editors
 
         private Sprite? sprite;
 
-        private string currentSpritePath = string.Empty;
-
         private readonly string frameEditorName = "Frame Editor";
         private bool isFrameEditorOpen = false, isFrameEditorFocused = false;
         private int selectedFrame = 0;
@@ -61,7 +59,7 @@ namespace BouncingUFO.Editors
                         {
                             sprite = new();
                             sprite.CreateTextures(manager.GraphicsDevice);
-                            currentSpritePath = string.Empty;
+                            CurrentFilePath = string.Empty;
                             ImGui.CloseCurrentPopup();
                         }
                         ImGui.SameLine();
@@ -76,11 +74,11 @@ namespace BouncingUFO.Editors
                         {
                             if (r == FileSystem.DialogResult.Success && s.Length > 0 && s[0] != null)
                             {
-                                currentSpritePath = s[0];
-                                sprite = JsonSerializer.Deserialize<Sprite>(File.ReadAllText(currentSpritePath), serializerOptions);
+                                CurrentFilePath = s[0];
+                                sprite = JsonSerializer.Deserialize<Sprite>(File.ReadAllText(CurrentFilePath), serializerOptions);
                                 sprite?.CreateTextures(manager.GraphicsDevice);
                             }
-                        }), [new("JSON files (*.json)", "json")], currentSpritePath);
+                        }), [new("JSON files (*.json)", "json")], CurrentFilePath);
                     }
                     ImGui.SameLine();
 
@@ -91,7 +89,7 @@ namespace BouncingUFO.Editors
                         {
                             if (r == FileSystem.DialogResult.Success)
                                 File.WriteAllText(s, JsonSerializer.Serialize(sprite, serializerOptions));
-                        }), [new("JSON files (*.json)", "json")], currentSpritePath);
+                        }), [new("JSON files (*.json)", "json")], CurrentFilePath);
                     }
                     if (sprite == null) ImGui.EndDisabled();
                     ImGui.SameLine();
@@ -122,7 +120,7 @@ namespace BouncingUFO.Editors
                     ImGui.Separator();
                     ImGui.BeginGroup();
                     {
-                        ImGui.Text($"Current sprite: {(string.IsNullOrWhiteSpace(currentSpritePath) ? "unsaved" : currentSpritePath)}");
+                        ImGui.Text($"Current sprite: {(string.IsNullOrWhiteSpace(CurrentFilePath) ? "unsaved" : CurrentFilePath)}");
                     }
                     ImGui.EndGroup();
                     ImGui.BeginGroup();
