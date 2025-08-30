@@ -7,6 +7,8 @@ namespace BouncingUFO.Utilities
 
     public class ScreenFader(Manager manager)
     {
+        private readonly SpriteFont debugFont = manager.Assets.Fonts["SmallFont"];
+
         private Color color = Color.Black;
         private float progress = 0f;
 
@@ -67,7 +69,7 @@ namespace BouncingUFO.Utilities
 
             if (manager.Settings.ShowDebugInfo)
             {
-                manager.Batcher.Text(manager.Assets.SmallFont, $"{FadeType}\nProgress:{progress:0.0000}\nAlpha:{color.A}", manager.Screen.Bounds.TopRight - Point2.One.OnlyX(), Vector2.One.ZeroY(), Color.CornflowerBlue);
+                manager.Batcher.Text(debugFont, $"{FadeType}\nProgress:{progress:0.0000}\nAlpha:{color.A}", manager.Screen.Bounds.TopRight - Point2.One.OnlyX(), Vector2.One.ZeroY(), Color.CornflowerBlue);
             }
         }
     }

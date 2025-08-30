@@ -2,7 +2,9 @@
 
 namespace BouncingUFO.Game.Levels
 {
-    public record Progression
+    public class LevelCollection : List<LevelProgression> { }
+
+    public record LevelProgression
     {
         [JsonInclude]
         public string Title = string.Empty;

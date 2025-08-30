@@ -9,12 +9,14 @@ namespace BouncingUFO.Game.States
     public class InGame : IGameState
     {
         private const float screenFadeDuration = 0.5f;
-        private const string levelsDialogFile = "Levels";
+        private const string levelsDialogFile = "InGame";
 
         private enum State { Initialize, FadeIn, GameIntroduction, GameStartCountdown, MainLogic, GameOver, ShowGameOverMenu, Restart, ExitToMenu, LoadNextLevel }
 
         private readonly Manager manager;
         private readonly object[] args;
+
+        private readonly SpriteFont smallFont, largeFont, futureFont;
 
         private readonly ScreenFader screenFader;
         private readonly Camera camera;
@@ -26,6 +28,7 @@ namespace BouncingUFO.Game.States
         private readonly MenuBoxItem[] gameOverMenuItems = [];
         private readonly MenuBoxItem nextLevelMenuItem;
 
+        private readonly Queue<DialogText> currentDialogQueue = [];
         private DialogText? currentDialogText = null;
 
         private State currentState = State.Initialize;
@@ -41,12 +44,16 @@ namespace BouncingUFO.Game.States
             this.manager = manager;
             this.args = args;
 
+            smallFont = manager.Assets.Fonts["SmallFont"];
+            largeFont = manager.Assets.Fonts["LargeFont"];
+            futureFont = manager.Assets.Fonts["FutureFont"];
+
             screenFader = new(manager);
             camera = new(manager);
             dialogBox = new(manager)
             {
-                Font = manager.Assets.LargeFont,
-                GraphicsSheet = manager.Assets.UI["DialogBox"],
+                Font = largeFont,
+                GraphicsSheet = manager.Assets.GraphicsSheets["DialogBox"],
                 FramePaddingTopLeft = (10, 10),
                 FramePaddingBottomRight = (12, 12),
                 BackgroundColor = new(0x3E4F65),
@@ -55,13 +62,13 @@ namespace BouncingUFO.Game.States
 
             menuBox = new(manager)
             {
-                Font = manager.Assets.LargeFont,
-                GraphicsSheet = manager.Assets.UI["DialogBox"],
+                Font = largeFont,
+                GraphicsSheet = manager.Assets.GraphicsSheets["DialogBox"],
                 FramePaddingTopLeft = (12, 12),
                 FramePaddingBottomRight = (14, 14),
                 LinePadding = 6,
                 BackgroundColor = new(0x3E4F65),
-                SmallFont = manager.Assets.SmallFont,
+                SmallFont = smallFont,
                 HighlightTextColor = Color.Lerp(Color.Green, Color.White, 0.35f),
                 ShowLegend = false
             };
@@ -124,17 +131,13 @@ namespace BouncingUFO.Game.States
                     {
                         if (screenFader.Update())
                         {
-                            if (!string.IsNullOrWhiteSpace(levelManager.Map?.IntroID) &&
-                                manager.Assets.DialogText[levelsDialogFile].TryGetValue(levelManager.Map.IntroID, out DialogText? dialogText))
-                            {
-                                currentDialogText = dialogText;
+                            currentDialogQueue.Clear();
 
-                                if (!currentDialogText.HasBeenShownOnce)
-                                {
-                                    dialogBox.TextStrings = currentDialogText.TextStrings;
-                                    dialogBox.SpeakerName = currentDialogText.SpeakerName;
-                                    dialogBox.Open();
-                                }
+                            if (!string.IsNullOrWhiteSpace(levelManager.Map?.IntroID) &&
+                                manager.Assets.DialogCollections[levelsDialogFile].TryGetValue(levelManager.Map.IntroID, out List<DialogText>? dialogTextList))
+                            {
+                                foreach (var dialogText in dialogTextList)
+                                    currentDialogQueue.Enqueue(dialogText);
                             }
                             currentState = State.GameIntroduction;
                         }
@@ -145,10 +148,21 @@ namespace BouncingUFO.Game.States
                     {
                         if (!dialogBox.IsOpen)
                         {
-                            if (currentDialogText != null)
-                                currentDialogText.HasBeenShownOnce = true;
+                            if (currentDialogQueue.TryDequeue(out currentDialogText))
+                            {
+                                if (!currentDialogText.HasBeenShownOnce)
+                                {
+                                    dialogBox.DialogText = currentDialogText;
+                                    dialogBox.Open();
 
-                            currentState = State.GameStartCountdown;
+                                    currentDialogText.HasBeenShownOnce = true;
+                                }
+                            }
+                            else
+                            {
+                                dialogBox.Close();
+                                currentState = State.GameStartCountdown;
+                            }
                         }
                     }
                     break;
@@ -276,20 +290,18 @@ namespace BouncingUFO.Game.States
             {
                 if (levelManager.GetFirstActor<Player>() is Player player)
                 {
-                    manager.Batcher.Text(manager.Assets.SmallFont, $"Current hitbox == {player.Position + player.Hitbox.Rectangle}", Vector2.Zero, Color.White);
-                    manager.Batcher.Text(manager.Assets.SmallFont, $"{manager.Controls.Move.Name}:{manager.Controls.Move.IntValue} {manager.Controls.Confirm.Name}:{manager.Controls.Confirm.Down} {manager.Controls.Cancel.Name}:{manager.Controls.Cancel.Down} {manager.Controls.Menu.Name}:{manager.Controls.Menu.Down} {manager.Controls.DebugDisplay.Name}:{manager.Controls.DebugDisplay.Down}", new Vector2(0f, manager.Screen.Height - manager.Assets.SmallFont.LineHeight), Color.White);
+                    manager.Batcher.Text(smallFont, $"Current hitbox == {player.Position + player.Hitbox.Rectangle}", Vector2.Zero, Color.White);
+                    manager.Batcher.Text(smallFont, $"{manager.Controls.Move.Name}:{manager.Controls.Move.IntValue} {manager.Controls.Confirm.Name}:{manager.Controls.Confirm.Down} {manager.Controls.Cancel.Name}:{manager.Controls.Cancel.Down} {manager.Controls.Menu.Name}:{manager.Controls.Menu.Down} {manager.Controls.DebugDisplay.Name}:{manager.Controls.DebugDisplay.Down}", new Vector2(0f, manager.Screen.Height - smallFont.LineHeight), Color.White);
 
                     var cells = player.GetMapCells();
                     for (var i = 0; i < cells.Length; i++)
-                        manager.Batcher.Text(manager.Assets.SmallFont, cells[i].ToString(), new(0f, 60f + i * manager.Assets.SmallFont.LineHeight), Color.CornflowerBlue);
+                        manager.Batcher.Text(smallFont, cells[i].ToString(), new(0f, 60f + i * smallFont.LineHeight), Color.CornflowerBlue);
 
-                    manager.Batcher.Text(manager.Assets.SmallFont, $"Camera {camera.Matrix.Translation:0.0000}", new(0f, 25f), Color.Yellow);
+                    manager.Batcher.Text(smallFont, $"Camera {camera.Matrix.Translation:0.0000}", new(0f, 25f), Color.Yellow);
                 }
             }
 
-            if (currentDialogText is DialogText dialogText && !dialogText.HasBeenShownOnce)
-                dialogBox.Render();
-
+            dialogBox.Render();
             menuBox.Render();
 
             screenFader.Render();
@@ -314,14 +326,14 @@ namespace BouncingUFO.Game.States
                     {
                         var startTimer = Math.Floor(gameStartCountdown);
                         var startText = startTimer < 1f ? "GO!!" : startTimer < 4f ? $"{startTimer}" : "GET READY...";
-                        manager.Batcher.Text(manager.Assets.FutureFont, startText, manager.Screen.Bounds.Center - manager.Assets.FutureFont.SizeOf(startText + Environment.NewLine) / 2f, Color.White);
+                        manager.Batcher.Text(futureFont, startText, manager.Screen.Bounds.Center - futureFont.SizeOf(startText + Environment.NewLine) / 2f, Color.White);
                     }
                     break;
 
                 case State.GameOver:
                     {
                         var gameOverText = capsuleCount <= 0 ? "YOU WON!" : "GAME OVER";
-                        manager.Batcher.Text(manager.Assets.FutureFont, gameOverText, manager.Screen.Bounds.Center - manager.Assets.FutureFont.SizeOf(gameOverText + Environment.NewLine) / 2f, Color.White);
+                        manager.Batcher.Text(futureFont, gameOverText, manager.Screen.Bounds.Center - futureFont.SizeOf(gameOverText + Environment.NewLine) / 2f, Color.White);
 
                         blinkEnergy = false;
                     }
@@ -334,10 +346,10 @@ namespace BouncingUFO.Game.States
                     break;
             }
 
-            manager.Batcher.Text(manager.Assets.FutureFont, $"TIME {gameDuration:mm\\:ss\\:ff}", new(8f), capsuleCount == 0 ? Color.Green : Color.White);
-            manager.Batcher.Text(manager.Assets.FutureFont, $"LEFT {capsuleCount:00}", new Vector2(manager.Screen.Bounds.Right - 8f, 8f), new Vector2(1f, 0f), Color.White);
+            manager.Batcher.Text(futureFont, $"TIME {gameDuration:mm\\:ss\\:ff}", new(8f), capsuleCount == 0 ? Color.Green : Color.White);
+            manager.Batcher.Text(futureFont, $"LEFT {capsuleCount:00}", new Vector2(manager.Screen.Bounds.Right - 8f, 8f), new Vector2(1f, 0f), Color.White);
             if (levelManager.GetFirstActor<Player>() is Player player)
-                manager.Batcher.Text(manager.Assets.FutureFont, $"ENERGY {player?.energy:00}", new Vector2(manager.Screen.Bounds.Right - 8f, manager.Screen.Bounds.Bottom - 8f - manager.Assets.FutureFont.Size), new Vector2(1f, 1f), blinkEnergy && player?.energy <= 25 && manager.Time.BetweenInterval(0.5) ? Color.Red : Color.White);
+                manager.Batcher.Text(futureFont, $"ENERGY {player?.energy:00}", new Vector2(manager.Screen.Bounds.Right - 8f, manager.Screen.Bounds.Bottom - 8f - futureFont.Size), new Vector2(1f, 1f), blinkEnergy && player?.energy <= 25 && manager.Time.BetweenInterval(0.5) ? Color.Red : Color.White);
         }
     }
 }

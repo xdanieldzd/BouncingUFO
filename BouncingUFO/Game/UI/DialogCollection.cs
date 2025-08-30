@@ -2,6 +2,8 @@
 
 namespace BouncingUFO.Game.UI
 {
+    public class DialogCollection : Dictionary<string, List<DialogText>> { }
+
     public record DialogText
     {
         [JsonInclude]

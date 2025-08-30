@@ -5,14 +5,16 @@ namespace BouncingUFO.Game.States
 {
     public class MainMenu(Manager manager, params object[] args) : GameStateBase(manager, args)
     {
+        private const string arcadeLevelCollectionName = "ArcadeMode";
+
         private readonly MenuBox menuBox = new(manager)
         {
-            Font = manager.Assets.LargeFont,
-            GraphicsSheet = manager.Assets.UI["DialogBox"],
+            Font = manager.Assets.Fonts["LargeFont"],
+            GraphicsSheet = manager.Assets.GraphicsSheets["DialogBox"],
             FramePaddingTopLeft = (12, 12),
             FramePaddingBottomRight = (14, 14),
             LinePadding = 6,
-            SmallFont = manager.Assets.SmallFont,
+            SmallFont = manager.Assets.Fonts["SmallFont"],
             BackgroundColor = new(0x3E4F65),
             HighlightTextColor = Color.Lerp(Color.Green, Color.White, 0.35f)
         };
@@ -31,7 +33,7 @@ namespace BouncingUFO.Game.States
                 new() { Label = "Play Single Level", Action = MenuSingleLevelSelectAction },
                 new() { Label = "Cancel", Action = MenuCancelAction, IsCancelAction = true }
             ];
-            modeSelectMenuItems = [.. manager.Assets.Progression.Select(x => new MenuBoxItem() { Label = x.Value.Title, Action = MenuArcadeModeStartAction }), new() { Label = "Cancel", Action = MenuEnterMainMenuAction, IsCancelAction = true }];
+            modeSelectMenuItems = [.. manager.Assets.LevelCollections[arcadeLevelCollectionName].Select(x => new MenuBoxItem() { Label = x.Title, Action = MenuArcadeModeStartAction }), new() { Label = "Cancel", Action = MenuEnterMainMenuAction, IsCancelAction = true }];
             levelSelectMenuItems = [.. manager.Assets.Maps.Select(x => new MenuBoxItem() { Label = $"{x.Value.Title} ({x.Key})", Action = MenuSingleLevelStartAction }), new() { Label = "Cancel", Action = MenuEnterMainMenuAction, IsCancelAction = true }];
 
             MenuEnterMainMenuAction();
@@ -79,7 +81,7 @@ namespace BouncingUFO.Game.States
 
         private void MenuArcadeModeStartAction()
         {
-            nextGameState = new InGame(manager, [.. manager.Assets.Progression.ElementAt(menuBox.SelectedIndex).Value.MapNames]);
+            nextGameState = new InGame(manager, [.. manager.Assets.LevelCollections[arcadeLevelCollectionName].ElementAt(menuBox.SelectedIndex).MapNames]);
             LeaveState();
         }
 

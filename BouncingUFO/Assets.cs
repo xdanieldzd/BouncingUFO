@@ -11,46 +11,35 @@ namespace BouncingUFO
         public const string AssetsFolderName = "Assets";
 
         public const string FontsFolderName = "Fonts";
-        public const string DataFolderName = "Data";
-        public const string ProgressionFolder = DataFolderName + "\\Progression";
-
         public const string TilesetFolderName = "Tilesets";
         public const string MapFolderName = "Maps";
         public const string SpriteFolderName = "Sprites";
-        public const string UIFolderName = "UI";
-        public const string DialogTextFolderName = "DialogText";
+        public const string GraphicsSheetsFolderName = "GraphicsSheets";
+        public const string DialogCollectionsFolderName = "DialogCollections";
+        public const string LevelCollectionsFolderName = "LevelCollections";
 
-        private readonly SpriteFont dummyFont;
-
-        private SpriteFont? smallFont, largeFont, futureFont;
-        public SpriteFont SmallFont => smallFont ?? dummyFont;
-        public SpriteFont LargeFont => largeFont ?? dummyFont;
-        public SpriteFont FutureFont => futureFont ?? dummyFont;
-
-        public Dictionary<string, Progression> Progression = [];
-
+        public Dictionary<string, SpriteFont> Fonts = [];
         public Dictionary<string, Tileset> Tilesets = [];
         public Dictionary<string, Map> Maps = [];
         public Dictionary<string, Sprite> Sprites = [];
-        public Dictionary<string, GraphicsSheet> UI = [];
-        public Dictionary<string, Dictionary<string, DialogText>> DialogText = [];
+        public Dictionary<string, GraphicsSheet> GraphicsSheets = [];
+        public Dictionary<string, DialogCollection> DialogCollections = [];
+        public Dictionary<string, LevelCollection> LevelCollections = [];
 
         public Assets(Manager manager)
         {
-            dummyFont = new(manager.GraphicsDevice);
-
             manager.FileSystem.OpenTitleStorage((storage) =>
             {
-                smallFont = SpriteFontHelper.GenerateFromImage(
-                   manager.GraphicsDevice,
-                   "SmallFont",
-                   storage.ReadAllBytes(Path.Join(AssetsFolderName, FontsFolderName, "SmallFont.png")),
-                   new(8, 8),
-                   SpriteFontSetting.None,
-                   SpriteFontHighlightType.Outline,
-                   Color.Black);
+                Fonts.Add("SmallFont", SpriteFontHelper.GenerateFromImage(
+                    manager.GraphicsDevice,
+                    "SmallFont",
+                    storage.ReadAllBytes(Path.Join(AssetsFolderName, FontsFolderName, "SmallFont.png")),
+                    new(8, 8),
+                    SpriteFontSetting.None,
+                    SpriteFontHighlightType.Outline,
+                    Color.Black));
 
-                largeFont = SpriteFontHelper.GenerateFromImage(
+                Fonts.Add("LargeFont", SpriteFontHelper.GenerateFromImage(
                     manager.GraphicsDevice,
                     "LargeFont",
                     storage.ReadAllBytes(Path.Join(AssetsFolderName, FontsFolderName, "LargeFont.png")),
@@ -58,9 +47,9 @@ namespace BouncingUFO
                     SpriteFontSetting.None,
                     SpriteFontHighlightType.DropShadowThin,
                     Color.Black,
-                    charaSpacing: 1);
+                    charaSpacing: 1));
 
-                futureFont = SpriteFontHelper.GenerateFromImage(
+                Fonts.Add("FutureFont", SpriteFontHelper.GenerateFromImage(
                     manager.GraphicsDevice,
                     "FutureFont",
                     storage.ReadAllBytes(Path.Join(AssetsFolderName, FontsFolderName, "FutureFont.png")),
@@ -69,15 +58,14 @@ namespace BouncingUFO
                     SpriteFontHighlightType.DropShadowThick,
                     Color.Black,
                     firstChara: 0x20,
-                    spaceWidth: 16);
-
-                LoadAssets(storage, ProgressionFolder, ref Progression);
+                    spaceWidth: 16));
 
                 LoadAssets(storage, TilesetFolderName, ref Tilesets, (obj) => obj.CreateTextures(manager.GraphicsDevice));
                 LoadAssets(storage, MapFolderName, ref Maps);
                 LoadAssets(storage, SpriteFolderName, ref Sprites, (obj) => obj.CreateTextures(manager.GraphicsDevice));
-                LoadAssets(storage, UIFolderName, ref UI, (obj) => obj.CreateTextures(manager.GraphicsDevice));
-                LoadAssets(storage, DialogTextFolderName, ref DialogText);
+                LoadAssets(storage, GraphicsSheetsFolderName, ref GraphicsSheets, (obj) => obj.CreateTextures(manager.GraphicsDevice));
+                LoadAssets(storage, DialogCollectionsFolderName, ref DialogCollections);
+                LoadAssets(storage, LevelCollectionsFolderName, ref LevelCollections);
             });
         }
 

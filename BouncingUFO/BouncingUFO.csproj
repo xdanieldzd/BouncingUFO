@@ -21,10 +21,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<None Update="Assets\Data\Progression\Normal.json">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="Assets\DialogText\Levels.json">
+		<None Update="Assets\DialogCollections\InGame.json">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 		<None Update="Assets\Fonts\FutureFont.png">
@@ -34,6 +31,9 @@
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 		<None Update="Assets\Fonts\LargeFont.png">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Assets\LevelCollections\ArcadeMode.json">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 		<None Update="Assets\Maps\Level1.json">
@@ -75,10 +75,10 @@
 		<None Update="Assets\Tilesets\Grass3.png">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
-		<None Update="Assets\UI\DialogBox.json">
+		<None Update="Assets\GraphicsSheets\DialogBox.json">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
-		<None Update="Assets\UI\DialogBox.png">
+		<None Update="Assets\GraphicsSheets\DialogBox.png">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 	</ItemGroup>

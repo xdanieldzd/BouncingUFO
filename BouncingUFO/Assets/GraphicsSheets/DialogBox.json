@@ -1,6 +1,6 @@
 {
   "Name": "DialogBox",
-  "ImageFile": "D:\\Programming\\UFO\\UI\\DialogBox.png",
+  "ImageFile": "Assets\\GraphicsSheets\\DialogBox.png",
   "Rectangles": {
     "BorderTopLeft": {
       "X": 0,

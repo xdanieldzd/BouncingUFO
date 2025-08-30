@@ -6,15 +6,19 @@ namespace BouncingUFO.Game.States
 {
     public class TitleScreen(Manager manager, params object[] args) : GameStateBase(manager, args)
     {
+        private readonly SpriteFont smallFont = manager.Assets.Fonts["SmallFont"];
+        private readonly SpriteFont largeFont = manager.Assets.Fonts["LargeFont"];
+        private readonly SpriteFont futureFont = manager.Assets.Fonts["FutureFont"];
+
         private readonly MenuBox menuBox = new(manager)
         {
-            Font = manager.Assets.LargeFont,
-            GraphicsSheet = manager.Assets.UI["DialogBox"],
+            Font = manager.Assets.Fonts["LargeFont"],
+            GraphicsSheet = manager.Assets.GraphicsSheets["DialogBox"],
             FramePaddingTopLeft = (12, 12),
             FramePaddingBottomRight = (14, 14),
             LinePadding = 6,
             BackgroundColor = new(0x3E4F65),
-            SmallFont = manager.Assets.SmallFont,
+            SmallFont = manager.Assets.Fonts["SmallFont"],
             HighlightTextColor = Color.Lerp(Color.Green, Color.White, 0.35f),
             WindowAlignment = MenuBoxWindowAlignment.BottomCenter,
             WindowSizing = MenuBoxWindowSizing.Automatic
@@ -76,27 +80,27 @@ namespace BouncingUFO.Game.States
                 "\n" +
                 " PUBLIC PROTOTYPE 1 ";
             manager.Batcher.Text(
-                manager.Assets.FutureFont,
+                futureFont,
                 titleText,
-                manager.Screen.Bounds.Center - manager.Assets.FutureFont.SizeOf(titleText) / 2f - new Vector2(0f, manager.Assets.FutureFont.Size * 4f),
+                manager.Screen.Bounds.Center - futureFont.SizeOf(titleText) / 2f - new Vector2(0f, futureFont.Size * 4f),
                 Color.White);
 
             if (!menuBox.IsOpen)
             {
                 var bottomText = "August 2025 by xdaniel -- xdaniel.neocities.org";
                 manager.Batcher.Text(
-                    manager.Assets.SmallFont,
+                    smallFont,
                     bottomText,
-                    manager.Screen.Bounds.BottomCenter - manager.Assets.SmallFont.SizeOf(bottomText) / 2f - new Vector2(0f, manager.Assets.SmallFont.Size * 2f),
+                    manager.Screen.Bounds.BottomCenter - smallFont.SizeOf(bottomText) / 2f - new Vector2(0f, smallFont.Size * 2f),
                     Color.White);
 
                 if (manager.Time.BetweenInterval(0.5))
                 {
                     var buttonText = "Press Menu Button!";
                     manager.Batcher.Text(
-                        manager.Assets.LargeFont,
+                        largeFont,
                         buttonText,
-                        manager.Screen.Bounds.Center - manager.Assets.LargeFont.SizeOf(buttonText) / 2f + new Vector2(0f, manager.Assets.LargeFont.Size * 2f),
+                        manager.Screen.Bounds.Center - largeFont.SizeOf(buttonText) / 2f + new Vector2(0f, largeFont.Size * 2f),
                         Color.White);
                 }
             }

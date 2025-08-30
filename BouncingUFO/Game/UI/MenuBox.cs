@@ -11,6 +11,8 @@ namespace BouncingUFO.Game.UI
     {
         private const float titleGap = 6f;
 
+        private readonly SpriteFont debugFont = manager.Assets.Fonts["SmallFont"];
+
         private Point2 manualPosition = Point2.Zero;
         private Point2 manualSize = Point2.One * 64;
 
@@ -206,7 +208,7 @@ namespace BouncingUFO.Game.UI
                     manager.Batcher.RectLine(menuRect, 1f, Color.Red);
                     manager.Batcher.Circle(menuRect.Center, 2f, 5, Color.Magenta);
                     manager.Batcher.Text(
-                        manager.Assets.SmallFont,
+                        debugFont,
                         "== MENU BOX DEBUG ==\n" +
                         $"State:{currentState}\n" +
                         $"Index:{currentItemIndex}\n" +

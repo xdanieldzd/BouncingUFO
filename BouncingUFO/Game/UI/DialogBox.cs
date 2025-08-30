@@ -8,7 +8,18 @@ namespace BouncingUFO.Game.UI
         public override Point2 Size => new((int)(manager.Screen.Width / 1.25f), (int)((Font?.LineHeight ?? 8) * NumTextLines) + LinePadding * (NumTextLines - 1) + FramePaddingTopLeft.Y + FramePaddingBottomRight.Y);
         public override Point2 Position => new(manager.Screen.Bounds.Center.X - Size.X / 2, manager.Screen.Bounds.Bottom - Size.Y - 16);
 
+        private readonly SpriteFont debugFont;
+
         public int NumTextLines = 3;
+
+        public DialogText DialogText
+        {
+            set
+            {
+                SpeakerName = value.SpeakerName;
+                TextStrings = value.TextStrings;
+            }
+        }
 
         public string SpeakerName = string.Empty;
         public List<string> TextStrings = [];
@@ -27,6 +38,8 @@ namespace BouncingUFO.Game.UI
             FramePaddingTopLeft = (8, 8);
             FramePaddingBottomRight = (10, 10);
             LinePadding = 6;
+
+            debugFont = manager.Assets.Fonts["SmallFont"];
         }
 
         public bool IsOpen => currentState != DialogBoxState.Closed;
@@ -183,11 +196,11 @@ namespace BouncingUFO.Game.UI
                 if (manager.Settings.ShowDebugInfo)
                 {
                     manager.Batcher.RectLine(new RectInt(TopLeft.X + FramePaddingTopLeft.X, TopLeft.Y + FramePaddingTopLeft.Y, Size.X - FramePaddingBottomRight.X - FramePaddingTopLeft.X, Size.Y - FramePaddingBottomRight.Y - FramePaddingTopLeft.Y), 2f, Color.Red);
-                    manager.Batcher.Text(manager.Assets.SmallFont, $"{currentState}, {currentMaxLine}", new(0f, manager.Assets.SmallFont.LineHeight), Color.White);
+                    manager.Batcher.Text(debugFont, $"{currentState}, {currentMaxLine}", new(0f, debugFont.LineHeight), Color.White);
                     for (var i = 0; i < currentTextWrapPositions.Length; i++)
                     {
                         var (start, totalLength, currentLength) = currentTextWrapPositions[i];
-                        manager.Batcher.Text(manager.Assets.SmallFont, $"{start}, {totalLength}, {currentLength}", new(0f, (i + 2) * manager.Assets.SmallFont.LineHeight), Color.White);
+                        manager.Batcher.Text(debugFont, $"{start}, {totalLength}, {currentLength}", new(0f, (i + 2) * debugFont.LineHeight), Color.White);
                     }
                 }
             }
