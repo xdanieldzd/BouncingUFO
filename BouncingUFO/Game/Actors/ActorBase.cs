@@ -167,7 +167,7 @@ namespace BouncingUFO.Game.Actors
                     var destMatch = match + sign;
 
                     var nextCellRect = new RectInt(destMatch * level.Tileset.CellSize, level.Tileset.CellSize);
-                    if (nextCellRect.Left < 0 || nextCellRect.Top < 0 || nextCellRect.Right >= level.Map.Size.X * level.Tileset.CellSize.X || nextCellRect.Bottom >= level.Map.Size.Y * level.Tileset.CellSize.Y) continue;
+                    if (nextCellRect.Left < 0 || nextCellRect.Top < 0 || nextCellRect.Right > level.Map.Size.X * level.Tileset.CellSize.X || nextCellRect.Bottom > level.Map.Size.Y * level.Tileset.CellSize.Y) continue;
 
                     foreach (var layer in layers)
                     {
