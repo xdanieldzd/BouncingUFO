@@ -18,6 +18,9 @@ namespace BouncingUFO.Game.Levels
         [JsonInclude]
         public List<Spawn> Spawns = [];
 
+        [JsonIgnore]
+        public RectInt Rectangle => new(Point2.Zero, Size);
+
         public void ResizeLayers()
         {
             foreach (var layer in Layers)

@@ -144,7 +144,7 @@ namespace BouncingUFO.Game.Actors
             sign.X = Math.Sign(sign.X);
             sign.Y = Math.Sign(sign.Y);
 
-            Point2[] getMatches(Point2[] cells, Point2 sign)
+            Point2[] getCellMatches(Point2[] cells, Point2 sign)
             {
                 var matches = new List<Point2>();
                 if (sign.X != 0f)
@@ -160,19 +160,18 @@ namespace BouncingUFO.Game.Actors
                 return [.. matches];
             }
 
-            bool checkMatches(Point2[] matches, MapLayer[] layers, Point2 sign, RectInt destRect)
+            bool checkCellMatches(Point2[] matches, MapLayer[] layers, Point2 sign, RectInt destRect)
             {
-                foreach (var match in matches)
+                foreach (var match in matches.Where(x => level.Map.Rectangle.Contains(x + sign)))
                 {
                     var destMatch = match + sign;
 
                     var nextCellRect = new RectInt(destMatch * level.Tileset.CellSize, level.Tileset.CellSize);
-                    if (nextCellRect.Left < 0 || nextCellRect.Top < 0 || nextCellRect.Right > level.Map.Size.X * level.Tileset.CellSize.X || nextCellRect.Bottom > level.Map.Size.Y * level.Tileset.CellSize.Y) continue;
+                    var nextCellIdx = destMatch.Y * level.Map.Size.X + destMatch.X;
 
                     foreach (var layer in layers)
                     {
-                        var nextCellType = layer.Tiles[destMatch.Y * level.Map.Size.X + destMatch.X];
-                        var nextCellFlags = level.Tileset.CellFlags[nextCellType];
+                        var nextCellFlags = level.Tileset.CellFlags[layer.Tiles[nextCellIdx]];
                         if (nextCellRect.Overlaps(destRect) &&
                             nextCellFlags != CellFlag.Empty &&
                             (!nextCellFlags.Has(CellFlag.Ground) || nextCellFlags.Has(CellFlag.Wall))) return false;
@@ -181,19 +180,15 @@ namespace BouncingUFO.Game.Actors
                 return true;
             }
 
-            var layers = level.Map.Layers.Where((_, i) => i <= MapLayer).Reverse().ToArray();
-            var cells = GetMapCells();
             var destRect = Position + Hitbox.Rectangle + sign;
 
-            if (destRect.Left < 0 || destRect.Right >= level.Map.Size.X * level.Tileset.CellSize.X)
-                return false;
-            if (destRect.Top < 0 || destRect.Bottom >= level.Map.Size.Y * level.Tileset.CellSize.Y)
+            if (!(level.Map.Rectangle * level.Tileset.CellSize).Contains(destRect))
                 return false;
 
-            if (!checkMatches(getMatches(cells, sign.OnlyX()), layers, sign.OnlyX(), destRect))
-                return false;
+            var layers = level.Map.Layers.Where((_, i) => i <= MapLayer).Reverse().ToArray();
+            var cells = GetMapCells();
 
-            if (!checkMatches(getMatches(cells, sign.OnlyY()), layers, sign.OnlyY(), destRect))
+            if (!checkCellMatches(getCellMatches(cells, sign), layers, sign, destRect))
                 return false;
 
             Position += sign;
