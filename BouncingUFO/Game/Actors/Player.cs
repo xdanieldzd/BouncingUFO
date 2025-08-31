@@ -8,7 +8,8 @@ namespace BouncingUFO.Game.Actors
         private const float acceleration = 1500f, friction = 100f, maxSpeed = 200f;
         private const float spriteRotation = 10f;
         private const float bounceCooldown = 25f;
-        private const float shieldRechargeDelay = 5f, shieldUnitRechargeDelay = 0.25f;
+        private const float fastShieldRechargeDelay = 3f, fastShieldUnitRechargeDelay = 0.25f;
+        private const float slowShieldRechargeDelay = 5f, slowShieldUnitRechargeDelay = 1f;
 
         public const int MaxEnergy = 69;
         public const int MaxShield = 5;
@@ -22,6 +23,7 @@ namespace BouncingUFO.Game.Actors
 
         public int Shield = 0, Energy = 0;
         private float shieldRechargeTimer = 0f, shieldUnitRechargeTimer = 0f;
+        private bool slowShieldRecharge = false;
 
         public Player(Manager manager, LevelManager level, int mapLayer = 0, int argument = 0) : base(manager, level, mapLayer, argument)
         {
@@ -39,8 +41,8 @@ namespace BouncingUFO.Game.Actors
             Energy = MaxEnergy;
             Shield = MaxShield;
 
-            shieldRechargeTimer = shieldRechargeDelay;
-            shieldUnitRechargeTimer = shieldUnitRechargeDelay;
+            shieldRechargeTimer = 0f;
+            shieldUnitRechargeTimer = 0f;
 
             IsRunning = true;
         }
@@ -104,18 +106,22 @@ namespace BouncingUFO.Game.Actors
         {
             if (diff != 0)
             {
-                shieldRechargeTimer = shieldRechargeDelay / 2f;
+                shieldRechargeTimer = fastShieldRechargeDelay;
+                slowShieldRecharge = false;
 
                 Shield += diff;
                 if (Shield <= 0)
                 {
                     Energy += Shield;
-                    shieldRechargeTimer = shieldRechargeDelay;
+
+                    shieldRechargeTimer = slowShieldRechargeDelay;
+                    slowShieldRecharge = true;
                 }
             }
 
             Energy = Math.Clamp(Energy, 0, MaxEnergy);
 
+            var shieldUnitRechargeDelay = slowShieldRecharge ? slowShieldUnitRechargeDelay : fastShieldUnitRechargeDelay;
             if (shieldRechargeTimer > 0f)
             {
                 shieldRechargeTimer -= manager.Time.Delta;

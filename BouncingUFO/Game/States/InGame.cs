@@ -318,7 +318,7 @@ namespace BouncingUFO.Game.States
 
         private void RenderHUD()
         {
-            var blinkEnergy = true;
+            var blinkEnergyOrShield = true;
 
             switch (currentState)
             {
@@ -335,14 +335,14 @@ namespace BouncingUFO.Game.States
                         var gameOverText = capsuleCount <= 0 ? "YOU WON!" : "GAME OVER";
                         manager.Batcher.Text(futureFont, gameOverText, manager.Screen.Bounds.Center - futureFont.SizeOf(gameOverText + Environment.NewLine) / 2f, Color.White);
 
-                        blinkEnergy = false;
+                        blinkEnergyOrShield = false;
                     }
                     break;
 
                 case State.ShowGameOverMenu:
                 case State.Restart:
                 case State.ExitToMenu:
-                    blinkEnergy = false;
+                    blinkEnergyOrShield = false;
                     break;
             }
 
@@ -350,8 +350,8 @@ namespace BouncingUFO.Game.States
             manager.Batcher.Text(futureFont, $"LEFT {capsuleCount:00}", new Vector2(manager.Screen.Bounds.Right - 8f, 8f), new Vector2(1f, 0f), Color.White);
             if (levelManager.GetFirstActor<Player>() is Player player)
             {
-                manager.Batcher.Text(futureFont, $"SHIELD {player.Shield:00}", new Vector2(8f, manager.Screen.Bounds.Bottom - 8f - futureFont.Size), player.Shield == Player.MaxShield ? Color.CornflowerBlue : player.Shield == 0 && manager.Time.BetweenInterval(0.5) ? Color.Red : Color.White);
-                manager.Batcher.Text(futureFont, $"ENERGY {player.Energy:00}", new Vector2(manager.Screen.Bounds.Right - 8f, manager.Screen.Bounds.Bottom - 8f - futureFont.Size), new Vector2(1f, 1f), blinkEnergy && player.Energy <= Player.MaxEnergy / 3 && manager.Time.BetweenInterval(0.5) ? Color.Red : player.Energy == Player.MaxEnergy ? Color.CornflowerBlue : Color.White);
+                manager.Batcher.Text(futureFont, $"SHIELD {player.Shield:00}", new Vector2(8f, manager.Screen.Bounds.Bottom - 8f - futureFont.Size), player.Shield == Player.MaxShield ? Color.CornflowerBlue : blinkEnergyOrShield && player.Shield == 0 && manager.Time.BetweenInterval(0.5) ? Color.Red : Color.White);
+                manager.Batcher.Text(futureFont, $"ENERGY {player.Energy:00}", new Vector2(manager.Screen.Bounds.Right - 8f, manager.Screen.Bounds.Bottom - 8f - futureFont.Size), new Vector2(1f, 1f), blinkEnergyOrShield && player.Energy <= Player.MaxEnergy / 3 && manager.Time.BetweenInterval(0.5) ? Color.Red : player.Energy == Player.MaxEnergy ? Color.CornflowerBlue : Color.White);
             }
         }
     }
