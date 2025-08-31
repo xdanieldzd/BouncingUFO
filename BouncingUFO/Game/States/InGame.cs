@@ -185,7 +185,7 @@ namespace BouncingUFO.Game.States
                         if (!menuBox.IsOpen)
                         {
                             gameDuration += TimeSpan.FromSeconds(manager.Time.Delta);
-                            if (levelManager.GetFirstActor<Player>() is Player player && (capsuleCount <= 0 || player.energy <= 0))
+                            if (levelManager.GetFirstActor<Player>() is Player player && (capsuleCount <= 0 || player.Energy <= 0))
                             {
                                 gameOverWaitTimer = 2f;
                                 currentState = State.GameOver;
@@ -349,7 +349,10 @@ namespace BouncingUFO.Game.States
             manager.Batcher.Text(futureFont, $"TIME {gameDuration:mm\\:ss\\:ff}", new(8f), capsuleCount == 0 ? Color.Green : Color.White);
             manager.Batcher.Text(futureFont, $"LEFT {capsuleCount:00}", new Vector2(manager.Screen.Bounds.Right - 8f, 8f), new Vector2(1f, 0f), Color.White);
             if (levelManager.GetFirstActor<Player>() is Player player)
-                manager.Batcher.Text(futureFont, $"ENERGY {player?.energy:00}", new Vector2(manager.Screen.Bounds.Right - 8f, manager.Screen.Bounds.Bottom - 8f - futureFont.Size), new Vector2(1f, 1f), blinkEnergy && player?.energy <= 25 && manager.Time.BetweenInterval(0.5) ? Color.Red : Color.White);
+            {
+                manager.Batcher.Text(futureFont, $"SHIELD {player.Shield:00}", new Vector2(8f, manager.Screen.Bounds.Bottom - 8f - futureFont.Size), player.Shield == Player.MaxShield ? Color.CornflowerBlue : player.Shield == 0 && manager.Time.BetweenInterval(0.5) ? Color.Red : Color.White);
+                manager.Batcher.Text(futureFont, $"ENERGY {player.Energy:00}", new Vector2(manager.Screen.Bounds.Right - 8f, manager.Screen.Bounds.Bottom - 8f - futureFont.Size), new Vector2(1f, 1f), blinkEnergy && player.Energy <= Player.MaxEnergy / 3 && manager.Time.BetweenInterval(0.5) ? Color.Red : player.Energy == Player.MaxEnergy ? Color.CornflowerBlue : Color.White);
+            }
         }
     }
 }

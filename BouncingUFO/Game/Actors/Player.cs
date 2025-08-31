@@ -8,7 +8,10 @@ namespace BouncingUFO.Game.Actors
         private const float acceleration = 1500f, friction = 100f, maxSpeed = 200f;
         private const float spriteRotation = 10f;
         private const float bounceCooldown = 25f;
-        private const int maxEnergy = 69;
+        private const float shieldRechargeDelay = 5f, shieldUnitRechargeDelay = 0.25f;
+
+        public const int MaxEnergy = 69;
+        public const int MaxShield = 5;
 
         public enum State { Normal, InputDisabled }
         public State CurrentState;
@@ -17,7 +20,8 @@ namespace BouncingUFO.Game.Actors
 
         public Vector2 BounceCooldown => currentBounceCooldown;
 
-        public int energy = 0;
+        public int Shield = 0, Energy = 0;
+        private float shieldRechargeTimer = 0f, shieldUnitRechargeTimer = 0f;
 
         public Player(Manager manager, LevelManager level, int mapLayer = 0, int argument = 0) : base(manager, level, mapLayer, argument)
         {
@@ -32,7 +36,11 @@ namespace BouncingUFO.Game.Actors
 
             CurrentState = State.InputDisabled;
 
-            energy = maxEnergy;
+            Energy = MaxEnergy;
+            Shield = MaxShield;
+
+            shieldRechargeTimer = shieldRechargeDelay;
+            shieldUnitRechargeTimer = shieldUnitRechargeDelay;
 
             IsRunning = true;
         }
@@ -49,7 +57,7 @@ namespace BouncingUFO.Game.Actors
                 Velocity.X = -Velocity.X;
                 veloRemainder.X = -veloRemainder.X;
                 currentBounceCooldown.X = bounceCooldown;
-                energy--;
+                CalcEnergyAndShield(-1);
             }
         }
 
@@ -60,7 +68,7 @@ namespace BouncingUFO.Game.Actors
                 Velocity.Y = -Velocity.Y;
                 veloRemainder.Y = -veloRemainder.Y;
                 currentBounceCooldown.Y = bounceCooldown;
-                energy--;
+                CalcEnergyAndShield(-1);
             }
         }
 
@@ -77,7 +85,7 @@ namespace BouncingUFO.Game.Actors
                 level.DestroyActor(actorHit);
             }
 
-            energy = Math.Clamp(energy, 0, maxEnergy);
+            CalcEnergyAndShield();
 
             switch (CurrentState)
             {
@@ -90,6 +98,44 @@ namespace BouncingUFO.Game.Actors
             }
 
             CalcBounceCooldown();
+        }
+
+        private void CalcEnergyAndShield(int diff = 0)
+        {
+            if (diff != 0)
+            {
+                shieldRechargeTimer = shieldRechargeDelay / 2f;
+
+                Shield += diff;
+                if (Shield <= 0)
+                {
+                    Energy += Shield;
+                    shieldRechargeTimer = shieldRechargeDelay;
+                }
+            }
+
+            Energy = Math.Clamp(Energy, 0, MaxEnergy);
+
+            if (shieldRechargeTimer > 0f)
+            {
+                shieldRechargeTimer -= manager.Time.Delta;
+                if (shieldRechargeTimer <= 0f)
+                {
+                    shieldRechargeTimer = 0f;
+                    shieldUnitRechargeTimer = shieldUnitRechargeDelay;
+                }
+            }
+            else if (shieldUnitRechargeTimer > 0f)
+            {
+                shieldUnitRechargeTimer -= manager.Time.Delta;
+                if (shieldUnitRechargeTimer <= 0f && Shield < MaxShield)
+                {
+                    Shield++;
+                    shieldUnitRechargeTimer = shieldUnitRechargeDelay;
+                }
+            }
+
+            Shield = Math.Clamp(Shield, 0, MaxShield);
         }
 
         private void CalcPlayerVelocityAndRotation(Point2 direction, bool buttonConfirm, bool buttonCancel)
