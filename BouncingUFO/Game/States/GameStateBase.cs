@@ -27,6 +27,7 @@ namespace BouncingUFO.Game.States
                     break;
 
                 case BaseState.FadeIn:
+                    OnFadeIn();
                     if (screenFader.Update())
                     {
                         OnFadeInComplete();
@@ -39,6 +40,7 @@ namespace BouncingUFO.Game.States
                     break;
 
                 case BaseState.FadeOut:
+                    OnFadeOut();
                     if (screenFader.Update())
                     {
                         OnLeaveState();
@@ -64,9 +66,11 @@ namespace BouncingUFO.Game.States
         }
 
         public abstract void OnEnterState();
+        public abstract void OnFadeIn();
         public abstract void OnFadeInComplete();
         public abstract void OnUpdate();
         public abstract void OnBeginFadeOut();
+        public abstract void OnFadeOut();
         public abstract void OnLeaveState();
 
         public abstract void OnRender();

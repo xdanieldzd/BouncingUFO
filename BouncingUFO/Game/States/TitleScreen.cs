@@ -10,6 +10,9 @@ namespace BouncingUFO.Game.States
         private readonly SpriteFont largeFont = manager.Assets.Fonts["LargeFont"];
         private readonly SpriteFont futureFont = manager.Assets.Fonts["FutureFont"];
 
+        private readonly Texture backgroundImageTexture = manager.Assets.Textures["TitleBackground"];
+        private Vector2 backgroundImagePosition = Vector2.Zero;
+
         private readonly MenuBox menuBox = new(manager)
         {
             Font = manager.Assets.Fonts["LargeFont"],
@@ -50,6 +53,11 @@ namespace BouncingUFO.Game.States
             ];
         }
 
+        public override void OnFadeIn()
+        {
+            ScrollBackground();
+        }
+
         public override void OnFadeInComplete() { }
 
         public override void OnUpdate()
@@ -70,10 +78,14 @@ namespace BouncingUFO.Game.States
                 }
             }
             menuBox.Update();
+
+            ScrollBackground();
         }
 
         public override void OnRender()
         {
+            manager.Batcher.Image(new Subtexture(backgroundImageTexture, new Rect(backgroundImagePosition, backgroundImageTexture.Size)), Vector2.Zero, Color.White);
+
             var titleText =
                 "GAME TEST PROJECT #1\n" +
                 " -- BOUNCING UFO -- \n" +
@@ -115,11 +127,21 @@ namespace BouncingUFO.Game.States
 
         public override void OnBeginFadeOut() { }
 
+        public override void OnFadeOut()
+        {
+            ScrollBackground();
+        }
+
         public override void OnLeaveState()
         {
             menuBox.Close();
 
             manager.GameStates.Push(new MainMenu(manager));
+        }
+
+        private void ScrollBackground()
+        {
+            backgroundImagePosition.X += manager.Time.Delta * 75f;
         }
     }
 }

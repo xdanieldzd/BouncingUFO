@@ -11,6 +11,8 @@ namespace BouncingUFO.Game.States
 
         public override void OnEnterState() { }
 
+        public override void OnFadeIn() { }
+
         public override void OnFadeInComplete() { }
 
         public override void OnUpdate()
@@ -28,6 +30,8 @@ namespace BouncingUFO.Game.States
         }
 
         public override void OnBeginFadeOut() { }
+
+        public override void OnFadeOut() { }
 
         public override void OnLeaveState()
         {

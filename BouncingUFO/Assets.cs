@@ -10,6 +10,7 @@ namespace BouncingUFO
     {
         public const string AssetsFolderName = "Assets";
 
+        public const string TexturesFolderName = "Textures";
         public const string FontsFolderName = "Fonts";
         public const string TilesetFolderName = "Tilesets";
         public const string MapFolderName = "Maps";
@@ -18,6 +19,7 @@ namespace BouncingUFO
         public const string DialogCollectionsFolderName = "DialogCollections";
         public const string LevelCollectionsFolderName = "LevelCollections";
 
+        public Dictionary<string, Texture> Textures = [];
         public Dictionary<string, SpriteFont> Fonts = [];
         public Dictionary<string, Tileset> Tilesets = [];
         public Dictionary<string, Map> Maps = [];
@@ -59,6 +61,9 @@ namespace BouncingUFO
                     Color.Black,
                     firstChara: 0x20,
                     spaceWidth: 16));
+
+                // TODO: multiple files, scan folder like LoadAssets
+                Textures.Add("TitleBackground", new Texture(manager.GraphicsDevice, new(storage.ReadAllBytes(Path.Combine(AssetsFolderName, TexturesFolderName, "TitleBackground.png"))), "TitleBackground"));
 
                 LoadAssets(storage, TilesetFolderName, ref Tilesets, (obj) => obj.CreateTextures(manager.GraphicsDevice));
                 LoadAssets(storage, MapFolderName, ref Maps);

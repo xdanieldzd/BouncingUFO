@@ -51,6 +51,8 @@ namespace BouncingUFO.Game.States
 
         public override void OnEnterState() { }
 
+        public override void OnFadeIn() { }
+
         public override void OnFadeInComplete() { }
 
         public override void OnUpdate() => deltaTime = manager.Time.Delta;
@@ -58,6 +60,8 @@ namespace BouncingUFO.Game.States
         public override void OnRender() { }
 
         public override void OnBeginFadeOut() { }
+
+        public override void OnFadeOut() { }
 
         public override void OnLeaveState()
         {

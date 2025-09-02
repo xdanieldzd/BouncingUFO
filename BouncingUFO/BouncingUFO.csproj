@@ -10,7 +10,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<AssemblyMetadata Include="BuildDate"    Value="$([System.DateTime]::UtcNow.ToString(o))" />
+		<AssemblyMetadata Include="BuildDate" Value="$([System.DateTime]::UtcNow.ToString(o))" />
 		<AssemblyMetadata Include="DevStartDate" Value="$([System.DateTime]::Parse('2025-08-01T21:13:00.000+02:00').ToUniversalTime().ToString(o))" />
 		<AssemblyMetadata Include="BuildUserName" Value="$([System.Environment]::UserName)" />
 		<AssemblyMetadata Include="BuildMachineName" Value="$([System.Environment]::MachineName)" />
@@ -33,6 +33,9 @@
 		</None>
 		<None Update="Assets\Fonts\LargeFont.png">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Assets\Textures\TitleBackground.png">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 		<None Update="Assets\LevelCollections\ArcadeMode.json">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
