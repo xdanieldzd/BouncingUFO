@@ -1,5 +1,7 @@
 ﻿using BouncingUFO.Game.UI;
+using BouncingUFO.Utilities;
 using Foster.Framework;
+using System.Numerics;
 
 namespace BouncingUFO.Game.States
 {
@@ -19,6 +21,9 @@ namespace BouncingUFO.Game.States
             HighlightTextColor = Color.Lerp(Color.Green, Color.White, 0.35f)
         };
 
+        private readonly Vector2[] parallaxScrollSpeeds = [new(20f, 0f), new(40f, 0f), new(60f, 0f), new(80f, 0f)];
+        private ParallaxBackground? parallaxBackground;
+
         private MenuBoxItem[] gameSelectMenuItems = [];
         private MenuBoxItem[] modeSelectMenuItems = [];
         private MenuBoxItem[] levelSelectMenuItems = [];
@@ -27,6 +32,8 @@ namespace BouncingUFO.Game.States
 
         public override void OnEnterState()
         {
+            parallaxBackground = ParallaxBackground.FromGraphicsSheet(manager, manager.Assets.GraphicsSheets["MainBackground"], parallaxScrollSpeeds);
+
             gameSelectMenuItems =
             [
                 new() { Label = "Arcade Mode", Action = MenuArcadeModeSelectAction },
@@ -41,23 +48,32 @@ namespace BouncingUFO.Game.States
             menuBox.Open();
         }
 
-        public override void OnFadeIn() { }
+        public override void OnFadeIn() => parallaxBackground?.Update();
 
         public override void OnFadeInComplete() { }
 
         public override void OnUpdate()
         {
+            parallaxBackground?.Update();
+
             menuBox.Update();
         }
 
         public override void OnRender()
         {
+            if (parallaxBackground != null)
+            {
+                manager.Batcher.PushBlend(BlendMode.NonPremultiplied);
+                parallaxBackground.Render();
+                manager.Batcher.PopBlend();
+            }
+
             menuBox.Render();
         }
 
         public override void OnBeginFadeOut() { }
 
-        public override void OnFadeOut() { }
+        public override void OnFadeOut() => parallaxBackground?.Update();
 
         public override void OnLeaveState()
         {

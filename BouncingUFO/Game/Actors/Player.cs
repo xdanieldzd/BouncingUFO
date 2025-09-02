@@ -87,12 +87,11 @@ namespace BouncingUFO.Game.Actors
                 level.DestroyActor(actorHit);
             }
 
-            CalcEnergyAndShield();
-
             switch (CurrentState)
             {
                 case State.Normal:
                     CalcPlayerVelocityAndRotation(manager.Controls.Move.IntValue, manager.Controls.Confirm.Down, manager.Controls.Cancel.Down);
+                    CalcEnergyAndShield();
                     break;
 
                 case State.InputDisabled:

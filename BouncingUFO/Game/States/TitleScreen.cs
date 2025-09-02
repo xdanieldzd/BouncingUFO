@@ -1,4 +1,5 @@
 ﻿using BouncingUFO.Game.UI;
+using BouncingUFO.Utilities;
 using Foster.Framework;
 using System.Numerics;
 
@@ -9,10 +10,6 @@ namespace BouncingUFO.Game.States
         private readonly SpriteFont smallFont = manager.Assets.Fonts["SmallFont"];
         private readonly SpriteFont largeFont = manager.Assets.Fonts["LargeFont"];
         private readonly SpriteFont futureFont = manager.Assets.Fonts["FutureFont"];
-
-        private readonly GraphicsSheet backgroundLayerSheet = manager.Assets.GraphicsSheets["TitleBackground"];
-        private readonly Vector2[] backgroundLayerScrollSpeeds = [new(25f, 0f), new(50f, 0f), new(75f, 0f), new(100f, 0f)];
-        private readonly Vector2[] backgroundLayerPositions = [Vector2.Zero, Vector2.Zero, Vector2.Zero, Vector2.Zero];
 
         private readonly MenuBox menuBox = new(manager)
         {
@@ -28,12 +25,17 @@ namespace BouncingUFO.Game.States
             WindowSizing = MenuBoxWindowSizing.Automatic
         };
 
+        private readonly Vector2[] parallaxScrollSpeeds = [new(20f, 0f), new(40f, 0f), new(60f, 0f), new(80f, 0f)];
+        private ParallaxBackground? parallaxBackground;
+
         private MenuBoxItem[] mainMenuItems = [];
         private MenuBoxItem[] optionsMenuItems = [];
         private MenuBoxItem[] exitMenuItems = [];
 
         public override void OnEnterState()
         {
+            parallaxBackground = ParallaxBackground.FromGraphicsSheet(manager, manager.Assets.GraphicsSheets["MainBackground"], parallaxScrollSpeeds);
+
             mainMenuItems =
             [
                 new MenuBoxItem() { Label = "Start Game", Action = LeaveState },
@@ -54,15 +56,14 @@ namespace BouncingUFO.Game.States
             ];
         }
 
-        public override void OnFadeIn()
-        {
-            ScrollBackground();
-        }
+        public override void OnFadeIn() => parallaxBackground?.Update();
 
         public override void OnFadeInComplete() { }
 
         public override void OnUpdate()
         {
+            parallaxBackground?.Update();
+
             if (!menuBox.IsOpen)
             {
                 if (manager.Controls.Menu.ConsumePress())
@@ -79,16 +80,16 @@ namespace BouncingUFO.Game.States
                 }
             }
             menuBox.Update();
-
-            ScrollBackground();
         }
 
         public override void OnRender()
         {
-            manager.Batcher.PushBlend(BlendMode.NonPremultiplied);
-            for (var i = 0; i < backgroundLayerSheet.Rectangles.Count; i++)
-                manager.Batcher.Image(backgroundLayerSheet.GetSubtexture(i, backgroundLayerPositions[i]), Color.White);
-            manager.Batcher.PopBlend();
+            if (parallaxBackground != null)
+            {
+                manager.Batcher.PushBlend(BlendMode.NonPremultiplied);
+                parallaxBackground.Render();
+                manager.Batcher.PopBlend();
+            }
 
             var titleText =
                 "GAME TEST PROJECT #1\n" +
@@ -131,22 +132,13 @@ namespace BouncingUFO.Game.States
 
         public override void OnBeginFadeOut() { }
 
-        public override void OnFadeOut()
-        {
-            ScrollBackground();
-        }
+        public override void OnFadeOut() => parallaxBackground?.Update();
 
         public override void OnLeaveState()
         {
             menuBox.Close();
 
             manager.GameStates.Push(new MainMenu(manager));
-        }
-
-        private void ScrollBackground()
-        {
-            for (var i = 0; i < backgroundLayerScrollSpeeds.Length; i++)
-                backgroundLayerPositions[i] += manager.Time.Delta * backgroundLayerScrollSpeeds[i];
         }
     }
 }

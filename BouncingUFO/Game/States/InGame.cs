@@ -28,6 +28,8 @@ namespace BouncingUFO.Game.States
         private readonly MenuBoxItem[] gameOverMenuItems = [];
         private readonly MenuBoxItem nextLevelMenuItem;
 
+        private readonly ParallaxBackground? parallaxBackground;
+
         private readonly Queue<DialogText> currentDialogQueue = [];
         private DialogText? currentDialogText = null;
 
@@ -88,6 +90,8 @@ namespace BouncingUFO.Game.States
                 new() { Label = "Exit to Menu", Action = () => { screenFader.Begin(ScreenFadeType.FadeOut, screenFadeDuration, Color.Black); currentState = State.ExitToMenu; } }
             ];
             nextLevelMenuItem = new() { Label = "Next Level", Action = () => { screenFader.Begin(ScreenFadeType.FadeOut, screenFadeDuration, Color.White); currentState = State.LoadNextLevel; } };
+
+            parallaxBackground = ParallaxBackground.FromGraphicsSheet(manager, manager.Assets.GraphicsSheets["MainBackground"], [new(2f, 0f), new(4f, 0f), new(6f, 0f), new(8f, 0f)]);
 
             levelManager.Load([.. this.args.Where(x => x is string).Cast<string>()]);
         }
@@ -267,6 +271,8 @@ namespace BouncingUFO.Game.States
             if (manager.Controls.DebugEditors.ConsumePress())
                 manager.GameStates.Push(new Editor(manager));
 
+            parallaxBackground?.Update();
+
             camera.Update(manager.Settings.ShowDebugInfo ? Point2.Zero : levelManager.SizeInPixels);
 
             if (!menuBox.IsOpen)
@@ -282,6 +288,13 @@ namespace BouncingUFO.Game.States
         public void Render()
         {
             manager.Screen.Clear(0x3E4F65);
+
+            if (parallaxBackground != null && (levelManager.SizeInPixels.X < manager.Screen.Width || levelManager.SizeInPixels.Y < manager.Screen.Height))
+            {
+                manager.Batcher.PushBlend(BlendMode.NonPremultiplied);
+                parallaxBackground.Render();
+                manager.Batcher.PopBlend();
+            }
 
             RenderMap();
             RenderHUD();
@@ -309,8 +322,12 @@ namespace BouncingUFO.Game.States
 
         private void RenderMap()
         {
+            var scissorRect = new RectInt(camera.Position, levelManager.SizeInPixels);
+            if (levelManager.SizeInPixels.X < manager.Screen.Width || levelManager.SizeInPixels.Y < manager.Screen.Height)
+                manager.Batcher.Rect(scissorRect.Inflate(4), Color.Black);
+
             manager.Batcher.PushMatrix(camera.Matrix);
-            manager.Batcher.PushScissor(manager.Settings.ShowDebugInfo ? null : new(camera.Position, levelManager.SizeInPixels));
+            manager.Batcher.PushScissor(manager.Settings.ShowDebugInfo ? null : scissorRect);
             levelManager.Render(manager.Settings.ShowDebugInfo);
             manager.Batcher.PopScissor();
             manager.Batcher.PopMatrix();

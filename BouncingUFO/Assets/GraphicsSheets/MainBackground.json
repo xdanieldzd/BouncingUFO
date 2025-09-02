@@ -1,6 +1,6 @@
 {
-  "Name": "TitleBackground",
-  "ImageFile": "Assets\\GraphicsSheets\\TitleBackground.png",
+  "Name": "MainBackground",
+  "ImageFile": "Assets\\GraphicsSheets\\MainBackground.png",
   "Rectangles": {
     "BGLayer1": {
       "X": 0,
