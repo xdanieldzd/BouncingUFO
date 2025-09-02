@@ -7,8 +7,6 @@ namespace BouncingUFO.Game.States
     {
         private const string arcadeLevelCollectionName = "ArcadeMode";
 
-        private readonly Texture backgroundImageTexture = manager.Assets.Textures["TitleBackground"];
-
         private readonly MenuBox menuBox = new(manager)
         {
             Font = manager.Assets.Fonts["LargeFont"],
@@ -54,8 +52,6 @@ namespace BouncingUFO.Game.States
 
         public override void OnRender()
         {
-            manager.Batcher.Image(backgroundImageTexture, Color.White);
-
             menuBox.Render();
         }
 

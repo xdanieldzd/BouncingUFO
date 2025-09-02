@@ -87,7 +87,7 @@ namespace BouncingUFO.Editors
                 {
                     var tilesheetFullPath = new string(tileset.TilesheetFile);
                     var jsonFilename = Path.ChangeExtension(Path.GetFileName(tileset.TilesheetFile), "json");
-                    var relativeTilesheetFilePath = Path.Join(Assets.AssetsFolderName, Assets.TilesetFolderName, Path.GetFileName(tileset.TilesheetFile));
+                    var relativeTilesheetFilePath = Path.Join(Assets.AssetsFolderName, Assets.TilesetsFolderName, Path.GetFileName(tileset.TilesheetFile));
                     manager.FileSystem.OpenFolderDialog(new FileSystem.DialogCallback((s, r) =>
                     {
                         if (r == FileSystem.DialogResult.Success && s.Length > 0 && s[0] != null)

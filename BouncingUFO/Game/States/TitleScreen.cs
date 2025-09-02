@@ -10,8 +10,9 @@ namespace BouncingUFO.Game.States
         private readonly SpriteFont largeFont = manager.Assets.Fonts["LargeFont"];
         private readonly SpriteFont futureFont = manager.Assets.Fonts["FutureFont"];
 
-        private readonly Texture backgroundImageTexture = manager.Assets.Textures["TitleBackground"];
-        private Vector2 backgroundImagePosition = Vector2.Zero;
+        private readonly GraphicsSheet backgroundLayerSheet = manager.Assets.GraphicsSheets["TitleBackground"];
+        private readonly Vector2[] backgroundLayerScrollSpeeds = [new(25f, 0f), new(50f, 0f), new(75f, 0f), new(100f, 0f)];
+        private readonly Vector2[] backgroundLayerPositions = [Vector2.Zero, Vector2.Zero, Vector2.Zero, Vector2.Zero];
 
         private readonly MenuBox menuBox = new(manager)
         {
@@ -84,7 +85,10 @@ namespace BouncingUFO.Game.States
 
         public override void OnRender()
         {
-            manager.Batcher.Image(new Subtexture(backgroundImageTexture, new Rect(backgroundImagePosition, backgroundImageTexture.Size)), Vector2.Zero, Color.White);
+            manager.Batcher.PushBlend(BlendMode.NonPremultiplied);
+            for (var i = 0; i < backgroundLayerSheet.Rectangles.Count; i++)
+                manager.Batcher.Image(backgroundLayerSheet.GetSubtexture(i, backgroundLayerPositions[i]), Color.White);
+            manager.Batcher.PopBlend();
 
             var titleText =
                 "GAME TEST PROJECT #1\n" +
@@ -141,7 +145,8 @@ namespace BouncingUFO.Game.States
 
         private void ScrollBackground()
         {
-            backgroundImagePosition.X += manager.Time.Delta * 75f;
+            for (var i = 0; i < backgroundLayerScrollSpeeds.Length; i++)
+                backgroundLayerPositions[i] += manager.Time.Delta * backgroundLayerScrollSpeeds[i];
         }
     }
 }

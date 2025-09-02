@@ -1,7 +1,8 @@
 ﻿using Foster.Framework;
+using System.Numerics;
 using System.Text.Json.Serialization;
 
-namespace BouncingUFO.Game.UI
+namespace BouncingUFO.Game
 {
     public class GraphicsSheet
     {
@@ -14,20 +15,17 @@ namespace BouncingUFO.Game.UI
 
         [JsonIgnore]
         public Texture? Texture = null;
-        [JsonIgnore]
-        public Dictionary<string, Subtexture?> Subtextures = [];
 
         public void CreateTextures(GraphicsDevice graphicsDevice)
         {
             if (!string.IsNullOrWhiteSpace(ImageFile))
-            {
                 Texture = new(graphicsDevice, new(ImageFile), $"GraphicsSheet {Name}");
-                foreach (var (name, rectangle) in Rectangles)
-                    Subtextures.Add(name, new(Texture, rectangle));
-            }
         }
 
-        public Subtexture GetSubtexture(string name) =>
-            Subtextures.TryGetValue(name, out Subtexture? value) && value is Subtexture subtexture ? subtexture : Subtexture.Empty;
+        public Subtexture GetSubtexture(string name, Vector2 offset = new()) =>
+            Rectangles.TryGetValue(name, out Rect rect) ? new(Texture, rect + offset) : Subtexture.Empty;
+
+        public Subtexture GetSubtexture(int idx, Vector2 offset = new()) =>
+            new(Texture, Rectangles.ElementAtOrDefault(idx).Value + offset);
     }
 }

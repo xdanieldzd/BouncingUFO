@@ -34,7 +34,10 @@
 		<None Update="Assets\Fonts\LargeFont.png">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
-		<None Update="Assets\Textures\TitleBackground.png">
+		<None Update="Assets\GraphicsSheets\TitleBackground.json">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Assets\GraphicsSheets\TitleBackground.png">
 		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 		<None Update="Assets\LevelCollections\ArcadeMode.json">

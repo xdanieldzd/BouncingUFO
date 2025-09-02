@@ -99,7 +99,7 @@ namespace BouncingUFO.Editors
                     {
                         var spritesheetFullPath = new string(sprite.SpritesheetFile);
                         var jsonFilename = Path.ChangeExtension(Path.GetFileName(sprite.SpritesheetFile), "json");
-                        var relativeSpritesheetFilePath = Path.Join(Assets.AssetsFolderName, Assets.SpriteFolderName, Path.GetFileName(sprite.SpritesheetFile));
+                        var relativeSpritesheetFilePath = Path.Join(Assets.AssetsFolderName, Assets.SpritesFolderName, Path.GetFileName(sprite.SpritesheetFile));
                         manager.FileSystem.OpenFolderDialog(new FileSystem.DialogCallback((s, r) =>
                         {
                             if (r == FileSystem.DialogResult.Success && s.Length > 0 && s[0] != null)

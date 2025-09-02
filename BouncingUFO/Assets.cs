@@ -1,4 +1,5 @@
-﻿using BouncingUFO.Game.Levels;
+﻿using BouncingUFO.Game;
+using BouncingUFO.Game.Levels;
 using BouncingUFO.Game.Sprites;
 using BouncingUFO.Game.UI;
 using BouncingUFO.Utilities;
@@ -10,16 +11,14 @@ namespace BouncingUFO
     {
         public const string AssetsFolderName = "Assets";
 
-        public const string TexturesFolderName = "Textures";
         public const string FontsFolderName = "Fonts";
-        public const string TilesetFolderName = "Tilesets";
-        public const string MapFolderName = "Maps";
-        public const string SpriteFolderName = "Sprites";
+        public const string TilesetsFolderName = "Tilesets";
+        public const string MapsFolderName = "Maps";
+        public const string SpritesFolderName = "Sprites";
         public const string GraphicsSheetsFolderName = "GraphicsSheets";
         public const string DialogCollectionsFolderName = "DialogCollections";
         public const string LevelCollectionsFolderName = "LevelCollections";
 
-        public Dictionary<string, Texture> Textures = [];
         public Dictionary<string, SpriteFont> Fonts = [];
         public Dictionary<string, Tileset> Tilesets = [];
         public Dictionary<string, Map> Maps = [];
@@ -62,12 +61,9 @@ namespace BouncingUFO
                     firstChara: 0x20,
                     spaceWidth: 16));
 
-                // TODO: multiple files, scan folder like LoadAssets
-                Textures.Add("TitleBackground", new Texture(manager.GraphicsDevice, new(storage.ReadAllBytes(Path.Combine(AssetsFolderName, TexturesFolderName, "TitleBackground.png"))), "TitleBackground"));
-
-                LoadAssets(storage, TilesetFolderName, ref Tilesets, (obj) => obj.CreateTextures(manager.GraphicsDevice));
-                LoadAssets(storage, MapFolderName, ref Maps);
-                LoadAssets(storage, SpriteFolderName, ref Sprites, (obj) => obj.CreateTextures(manager.GraphicsDevice));
+                LoadAssets(storage, TilesetsFolderName, ref Tilesets, (obj) => obj.CreateTextures(manager.GraphicsDevice));
+                LoadAssets(storage, MapsFolderName, ref Maps);
+                LoadAssets(storage, SpritesFolderName, ref Sprites, (obj) => obj.CreateTextures(manager.GraphicsDevice));
                 LoadAssets(storage, GraphicsSheetsFolderName, ref GraphicsSheets, (obj) => obj.CreateTextures(manager.GraphicsDevice));
                 LoadAssets(storage, DialogCollectionsFolderName, ref DialogCollections);
                 LoadAssets(storage, LevelCollectionsFolderName, ref LevelCollections);
