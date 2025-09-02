@@ -87,7 +87,12 @@ namespace BouncingUFO.Game.States
 
             if (!menuBox.IsOpen)
             {
-                var bottomText = "August 2025 by xdaniel -- xdaniel.neocities.org";
+                var dateString = string.Empty;
+                if (Manager.BuildInfo.StartDateTime.Year < Manager.BuildInfo.BuildDateTime.Year)
+                    dateString += $"{Manager.BuildInfo.StartDateTime:yyyy}-";
+                dateString += $"{Manager.BuildInfo.BuildDateTime:yyyy}";
+
+                var bottomText = $"Written {dateString} by xdaniel -- xdaniel.neocities.org";
                 manager.Batcher.Text(
                     smallFont,
                     bottomText,

@@ -19,7 +19,7 @@ namespace BouncingUFO
         private const int defaultScreenHeight = 270;
         private const int defaultWindowScale = 2;
 
-        public readonly static (DateTime DateTime, string UserName, string MachineName) BuildInfo = default;
+        public readonly static (DateTime BuildDateTime, DateTime StartDateTime, string UserName, string MachineName) BuildInfo = default;
 
         public readonly FrameCounter FrameCounter;
         public readonly Batcher Batcher;
@@ -63,7 +63,8 @@ namespace BouncingUFO
         static Manager()
         {
             var metadata = Assembly.GetEntryAssembly()?.GetCustomAttributes<AssemblyMetadataAttribute>().ToDictionary(x => x.Key, x => x.Value ?? string.Empty) ?? [];
-            BuildInfo.DateTime = metadata.TryGetValue("BuildDate", out var dateTime) ? DateTime.ParseExact(dateTime, "o", CultureInfo.InvariantCulture, DateTimeStyles.None) : default;
+            BuildInfo.BuildDateTime = metadata.TryGetValue("BuildDate", out var buildDateTime) ? DateTime.ParseExact(buildDateTime, "o", CultureInfo.InvariantCulture, DateTimeStyles.None) : default;
+            BuildInfo.StartDateTime = metadata.TryGetValue("DevStartDate", out var startDateTime) ? DateTime.ParseExact(startDateTime, "o", CultureInfo.InvariantCulture, DateTimeStyles.None) : default;
             BuildInfo.UserName = metadata.TryGetValue("BuildUserName", out var userName) ? userName : "Unknown";
             BuildInfo.MachineName = metadata.TryGetValue("BuildMachineName", out var machineName) ? machineName : "Unknown";
         }
