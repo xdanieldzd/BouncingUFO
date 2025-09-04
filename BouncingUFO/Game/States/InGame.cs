@@ -6,19 +6,14 @@ using System.Numerics;
 
 namespace BouncingUFO.Game.States
 {
-    public class InGame : IGameState
+    public class InGame : GameStateBase
     {
-        private const float screenFadeDuration = 0.5f;
         private const string levelsDialogFile = "InGame";
 
-        private enum State { Initialize, FadeIn, GameIntroduction, GameStartCountdown, MainLogic, GameOver, ShowGameOverMenu, Restart, ExitToMenu, LoadNextLevel }
-
-        private readonly Manager manager;
-        private readonly object[] args;
+        private enum State { Initialize, GameIntroduction, GameStartCountdown, MainLogic, GameOver, ShowGameOverMenu, Restart, ExitToMenu, LoadNextLevel }
 
         private readonly SpriteFont smallFont, largeFont, futureFont;
 
-        private readonly ScreenFader screenFader;
         private readonly Camera camera;
         private readonly DialogBox dialogBox;
         private readonly MenuBox menuBox;
@@ -41,16 +36,12 @@ namespace BouncingUFO.Game.States
 
         private float gameOverWaitTimer;
 
-        public InGame(Manager manager, params object[] args)
+        public InGame(Manager manager, params object[] args) : base(manager, args)
         {
-            this.manager = manager;
-            this.args = args;
-
             smallFont = manager.Assets.Fonts["SmallFont"];
             largeFont = manager.Assets.Fonts["LargeFont"];
             futureFont = manager.Assets.Fonts["FutureFont"];
 
-            screenFader = new(manager);
             camera = new(manager);
             dialogBox = new(manager)
             {
@@ -80,71 +71,147 @@ namespace BouncingUFO.Game.States
             pauseMenuItems =
             [
                 new() { Label = "Continue", Action = menuBox.Close },
-                new() { Label = "Restart", Action = () => { screenFader.Begin(ScreenFadeType.FadeOut, screenFadeDuration, Color.White); currentState = State.Restart; } },
-                new() { Label = "Exit to Menu", Action = () => { screenFader.Begin(ScreenFadeType.FadeOut, screenFadeDuration, Color.Black); currentState = State.ExitToMenu; } }
+                new() { Label = "Restart", Action = () => { currentState = State.Restart; LeaveState(); } },
+                new() { Label = "Exit to Menu", Action = () => { currentState = State.ExitToMenu; LeaveState(); } }
             ];
 
             gameOverMenuItems =
             [
-                new() { Label = "Retry", Action = () => { screenFader.Begin(ScreenFadeType.FadeOut, screenFadeDuration, Color.White); currentState = State.Restart; } },
-                new() { Label = "Exit to Menu", Action = () => { screenFader.Begin(ScreenFadeType.FadeOut, screenFadeDuration, Color.Black); currentState = State.ExitToMenu; } }
+                new() { Label = "Retry", Action = () => { currentState = State.Restart; LeaveState(); } },
+                new() { Label = "Exit to Menu", Action = () => { currentState = State.ExitToMenu; LeaveState(); } }
             ];
-            nextLevelMenuItem = new() { Label = "Next Level", Action = () => { screenFader.Begin(ScreenFadeType.FadeOut, screenFadeDuration, Color.White); currentState = State.LoadNextLevel; } };
+            nextLevelMenuItem = new() { Label = "Next Level", Action = () => { currentState = State.LoadNextLevel; LeaveState(); } };
 
             parallaxBackground = ParallaxBackground.FromGraphicsSheet(manager, manager.Assets.GraphicsSheets["MainBackground"], [new(2f, 0f), new(4f, 0f), new(6f, 0f), new(8f, 0f)]);
 
             levelManager.Load([.. this.args.Where(x => x is string).Cast<string>()]);
         }
 
-        public void Update()
+        public override void OnEnterState()
+        {
+            if (!Globals.QuickStart)
+            {
+                levelManager.Reset();
+                gameStartCountdown = 5f;
+            }
+            else
+            {
+                levelManager.Load(@"TestMaps/BigTestMap");
+                gameStartCountdown = 0f;
+
+                if (levelManager.GetFirstActor<Player>() is Player player)
+                    player.CurrentState = Player.State.Normal;
+            }
+
+            menuBox.MenuTitle = "Paused";
+            menuBox.MenuItems = pauseMenuItems;
+
+            camera.FollowActor(levelManager.GetFirstActor<Player>());
+
+            gameDuration = TimeSpan.Zero;
+
+            currentDialogQueue.Clear();
+
+            if (!string.IsNullOrWhiteSpace(levelManager.Map?.IntroID) &&
+                manager.Assets.DialogCollections[levelsDialogFile].TryGetValue(levelManager.Map.IntroID, out List<DialogText>? dialogTextList))
+            {
+                foreach (var dialogText in dialogTextList)
+                    currentDialogQueue.Enqueue(dialogText);
+            }
+        }
+
+        public override void OnFadeIn() => UpdateGame();
+
+        public override void OnFadeInComplete() => currentState = State.GameIntroduction;
+
+        public override void OnUpdate() => UpdateGame();
+
+        public override void OnRender()
+        {
+            manager.Screen.Clear(0x3E4F65);
+
+            if (levelManager.SizeInPixels.X < manager.Screen.Width || levelManager.SizeInPixels.Y < manager.Screen.Height)
+            {
+                manager.Batcher.PushBlend(BlendMode.NonPremultiplied);
+                parallaxBackground.Render();
+                manager.Batcher.PopBlend();
+            }
+
+            RenderMap();
+            RenderHUD();
+
+            if (manager.Settings.ShowDebugInfo)
+            {
+                if (levelManager.GetFirstActor<Player>() is Player player)
+                {
+                    manager.Batcher.Text(smallFont, $"Current hitbox == {player.Position + player.Hitbox.Rectangle}", Vector2.Zero, Color.White);
+                    manager.Batcher.Text(smallFont, $"{manager.Controls.Move.Name}:{manager.Controls.Move.IntValue} {manager.Controls.Confirm.Name}:{manager.Controls.Confirm.Down} {manager.Controls.Cancel.Name}:{manager.Controls.Cancel.Down} {manager.Controls.Menu.Name}:{manager.Controls.Menu.Down} {manager.Controls.DebugDisplay.Name}:{manager.Controls.DebugDisplay.Down}", new Vector2(0f, manager.Screen.Height - smallFont.LineHeight), Color.White);
+
+                    var cells = player.GetMapCells();
+                    for (var i = 0; i < cells.Length; i++)
+                        manager.Batcher.Text(smallFont, cells[i].ToString(), new(0f, 60f + i * smallFont.LineHeight), Color.CornflowerBlue);
+
+                    manager.Batcher.Text(smallFont, $"Camera {camera.Matrix.Translation:0.0000}", new(0f, 25f), Color.Yellow);
+                }
+            }
+
+            dialogBox.Render();
+            menuBox.Render();
+        }
+
+        public override void OnBeginFadeOut()
+        {
+            switch (currentState)
+            {
+                case State.Restart:
+                case State.LoadNextLevel:
+                    FadeColor = Color.White;
+                    fadeOutColor = FadeOutMode.UseFadeColor;
+                    break;
+                case State.ExitToMenu:
+                    FadeColor = Color.Black;
+                    fadeOutColor = FadeOutMode.UseFadeColor;
+                    break;
+                default:
+                    FadeColor = ScreenFader.PreviousColor;
+                    fadeOutColor = FadeOutMode.UsePreviousColor;
+                    break;
+            }
+        }
+
+        public override void OnFadeOut() => UpdateGame();
+
+        public override void OnLeaveState()
+        {
+            menuBox.Close();
+
+            switch (currentState)
+            {
+                case State.Restart:
+                    levelManager.DestroyAllActors();
+                    currentState = State.Initialize;
+                    break;
+
+                case State.ExitToMenu:
+                    manager.GameStates.Pop();
+                    break;
+
+                case State.LoadNextLevel:
+                    if (levelManager.Advance())
+                        currentState = State.Initialize;
+                    else
+                        manager.GameStates.Pop();
+                    break;
+            }
+        }
+
+        private void UpdateGame()
         {
             switch (currentState)
             {
                 case State.Initialize:
                     {
-                        if (!Globals.QuickStart)
-                        {
-                            levelManager.Reset();
-                            gameStartCountdown = 5f;
-
-                            screenFader.Begin(ScreenFadeType.FadeIn, screenFadeDuration, ScreenFader.PreviousColor);
-                            currentState = State.FadeIn;
-                        }
-                        else
-                        {
-                            levelManager.Load(@"TestMaps/BigTestMap");
-                            gameStartCountdown = 0f;
-
-                            if (levelManager.GetFirstActor<Player>() is Player player)
-                                player.CurrentState = Player.State.Normal;
-
-                            screenFader.Begin(ScreenFadeType.FadeIn, screenFadeDuration, ScreenFader.PreviousColor);
-                            currentState = State.FadeIn;
-                        }
-
-                        menuBox.MenuTitle = "Paused";
-                        menuBox.MenuItems = pauseMenuItems;
-
-                        camera.FollowActor(levelManager.GetFirstActor<Player>());
-
-                        gameDuration = TimeSpan.Zero;
-                    }
-                    break;
-
-                case State.FadeIn:
-                    {
-                        if (screenFader.Update())
-                        {
-                            currentDialogQueue.Clear();
-
-                            if (!string.IsNullOrWhiteSpace(levelManager.Map?.IntroID) &&
-                                manager.Assets.DialogCollections[levelsDialogFile].TryGetValue(levelManager.Map.IntroID, out List<DialogText>? dialogTextList))
-                            {
-                                foreach (var dialogText in dialogTextList)
-                                    currentDialogQueue.Enqueue(dialogText);
-                            }
-                            currentState = State.GameIntroduction;
-                        }
+                        /* Wait ... */
                     }
                     break;
 
@@ -229,43 +296,6 @@ namespace BouncingUFO.Game.States
                         }
                     }
                     break;
-
-                case State.Restart:
-                    {
-                        if (screenFader.Update())
-                        {
-                            menuBox.Close();
-
-                            levelManager.DestroyAllActors();
-                            currentState = State.Initialize;
-                        }
-                    }
-                    break;
-
-                case State.ExitToMenu:
-                    {
-                        if (screenFader.Update())
-                        {
-                            menuBox.Close();
-
-                            manager.GameStates.Pop();
-                        }
-                    }
-                    break;
-
-                case State.LoadNextLevel:
-                    {
-                        if (screenFader.Update())
-                        {
-                            menuBox.Close();
-
-                            if (levelManager.Advance())
-                                currentState = State.Initialize;
-                            else
-                                manager.GameStates.Pop();
-                        }
-                    }
-                    break;
             }
 
             if (manager.Controls.DebugEditors.ConsumePress())
@@ -283,41 +313,6 @@ namespace BouncingUFO.Game.States
 
             dialogBox.Update();
             menuBox.Update();
-        }
-
-        public void Render()
-        {
-            manager.Screen.Clear(0x3E4F65);
-
-            if (levelManager.SizeInPixels.X < manager.Screen.Width || levelManager.SizeInPixels.Y < manager.Screen.Height)
-            {
-                manager.Batcher.PushBlend(BlendMode.NonPremultiplied);
-                parallaxBackground.Render();
-                manager.Batcher.PopBlend();
-            }
-
-            RenderMap();
-            RenderHUD();
-
-            if (manager.Settings.ShowDebugInfo)
-            {
-                if (levelManager.GetFirstActor<Player>() is Player player)
-                {
-                    manager.Batcher.Text(smallFont, $"Current hitbox == {player.Position + player.Hitbox.Rectangle}", Vector2.Zero, Color.White);
-                    manager.Batcher.Text(smallFont, $"{manager.Controls.Move.Name}:{manager.Controls.Move.IntValue} {manager.Controls.Confirm.Name}:{manager.Controls.Confirm.Down} {manager.Controls.Cancel.Name}:{manager.Controls.Cancel.Down} {manager.Controls.Menu.Name}:{manager.Controls.Menu.Down} {manager.Controls.DebugDisplay.Name}:{manager.Controls.DebugDisplay.Down}", new Vector2(0f, manager.Screen.Height - smallFont.LineHeight), Color.White);
-
-                    var cells = player.GetMapCells();
-                    for (var i = 0; i < cells.Length; i++)
-                        manager.Batcher.Text(smallFont, cells[i].ToString(), new(0f, 60f + i * smallFont.LineHeight), Color.CornflowerBlue);
-
-                    manager.Batcher.Text(smallFont, $"Camera {camera.Matrix.Translation:0.0000}", new(0f, 25f), Color.Yellow);
-                }
-            }
-
-            dialogBox.Render();
-            menuBox.Render();
-
-            screenFader.Render();
         }
 
         private void RenderMap()

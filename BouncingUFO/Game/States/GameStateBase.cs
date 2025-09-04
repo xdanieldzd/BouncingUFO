@@ -5,9 +5,9 @@ namespace BouncingUFO.Game.States
 {
     public abstract class GameStateBase(Manager manager, params object[] args) : IGameState
     {
-        public virtual Color ClearColor => Color.DarkGray;
-        public virtual float FadeDuration => 0.5f;
-        public virtual Color FadeColor => ScreenFader.PreviousColor;
+        public virtual Color ClearColor { get; set; } = Color.DarkGray;
+        public virtual float FadeDuration { get; set; } = 0.5f;
+        public virtual Color FadeColor { get; set; } = ScreenFader.PreviousColor;
 
         protected readonly Manager manager = manager;
         protected readonly object[] args = args;
@@ -15,6 +15,9 @@ namespace BouncingUFO.Game.States
         private readonly ScreenFader screenFader = new(manager);
         private enum BaseState { EnterState, FadeIn, Main, FadeOut }
         private BaseState currentState = BaseState.EnterState;
+
+        protected enum FadeOutMode { UseFadeColor, UsePreviousColor }
+        protected FadeOutMode fadeOutColor = FadeOutMode.UseFadeColor;
 
         public void Update()
         {
@@ -61,7 +64,7 @@ namespace BouncingUFO.Game.States
         {
             OnBeginFadeOut();
 
-            screenFader.Begin(ScreenFadeType.FadeOut, FadeDuration, ScreenFader.PreviousColor);
+            screenFader.Begin(ScreenFadeType.FadeOut, FadeDuration, fadeOutColor == FadeOutMode.UsePreviousColor ? ScreenFader.PreviousColor : FadeColor);
             currentState = BaseState.FadeOut;
         }
 
