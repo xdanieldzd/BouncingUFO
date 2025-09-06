@@ -33,8 +33,6 @@ namespace BouncingUFO
 
         public Settings Settings = new();
 
-        private readonly SpriteFont smallFont;
-
         public Manager() : base(new AppConfig()
         {
             ApplicationName = applicationName,
@@ -56,8 +54,6 @@ namespace BouncingUFO
             ImGuiRenderer = new(this);
             Assets = new(this);
             Controls = new(Input);
-
-            smallFont = Assets.Fonts["SmallFont"];
         }
 
         static Manager()
@@ -116,16 +112,17 @@ namespace BouncingUFO
 
             ClearWindow();
 
+            Batcher.PushBlend(BlendMode.NonPremultiplied);
+
             if (GameStates.TryPeek(out IGameState? gameState))
                 gameState.Render();
             else
-            {
-                Screen.Clear(Color.DarkGray);
-                Batcher.Text(smallFont, "Error: GameState stack is empty!", Vector2.Zero, Color.Red);
-            }
+                Screen.Clear(Color.Red);
 
             if (Settings.ShowFramerate)
-                FrameCounter.Render(Vector2.Zero, smallFont);
+                FrameCounter.Render(Vector2.Zero, Assets.Fonts["SmallFont"]);
+
+            Batcher.PopBlend();
 
             Batcher.Render(Screen);
             Batcher.Clear();

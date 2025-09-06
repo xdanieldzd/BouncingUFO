@@ -131,11 +131,7 @@ namespace BouncingUFO.Game.States
             manager.Screen.Clear(0x3E4F65);
 
             if (levelManager.SizeInPixels.X < manager.Screen.Width || levelManager.SizeInPixels.Y < manager.Screen.Height)
-            {
-                manager.Batcher.PushBlend(BlendMode.NonPremultiplied);
                 parallaxBackground.Render();
-                manager.Batcher.PopBlend();
-            }
 
             RenderMap();
             RenderHUD();
@@ -166,15 +162,15 @@ namespace BouncingUFO.Game.States
                 case State.Restart:
                 case State.LoadNextLevel:
                     FadeColor = Color.White;
-                    fadeOutColor = FadeOutMode.UseFadeColor;
+                    FadeOutMode = FadeMode.UseFadeColor;
                     break;
                 case State.ExitToMenu:
                     FadeColor = Color.Black;
-                    fadeOutColor = FadeOutMode.UseFadeColor;
+                    FadeOutMode = FadeMode.UseFadeColor;
                     break;
                 default:
                     FadeColor = ScreenFader.PreviousColor;
-                    fadeOutColor = FadeOutMode.UsePreviousColor;
+                    FadeOutMode = FadeMode.UsePreviousColor;
                     break;
             }
         }

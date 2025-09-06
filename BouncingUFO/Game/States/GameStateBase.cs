@@ -5,9 +5,13 @@ namespace BouncingUFO.Game.States
 {
     public abstract class GameStateBase(Manager manager, params object[] args) : IGameState
     {
+        public enum FadeMode { UseFadeColor, UsePreviousColor }
+
         public virtual Color ClearColor { get; set; } = Color.DarkGray;
         public virtual float FadeDuration { get; set; } = 0.5f;
         public virtual Color FadeColor { get; set; } = ScreenFader.PreviousColor;
+        public virtual FadeMode FadeInMode { get; set; } = FadeMode.UseFadeColor;
+        public virtual FadeMode FadeOutMode { get; set; } = FadeMode.UseFadeColor;
 
         protected readonly Manager manager = manager;
         protected readonly object[] args = args;
@@ -16,16 +20,13 @@ namespace BouncingUFO.Game.States
         private enum BaseState { EnterState, FadeIn, Main, FadeOut }
         private BaseState currentState = BaseState.EnterState;
 
-        protected enum FadeOutMode { UseFadeColor, UsePreviousColor }
-        protected FadeOutMode fadeOutColor = FadeOutMode.UseFadeColor;
-
         public void Update()
         {
             switch (currentState)
             {
                 case BaseState.EnterState:
                     OnEnterState();
-                    screenFader.Begin(ScreenFadeType.FadeIn, FadeDuration, FadeColor);
+                    screenFader.Begin(ScreenFadeType.FadeIn, FadeDuration, FadeInMode == FadeMode.UsePreviousColor ? ScreenFader.PreviousColor : FadeColor);
                     currentState = BaseState.FadeIn;
                     break;
 
@@ -64,7 +65,7 @@ namespace BouncingUFO.Game.States
         {
             OnBeginFadeOut();
 
-            screenFader.Begin(ScreenFadeType.FadeOut, FadeDuration, fadeOutColor == FadeOutMode.UsePreviousColor ? ScreenFader.PreviousColor : FadeColor);
+            screenFader.Begin(ScreenFadeType.FadeOut, FadeDuration, FadeOutMode == FadeMode.UsePreviousColor ? ScreenFader.PreviousColor : FadeColor);
             currentState = BaseState.FadeOut;
         }
 

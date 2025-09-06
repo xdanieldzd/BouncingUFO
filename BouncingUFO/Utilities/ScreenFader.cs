@@ -61,16 +61,10 @@ namespace BouncingUFO.Utilities
         public void Render()
         {
             if (color.A != 0)
-            {
-                manager.Batcher.PushBlend(BlendMode.NonPremultiplied);
                 manager.Batcher.Rect(manager.Screen.Bounds, color);
-                manager.Batcher.PopBlend();
-            }
 
             if (manager.Settings.ShowDebugInfo)
-            {
                 manager.Batcher.Text(debugFont, $"{FadeType}\nProgress:{progress:0.0000}\nAlpha:{color.A}", manager.Screen.Bounds.TopRight - Point2.One.OnlyX(), Vector2.One.ZeroY(), Color.CornflowerBlue);
-            }
         }
     }
 }

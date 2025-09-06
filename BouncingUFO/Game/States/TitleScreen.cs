@@ -84,12 +84,7 @@ namespace BouncingUFO.Game.States
 
         public override void OnRender()
         {
-            if (parallaxBackground != null)
-            {
-                manager.Batcher.PushBlend(BlendMode.NonPremultiplied);
-                parallaxBackground.Render();
-                manager.Batcher.PopBlend();
-            }
+            parallaxBackground?.Render();
 
             var titleText =
                 "GAME TEST PROJECT #1\n" +

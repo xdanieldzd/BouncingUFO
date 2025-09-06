@@ -4,7 +4,7 @@ using ImGuiNET;
 
 namespace BouncingUFO.Game.States
 {
-    public class Editor(Manager manager, params object[] args) : GameStateBase(manager, args), IGameState
+    public class Editor(Manager manager, params object[] args) : GameStateBase(manager, args)
     {
         public override Color ClearColor => Color.Black;
         public override float FadeDuration => 0f;

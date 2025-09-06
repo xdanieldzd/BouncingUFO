@@ -99,8 +99,6 @@ namespace BouncingUFO.Game
         {
             if (Map == null || Tileset == null || Tileset.CellTextures == null) return;
 
-            manager.Batcher.PushBlend(BlendMode.NonPremultiplied);
-
             for (var i = 0; i < Map.Layers.Count; i++)
             {
                 for (var y = Math.Max(0, visibleArea.Top); y < Math.Min(Map.Size.Y, visibleArea.Bottom); y++)
@@ -139,8 +137,6 @@ namespace BouncingUFO.Game
                     }
                 }
             }
-
-            manager.Batcher.PopBlend();
 
             if (debug)
             {

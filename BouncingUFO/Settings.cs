@@ -2,7 +2,7 @@
 {
     public sealed class Settings
     {
-        public const string Filename = "Settings.json";
+        public static string Filename => "Settings.json";
 
         public bool Fullscreen { get; set; } = false;
         public bool ShowFramerate { get; set; } = false;
