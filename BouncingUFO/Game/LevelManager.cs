@@ -138,12 +138,34 @@ namespace BouncingUFO.Game
                 }
             }
 
-            foreach (var actor in actorsToRender.SelectMany(x => x.Value))
+            /* Very crude, cell-based highlight through layers; pixel-based would be nicer, but eh, this works and I already spent a day trying to get this to work... */
+            foreach (var actor in actorsToRender.SelectMany(x => x.Value).Where(x => x.HasHighlight))
             {
-                if (actor is not Player) continue;
+                var actorFrameRect = new Rect(actor.Position + actor.Offset.CeilingToPoint2(), actor.Frame?.Size ?? Vector2.Zero);
+                var actorOverCells = ActorBase.GetMapCells(actorFrameRect.TopLeft.FloorToPoint2(), new(Point2.Zero, actorFrameRect.Size.FloorToPoint2()), Map, Tileset);
 
-                // TODO: try to show player (all actors?) shaded through layers if obscured by them
-                // actor.Render(ActorRenderMode.ShadeOnly);
+                var nonEmptyCells = new List<Point2>();
+
+                for (var i = actor.MapLayer; i < Map.Layers.Count; i++)
+                {
+                    foreach (var cell in actorOverCells)
+                    {
+                        var cellValue = Map.Layers[i].Tiles[cell.Y * Map.Size.X + cell.X];
+                        var cellFlags = Tileset.CellFlags[cellValue];
+
+                        if (cellValue != 0 && !cellFlags.HasFlag(CellFlag.Translucent) && !nonEmptyCells.Contains(cell))
+                            nonEmptyCells.Add(cell);
+                    }
+                }
+
+                if (nonEmptyCells.Count > 0)
+                {
+                    var actorCellsRect = new Rect(nonEmptyCells.MinBy(x => x.LengthSquared()), nonEmptyCells.MaxBy(x => x.LengthSquared()) - nonEmptyCells.MinBy(x => x.LengthSquared()) + Point2.One) * Tileset.CellSize;
+
+                    manager.Batcher.PushScissor(actorCellsRect.GetIntersection(actorFrameRect).Int() + camera.Position);
+                    actor.Render(ActorRenderMode.Highlight);
+                    manager.Batcher.PopScissor();
+                }
             }
 
             if (debug)

@@ -20,7 +20,7 @@ namespace BouncingUFO.Game.Actors
     {
         Normal,
         Shadow,
-        ShadeOnly
+        Highlight
     }
 
     public abstract class ActorBase(Manager manager, LevelManager level, int mapLayer = 0, int argument = 0)
@@ -51,8 +51,8 @@ namespace BouncingUFO.Game.Actors
         public int MapLayer = mapLayer, DrawPriority = 0;
         public float Rotation = 0f;
         public float BobSpeed = 10f, BobDirection = 0f;
-        public bool HasShadow = false;
-        public Color ShadowColor = new(0f, 0f, 0f, 0.5f);
+        public bool HasShadow = false, HasHighlight = false;
+        public Color ShadowColor = new(0f, 0f, 0f, 0.5f), HighlightColor = new(0f, 0f, 0f, 0.5f);
         public Vector2 ShadowScale = Vector2.One / 2f;
         public Vector2 ShadowOffset = Vector2.Zero;
         public float LogicTimer = 0f, AnimationTimer = 0f;
@@ -246,10 +246,13 @@ namespace BouncingUFO.Game.Actors
                     }
                     break;
 
-                case ActorRenderMode.ShadeOnly:
-                    manager.Batcher.PushMode(Batcher.Modes.Wash);
-                    manager.Batcher.Image(texture, Position + Offset + sprite.Origin, sprite.Origin, Vector2.One, Calc.DegToRad * Rotation, ShadowColor);
-                    manager.Batcher.PopMode();
+                case ActorRenderMode.Highlight:
+                    if (HasHighlight)
+                    {
+                        manager.Batcher.PushMode(Batcher.Modes.Wash);
+                        manager.Batcher.Image(texture, Position + Offset + sprite.Origin, sprite.Origin, Vector2.One, Calc.DegToRad * Rotation, HighlightColor);
+                        manager.Batcher.PopMode();
+                    }
                     break;
             }
         }

@@ -9,6 +9,8 @@
             Hitbox = new(new(2, 2, 12, 12));
             DrawPriority = 50;
             HasShadow = true;
+            HasHighlight = true;
+            HighlightColor = new(0f, 0f, 0f, 0.15f);
             PlayAnimation("Idle");
 
             Offset.Y = Random.Shared.NextSingle() * 2f - 1f;

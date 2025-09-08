@@ -32,6 +32,8 @@ namespace BouncingUFO.Game.Actors
             Hitbox = new(new(0, 12, 32, 12));
             DrawPriority = 100;
             HasShadow = true;
+            HasHighlight = true;
+            HighlightColor = new(0f, 0f, 0f, 0.5f);
             BobSpeed = 5f;
             BobDirection = 1f;
             PlayAnimation("Idle");
