@@ -1,4 +1,44 @@
 {
+  "Level1Intro": [
+    {
+      "SpeakerName": "Alien",
+      "TextStrings": [
+        "This is the intro to level 1!"
+      ]
+    }
+  ],
+  "Level2Intro": [
+    {
+      "SpeakerName": "Alien",
+      "TextStrings": [
+        "This is the intro to level 2!"
+      ]
+    }
+  ],
+  "Level3Intro": [
+    {
+      "SpeakerName": "Alien",
+      "TextStrings": [
+        "This is the intro to level 3!"
+      ]
+    }
+  ],
+  "Level4Intro": [
+    {
+      "SpeakerName": "Alien",
+      "TextStrings": [
+        "This is the intro to level 4!"
+      ]
+    }
+  ],
+  "Level5Intro": [
+    {
+      "SpeakerName": "Alien",
+      "TextStrings": [
+        "This is the intro to level 5!"
+      ]
+    }
+  ],
   "BigTestMapIntro": [
     {
       "SpeakerName": "xdaniel",

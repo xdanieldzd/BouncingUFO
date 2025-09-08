@@ -10,7 +10,11 @@ namespace BouncingUFO.Game.States
     {
         private const string levelsDialogFile = "InGame";
 
-        private enum State { Initialize, GameIntroduction, GameStartCountdown, MainLogic, GameOver, ShowGameOverMenu, Restart, ExitToMenu, LoadNextLevel }
+        private const float levelNameDisplayStart = 4f;
+        private const float levelNameDisplayNextState = levelNameDisplayStart - 0.5f;
+        private const float levelNameDisplayEnd = levelNameDisplayNextState - 2.5f;
+
+        private enum State { Initialize, ShowLevelName, GameIntroduction, GameStartCountdown, MainLogic, GameOver, ShowGameOverMenu, Restart, ExitToMenu, LoadNextLevel }
 
         private readonly SpriteFont smallFont, largeFont, futureFont;
 
@@ -29,7 +33,10 @@ namespace BouncingUFO.Game.States
         private DialogText? currentDialogText = null;
 
         private State currentState = State.Initialize;
-        private float gameStartCountdown;
+        private float levelNameDisplayTimer, gameStartCountdown;
+
+        private Rect levelNameDisplayRect;
+        private float levelNameDisplayScaleY;
 
         private TimeSpan gameDuration = TimeSpan.Zero;
         private int capsuleCount;
@@ -97,11 +104,15 @@ namespace BouncingUFO.Game.States
             else
             {
                 levelManager.Load(@"Level4");
-                gameStartCountdown = 0f;
+                gameStartCountdown = 5f;
 
                 if (levelManager.GetFirstActor<Player>() is Player player)
                     player.CurrentState = Player.State.Normal;
             }
+
+            levelNameDisplayTimer = levelNameDisplayStart;
+            levelNameDisplayRect = new Rect(manager.Screen.Width, 30f) + new Vector2(0f, (manager.Screen.Height - 30f) / 2f);
+            levelNameDisplayScaleY = 0f;
 
             menuBox.MenuTitle = "Paused";
             menuBox.MenuItems = pauseMenuItems;
@@ -122,7 +133,7 @@ namespace BouncingUFO.Game.States
 
         public override void OnFadeIn() => UpdateGame();
 
-        public override void OnFadeInComplete() => currentState = State.GameIntroduction;
+        public override void OnFadeInComplete() => currentState = State.ShowLevelName;
 
         public override void OnUpdate() => UpdateGame();
 
@@ -211,8 +222,21 @@ namespace BouncingUFO.Game.States
                     }
                     break;
 
+                case State.ShowLevelName:
+                    {
+                        levelNameDisplayTimer = Calc.Approach(levelNameDisplayTimer, 0f, manager.Time.Delta);
+                        if (levelNameDisplayTimer <= levelNameDisplayNextState) currentState = State.GameIntroduction;
+                    }
+                    break;
+
                 case State.GameIntroduction:
                     {
+                        levelNameDisplayTimer = Calc.Approach(levelNameDisplayTimer, 0f, manager.Time.Delta);
+                        if (levelNameDisplayTimer > levelNameDisplayEnd)
+                            levelNameDisplayScaleY = Calc.Approach(levelNameDisplayScaleY, 1f, manager.Time.Delta * 5f);
+                        else
+                            levelNameDisplayScaleY = Calc.Approach(levelNameDisplayScaleY, 0f, manager.Time.Delta * 5f);
+
                         if (!dialogBox.IsOpen)
                         {
                             if (currentDialogQueue.TryDequeue(out currentDialogText))
@@ -330,6 +354,16 @@ namespace BouncingUFO.Game.States
 
             switch (currentState)
             {
+                case State.ShowLevelName:
+                case State.GameIntroduction:
+                    {
+                        manager.Batcher.PushMatrix(Matrix3x2.CreateScale(1f, levelNameDisplayScaleY));
+                        manager.Batcher.Rect(levelNameDisplayRect, new(0f, 0f, 0f, 0.5f));
+                        manager.Batcher.TextCenteredInBounds(levelManager.Map?.Title ?? string.Empty, largeFont, levelNameDisplayRect.Int(), Color.White);
+                        manager.Batcher.PopMatrix();
+                    }
+                    break;
+
                 case State.GameStartCountdown:
                     {
                         var startTimer = Math.Floor(gameStartCountdown);
