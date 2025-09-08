@@ -61,6 +61,8 @@ namespace BouncingUFO.Game.States
             screenFader.Render();
         }
 
+        public virtual void RenderImGui() { }
+
         public void LeaveState()
         {
             OnBeginFadeOut();

@@ -18,7 +18,7 @@ namespace BouncingUFO.Game.States
 
         private float deltaTime = 0f;
 
-        public void RenderImGui()
+        public override void RenderImGui()
         {
             if (editors == null)
             {

@@ -121,11 +121,11 @@ namespace BouncingUFO.Game
                         var actorsInRange = actorsToRender[(i, y)];
 
                         foreach (var actor in actorsInRange)
-                            actor.RenderShadow();
+                            actor.Render(ActorRenderMode.Shadow);
 
                         foreach (var actor in actorsInRange)
                         {
-                            actor.RenderSprite();
+                            actor.Render(ActorRenderMode.Normal);
 
                             if (debug)
                             {
@@ -136,6 +136,14 @@ namespace BouncingUFO.Game
                         }
                     }
                 }
+            }
+
+            foreach (var actor in actorsToRender.SelectMany(x => x.Value))
+            {
+                if (actor is not Player) continue;
+
+                // TODO: try to show player (all actors?) shaded through layers if obscured by them
+                // actor.Render(ActorRenderMode.ShadeOnly);
             }
 
             if (debug)

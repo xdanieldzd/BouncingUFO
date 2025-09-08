@@ -95,6 +95,8 @@ namespace BouncingUFO
 
             if (GameStates.TryPeek(out IGameState? gameState))
                 gameState.Update();
+            else
+                Startup();
 
             ImGuiRenderer.BeginLayout();
 
@@ -116,8 +118,6 @@ namespace BouncingUFO
 
             if (GameStates.TryPeek(out IGameState? gameState))
                 gameState.Render();
-            else
-                Screen.Clear(Color.Red);
 
             if (Settings.ShowFramerate)
                 FrameCounter.Render(Vector2.Zero, Assets.Fonts["SmallFont"]);

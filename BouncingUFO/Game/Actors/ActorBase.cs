@@ -16,6 +16,13 @@ namespace BouncingUFO.Game.Actors
         Collectible = 1 << 2
     }
 
+    public enum ActorRenderMode
+    {
+        Normal,
+        Shadow,
+        ShadeOnly
+    }
+
     public abstract class ActorBase(Manager manager, LevelManager level, int mapLayer = 0, int argument = 0)
     {
         protected Manager manager = manager;
@@ -220,19 +227,30 @@ namespace BouncingUFO.Game.Actors
             if (Offset.Y >= 1f || Offset.Y <= -1f) BobDirection = -BobDirection;
         }
 
-        public virtual void RenderSprite()
+        public virtual void Render(ActorRenderMode mode)
         {
-            if (sprite != null && currentFrame != null && currentFrame.Texture is Subtexture texture)
-                manager.Batcher.Image(texture, Position + Offset + sprite.Origin, sprite.Origin, Vector2.One, Calc.DegToRad * Rotation, Color.White);
-        }
+            if (sprite == null || currentFrame == null || currentFrame.Texture is not Subtexture texture) return;
 
-        public virtual void RenderShadow()
-        {
-            if (HasShadow && sprite != null && currentFrame != null && currentFrame.Texture is Subtexture texture)
+            switch (mode)
             {
-                manager.Batcher.PushMode(Batcher.Modes.Wash);
-                manager.Batcher.Image(texture, Position + ShadowOffset + sprite.Origin, sprite.Origin, ShadowScale, 0f, ShadowColor);
-                manager.Batcher.PopMode();
+                case ActorRenderMode.Normal:
+                    manager.Batcher.Image(texture, Position + Offset + sprite.Origin, sprite.Origin, Vector2.One, Calc.DegToRad * Rotation, Color.White);
+                    break;
+
+                case ActorRenderMode.Shadow:
+                    if (HasShadow)
+                    {
+                        manager.Batcher.PushMode(Batcher.Modes.Wash);
+                        manager.Batcher.Image(texture, Position + ShadowOffset + sprite.Origin, sprite.Origin, ShadowScale, 0f, ShadowColor);
+                        manager.Batcher.PopMode();
+                    }
+                    break;
+
+                case ActorRenderMode.ShadeOnly:
+                    manager.Batcher.PushMode(Batcher.Modes.Wash);
+                    manager.Batcher.Image(texture, Position + Offset + sprite.Origin, sprite.Origin, Vector2.One, Calc.DegToRad * Rotation, ShadowColor);
+                    manager.Batcher.PopMode();
+                    break;
             }
         }
 

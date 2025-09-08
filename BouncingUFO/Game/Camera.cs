@@ -26,10 +26,10 @@ namespace BouncingUFO.Game
 
             if (bounds != Point2.Zero)
             {
-                if (bounds.X < manager.Screen.Bounds.Right || bounds.Y < manager.Screen.Bounds.Bottom)
-                    position = manager.Screen.Bounds.Center - bounds / 2;
-                else
-                    position = position.Clamp(-(bounds - manager.Screen.Bounds.BottomRight), Vector2.Zero);
+                var clampedPosition = position.Clamp(-(bounds - manager.Screen.Bounds.BottomRight), Vector2.Zero);
+                position = new(
+                    bounds.X < manager.Screen.Bounds.Right ? manager.Screen.Bounds.Center.X - bounds.X / 2 : clampedPosition.X,
+                    bounds.Y < manager.Screen.Bounds.Bottom ? manager.Screen.Bounds.Center.Y - bounds.Y / 2 : clampedPosition.Y);
             }
         }
     }

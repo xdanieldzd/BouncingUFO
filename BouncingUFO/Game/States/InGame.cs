@@ -96,7 +96,7 @@ namespace BouncingUFO.Game.States
             }
             else
             {
-                levelManager.Load(@"TestMaps/BigTestMap");
+                levelManager.Load(@"Level4");
                 gameStartCountdown = 0f;
 
                 if (levelManager.GetFirstActor<Player>() is Player player)

@@ -79,6 +79,7 @@ namespace BouncingUFO.Editors
                             CurrentFilePath = s[0];
                             map = JsonSerializer.Deserialize<Map>(File.ReadAllText(CurrentFilePath), serializerOptions);
                             tileset = null;
+                            activeLayer = 0;
                         }
                     }), [new("JSON files (*.json)", "json")], CurrentFilePath);
                 }
@@ -147,21 +148,21 @@ namespace BouncingUFO.Editors
                     ImGui.BeginGroup();
                     var currentLayerCount = map.Layers.Count;
                     if (currentLayerCount >= 8) ImGui.BeginDisabled();
-                    if (ImGui.Button("Add new layer"))
+                    if (ImGui.Button("Add new layer", new(200f, 0f)))
                     {
                         map.Layers.Add(new(map.Size));
                         layersDirty = true;
                     }
                     if (currentLayerCount >= 8) ImGui.EndDisabled();
                     if (currentLayerCount <= 0) ImGui.BeginDisabled();
-                    if (ImGui.Button("Remove active layer"))
+                    if (ImGui.Button("Remove active layer", new(200f, 0f)))
                     {
                         map.Layers.RemoveAt(activeLayer);
                         layersDirty = true;
                     }
                     if (currentLayerCount <= 0) ImGui.EndDisabled();
                     ImGui.NewLine();
-                    if (ImGui.Button("Spawn editor")) { isSpawnEditorOpen = true; ImGui.SetWindowFocus(spawnEditorName); }
+                    if (ImGui.Button("Spawn editor", new(200f, 0f))) { isSpawnEditorOpen = true; ImGui.SetWindowFocus(spawnEditorName); }
                     ImGui.EndGroup();
                     ImGui.SameLine();
 
@@ -178,26 +179,85 @@ namespace BouncingUFO.Editors
                     ImGui.SameLine();
                     ImGui.Checkbox("Draw tileset grid", ref drawTilesetCellGrid);
                     ImGui.EndGroup();
+                    ImGui.SameLine();
 
-                    if (layersDirty)
+                    ImGui.Dummy(new(10f, 0f));
+                    ImGui.SameLine();
+
+                    ImGui.BeginGroup();
+                    if (currentLayerCount <= 0) ImGui.BeginDisabled();
+                    if (ImGui.Button("Clear active layer", new(200f, 0f))) ImGui.OpenPopup("Clear");
+                    ImGui.SetNextWindowPos(center, ImGuiCond.Appearing, new(0.5f));
+                    if (map != null && ImGui.BeginPopupModal("Clear", ImGuiWindowFlags.AlwaysAutoResize))
                     {
-                        hoveredMapCell = -1;
-                        map.ResizeLayers();
-                        activeLayer = Math.Min(activeLayer, map.Layers.Count - 1);
-                        layersDirty = false;
+                        ImGui.Text("Really clear layer to cell #0?\n\nThis is destructive!");
+                        ImGui.Separator();
+                        if (ImGui.Button("Yes")) { Array.Fill(map.Layers[activeLayer].Tiles, 0); ImGui.CloseCurrentPopup(); }
+                        ImGui.SameLine();
+                        ImGui.SetItemDefaultFocus();
+                        if (ImGui.Button("No")) ImGui.CloseCurrentPopup();
+                        ImGui.EndPopup();
                     }
 
-                    if (tilesetDirty && manager.Assets.Tilesets.TryGetValue(map.Tileset, out Tileset? value))
+                    if (ImGui.Button("Fill with selected", new(200f, 0f))) ImGui.OpenPopup("Fill");
+                    ImGui.SetNextWindowPos(center, ImGuiCond.Appearing, new(0.5f));
+                    if (map != null && ImGui.BeginPopupModal("Fill", ImGuiWindowFlags.AlwaysAutoResize))
                     {
-                        tileset = value;
-                        tilesetDirty = false;
+                        ImGui.Text("Really fill layer with selected cell?\n\nThis is destructive!");
+                        ImGui.Separator();
+                        if (ImGui.Button("Yes")) { Array.Fill(map.Layers[activeLayer].Tiles, selectedTilemapCell); ImGui.CloseCurrentPopup(); }
+                        ImGui.SameLine();
+                        ImGui.SetItemDefaultFocus();
+                        if (ImGui.Button("No")) ImGui.CloseCurrentPopup();
+                        ImGui.EndPopup();
                     }
 
-                    if (tileset != null && tileset.CellTextures != null && map.Layers.Count != 0)
+                    if (ImGui.Button("Randomize empty to selected", new(200f, 0f))) ImGui.OpenPopup("FillRandom");
+                    ImGui.SetNextWindowPos(center, ImGuiCond.Appearing, new(0.5f));
+                    if (map != null && ImGui.BeginPopupModal("FillRandom", ImGuiWindowFlags.AlwaysAutoResize))
+                    {
+                        ImGui.Text("Really randomize empty cells to selected cell?\n\nThis is destructive!");
+                        ImGui.Separator();
+                        if (ImGui.Button("Yes"))
+                        {
+                            var random = Random.Shared.GetItems([true, false, false, false], map.Size.X * map.Size.Y);
+                            for (var i = 0; i < random.Length; i++)
+                            {
+                                if (random[i] && map.Layers[activeLayer].Tiles[i] == 0)
+                                    map.Layers[activeLayer].Tiles[i] = selectedTilemapCell;
+                            }
+                            ImGui.CloseCurrentPopup();
+                        }
+                        ImGui.SameLine();
+                        ImGui.SetItemDefaultFocus();
+                        if (ImGui.Button("No")) ImGui.CloseCurrentPopup();
+                        ImGui.EndPopup();
+                    }
+                    if (currentLayerCount <= 0) ImGui.EndDisabled();
+                    ImGui.EndGroup();
+
+                    if (map != null)
+                    {
+                        if (layersDirty)
+                        {
+                            hoveredMapCell = -1;
+                            map.ResizeLayers();
+                            activeLayer = Math.Clamp(activeLayer, 0, map.Layers.Count);
+                            layersDirty = false;
+                        }
+
+                        if (tilesetDirty && manager.Assets.Tilesets.TryGetValue(map.Tileset, out Tileset? value))
+                        {
+                            tileset = value;
+                            tilesetDirty = false;
+                        }
+                    }
+
+                    if (tileset != null && tileset.CellTextures != null && map != null && map.Layers.Count != 0)
                     {
                         ImGui.Separator();
 
-                        var mapScrollHeight = tileset.CellSize.Y * 14 * tilesetZoom;
+                        var mapScrollHeight = tileset.CellSize.Y * 12 * tilesetZoom;
                         var tileScrollWidth = tileset.CellSize.X * tileSelectorWidth * tilesetZoom + style.ScrollbarSize;
 
                         ImGui.BeginGroup();
@@ -339,22 +399,6 @@ namespace BouncingUFO.Editors
                             ImGui.EndGroup();
                         }
                         ImGui.EndChild();
-                        ImGui.EndGroup();
-
-                        ImGui.BeginGroup();
-                        if (ImGui.Button("Fill active layer")) ImGui.OpenPopup("Fill");
-
-                        ImGui.SetNextWindowPos(center, ImGuiCond.Appearing, new(0.5f));
-                        if (map != null && ImGui.BeginPopupModal("Fill", ImGuiWindowFlags.AlwaysAutoResize))
-                        {
-                            ImGui.Text("Really fill layer? This is destructive!");
-                            ImGui.Separator();
-                            if (ImGui.Button("Yes")) { Array.Fill(map.Layers[activeLayer].Tiles, selectedTilemapCell); ImGui.CloseCurrentPopup(); }
-                            ImGui.SameLine();
-                            ImGui.SetItemDefaultFocus();
-                            if (ImGui.Button("No")) ImGui.CloseCurrentPopup();
-                            ImGui.EndPopup();
-                        }
                         ImGui.EndGroup();
                     }
 
