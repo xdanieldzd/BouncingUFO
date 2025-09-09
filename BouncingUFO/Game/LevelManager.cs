@@ -1,0 +1,240 @@
+﻿using BouncingUFO.Game.Actors;
+using BouncingUFO.Game.Levels;
+using Foster.Framework;
+using System.Numerics;
+
+namespace BouncingUFO.Game
+{
+    public class LevelManager(Manager manager, Camera camera)
+    {
+        private readonly Dictionary<string, Type> actorTypeDictionary = new()
+        {
+            { "Player", typeof(Player) },
+            { "Capsule", typeof(Capsule) },
+            { "CapsuleSpawner", typeof(CapsuleSpawner) }
+        };
+
+        public Queue<string> QueuedMaps = [];
+        public Map? Map;
+        public Tileset? Tileset;
+
+        public readonly List<ActorBase> Actors = [];
+        public readonly List<ActorBase> ActorsToDestroy = [];
+
+        private RectInt visibleArea = default;
+        private readonly Dictionary<(int layer, int y), List<ActorBase>> actorsToRender = [];
+
+        public bool IsLevelLoaded => Map != null && Tileset != null;
+        public Point2 SizeInPixels => Map?.Size * Tileset?.CellSize ?? Point2.Zero;
+
+        public bool Load(params string[] mapNames)
+        {
+            foreach (var mapName in mapNames)
+                QueuedMaps.Enqueue(mapName);
+
+            return Advance();
+        }
+
+        public bool Advance()
+        {
+            if (QueuedMaps.TryDequeue(out string? nextMapName))
+            {
+                Map = manager.Assets.Maps[nextMapName];
+                Tileset = manager.Assets.Tilesets[Map.Tileset];
+
+                Reset();
+
+                return true;
+            }
+            else
+                return false;
+        }
+
+        public void Reset()
+        {
+            if (Map == null) return;
+
+            Actors.Clear();
+            ActorsToDestroy.Clear();
+
+            foreach (var spawn in Map.Spawns)
+                SpawnActor(spawn.ActorType, spawn.Position, spawn.MapLayer, spawn.Argument);
+        }
+
+        public void Update()
+        {
+            for (var i = 0; i < ActorsToDestroy.Count; i++)
+            {
+                ActorsToDestroy[i].Destroyed();
+                Actors.Remove(ActorsToDestroy[i]);
+            }
+            ActorsToDestroy.Clear();
+
+            foreach (var actor in Actors)
+                actor.Update();
+
+            if (Map != null && Tileset != null)
+            {
+                visibleArea = (manager.Screen.Bounds.Translate(-camera.Position) / Tileset.CellSize).Inflate(2);
+
+                var actorsVisible = Actors.Where(x => x.IsVisible).OrderBy(x => x.DrawPriority).ToList();
+
+                actorsToRender.Clear();
+                for (var i = 0; i < Map.Layers.Count; i++)
+                {
+                    for (var y = visibleArea.Top; y < visibleArea.Bottom; y++)
+                    {
+                        var actorsInRange = actorsVisible.Where(x => x.MapLayer == i && (x.Position + x.Offset).Y < y * Tileset.CellSize.Y && (visibleArea * Tileset.CellSize).Contains(x.Position + x.Offset)).ToList();
+                        if (actorsInRange.Count > 0)
+                        {
+                            actorsToRender.Add((i, y), actorsInRange);
+                            actorsVisible.RemoveAll(actorsInRange.Contains);
+                        }
+                    }
+                }
+            }
+        }
+
+        public void Render(bool debug = false)
+        {
+            if (Map == null || Tileset == null || Tileset.CellTextures == null) return;
+
+            for (var i = 0; i < Map.Layers.Count; i++)
+            {
+                for (var y = Math.Max(0, visibleArea.Top); y < Math.Min(Map.Size.Y, visibleArea.Bottom); y++)
+                {
+                    for (var x = Math.Max(0, visibleArea.Left); x < Math.Min(Map.Size.X, visibleArea.Right); x++)
+                    {
+                        var cellPos = new Vector2(x, y) * Tileset.CellSize;
+                        var cellOffset = y * Map.Size.X + x;
+                        var cellValue = Map.Layers[i].Tiles[cellOffset];
+                        var cellFlags = Tileset.CellFlags[cellValue];
+
+                        manager.Batcher.Image(Tileset.CellTextures[cellValue], cellPos, cellFlags.Has(CellFlag.Translucent) ? new(255, 255, 255, 64) : Color.White);
+
+                        if (debug)
+                            manager.Batcher.RectLine(new(cellPos, Tileset.CellSize), 1f, new(0, 0, 0, 64));
+                    }
+
+                    if (actorsToRender.ContainsKey((i, y)))
+                    {
+                        var actorsInRange = actorsToRender[(i, y)];
+
+                        foreach (var actor in actorsInRange)
+                            actor.Render(ActorRenderMode.Shadow);
+
+                        foreach (var actor in actorsInRange)
+                        {
+                            actor.Render(ActorRenderMode.Normal);
+
+                            if (debug)
+                            {
+                                manager.Batcher.RectLine(new(actor.Position + actor.Offset, actor.Frame?.Size ?? Vector2.Zero), 2f, Color.White);
+                                actor.Hitbox.Render(manager.Batcher, actor.Position, Color.Red);
+                                manager.Batcher.Circle(actor.Position + actor.Sprite?.Origin ?? Vector2.Zero, 2f, 5, Color.Magenta);
+                            }
+                        }
+                    }
+                }
+            }
+
+            /* Very crude, cell-based highlight through layers; pixel-based would be nicer, but eh, this works and I already spent a day trying to get this to work... */
+            foreach (var actor in actorsToRender.SelectMany(x => x.Value).Where(x => x.HasHighlight))
+            {
+                var actorFrameRect = new Rect(actor.Position + actor.Offset.CeilingToPoint2(), actor.Frame?.Size ?? Vector2.Zero);
+                var actorOverCells = ActorBase.GetMapCells(actorFrameRect.TopLeft.FloorToPoint2(), new(Point2.Zero, actorFrameRect.Size.FloorToPoint2()), Map, Tileset);
+
+                var nonEmptyCells = new List<Point2>();
+
+                for (var i = actor.MapLayer + 1; i < Map.Layers.Count; i++)
+                {
+                    foreach (var cell in actorOverCells)
+                    {
+                        var cellValue = Map.Layers[i].Tiles[cell.Y * Map.Size.X + cell.X];
+                        var cellFlags = Tileset.CellFlags[cellValue];
+
+                        if (cellValue != 0 && !cellFlags.HasFlag(CellFlag.Translucent) && !nonEmptyCells.Contains(cell))
+                            nonEmptyCells.Add(cell);
+                    }
+                }
+
+                if (nonEmptyCells.Count > 0)
+                {
+                    var actorCellsRect = new Rect(nonEmptyCells.MinBy(x => x.LengthSquared()), nonEmptyCells.MaxBy(x => x.LengthSquared()) - nonEmptyCells.MinBy(x => x.LengthSquared()) + Point2.One) * Tileset.CellSize;
+
+                    manager.Batcher.PushScissor(actorCellsRect.GetIntersection(actorFrameRect).Int() + camera.Position);
+                    actor.Render(ActorRenderMode.Highlight);
+                    manager.Batcher.PopScissor();
+                }
+            }
+
+            if (debug)
+            {
+                foreach (var spawn in Map.Spawns)
+                {
+                    var spawnPos = new Vector2(spawn.Position.X, spawn.Position.Y) * Tileset.CellSize;
+                    manager.Batcher.Rect(spawnPos, Tileset.CellSize, new Color(128, 64, 0, 64));
+                    manager.Batcher.RectLine(new(spawnPos, Tileset.CellSize), 2f, new Color(255, 128, 0, 128));
+                }
+
+                foreach (var actor in Actors)
+                {
+                    foreach (var hit in actor.GetMapCells())
+                    {
+                        var cellPos = new Vector2(hit.X, hit.Y) * Tileset.CellSize;
+                        manager.Batcher.Rect(cellPos, Tileset.CellSize, new Color(0, 0, 64, 64));
+                    }
+                }
+            }
+        }
+
+        public void DestroyAllActors() => ActorsToDestroy.AddRange(Actors);
+
+        public ActorBase CreateActor(string actorType, Point2? position = null, int mapLayer = 0, int argument = 0)
+        {
+            if (actorTypeDictionary.TryGetValue(actorType, out Type? type))
+                return CreateActor(type, position, mapLayer, argument);
+            else
+                throw new ActorException($"Actor type '{actorType}' not recognized");
+        }
+
+        public ActorBase CreateActor(Type type, Point2? position = null, int mapLayer = 0, int argument = 0)
+        {
+            var actor = Activator.CreateInstance(type, manager, this, mapLayer, argument) as ActorBase ??
+                throw new ActorException(type, "Failed to create actor instance");
+            actor.Position = position * Tileset?.CellSize ?? Point2.One;
+            actor.Created();
+            return actor;
+        }
+
+        public void SpawnActor(ActorBase actor) => Actors.Add(actor);
+        public void SpawnActor(string actorType, Point2? position = null, int mapLayer = 0, int argument = 0) => Actors.Add(CreateActor(actorType, position, mapLayer, argument));
+        public void SpawnActor(Type type, Point2? position = null, int mapLayer = 0, int argument = 0) => Actors.Add(CreateActor(type, position, mapLayer, argument));
+
+        public void DestroyActor(ActorBase actor)
+        {
+            if (!ActorsToDestroy.Contains(actor))
+                ActorsToDestroy.Add(actor);
+        }
+
+        public IEnumerable<T> GetActors<T>() where T : ActorBase => Actors.Where(x => x is T && !ActorsToDestroy.Contains(x)).Cast<T>();
+        public IEnumerable<ActorBase> GetActors(ActorClass actorClass) => Actors.Where(x => x.Class.Has(actorClass) && !ActorsToDestroy.Contains(x));
+
+        public T? GetFirstActor<T>() where T : ActorBase => Actors.FirstOrDefault(x => x is T && !ActorsToDestroy.Contains(x)) as T;
+        public ActorBase? GetFirstActor(ActorClass actorClass) => Actors.FirstOrDefault(x => x.Class.Has(actorClass) && !ActorsToDestroy.Contains(x));
+
+        public ActorBase? GetFirstOverlapActor(Point2 position, RectInt hitboxRect, ActorClass actorClass) => GetFirstOverlapActor(position, hitboxRect, actorClass, Actors);
+        public ActorBase? GetFirstOverlapActor(ActorBase actor, ActorClass actorClass) => GetFirstOverlapActor(actor.Position, actor.Hitbox.Rectangle, actorClass, Actors.Where(x => x != actor));
+
+        private static ActorBase? GetFirstOverlapActor(Point2 position, RectInt hitboxRect, ActorClass actorClass, IEnumerable<ActorBase> actorsToCheck)
+        {
+            foreach (var other in actorsToCheck)
+            {
+                if (other.Class.HasFlag(actorClass) &&
+                    (hitboxRect + position).Overlaps(other.Hitbox.Rectangle + other.Position))
+                    return other;
+            }
+            return null;
+        }
+    }
+}

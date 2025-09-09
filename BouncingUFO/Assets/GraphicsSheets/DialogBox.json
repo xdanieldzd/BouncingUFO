@@ -1,0 +1,96 @@
+{
+  "Name": "DialogBox",
+  "ImageFile": "Assets\\GraphicsSheets\\DialogBox.png",
+  "Rectangles": {
+    "BorderTopLeft": {
+      "X": 0,
+      "Y": 0,
+      "Width": 8,
+      "Height": 8
+    },
+    "BorderTopCenter": {
+      "X": 8,
+      "Y": 0,
+      "Width": 8,
+      "Height": 8
+    },
+    "BorderTopRight": {
+      "X": 16,
+      "Y": 0,
+      "Width": 8,
+      "Height": 8
+    },
+    "BorderMiddleLeft": {
+      "X": 0,
+      "Y": 8,
+      "Width": 8,
+      "Height": 8
+    },
+    "BoxBackground": {
+      "X": 8,
+      "Y": 8,
+      "Width": 8,
+      "Height": 8
+    },
+    "BorderMiddleRight": {
+      "X": 16,
+      "Y": 8,
+      "Width": 8,
+      "Height": 8
+    },
+    "BorderBottomLeft": {
+      "X": 0,
+      "Y": 16,
+      "Width": 8,
+      "Height": 8
+    },
+    "BorderBottomCenter": {
+      "X": 8,
+      "Y": 16,
+      "Width": 8,
+      "Height": 8
+    },
+    "BorderBottomRight": {
+      "X": 16,
+      "Y": 16,
+      "Width": 8,
+      "Height": 8
+    },
+    "InnerBottomRight": {
+      "X": 24,
+      "Y": 0,
+      "Width": 8,
+      "Height": 8
+    },
+    "InnerBottomLeft": {
+      "X": 32,
+      "Y": 0,
+      "Width": 8,
+      "Height": 8
+    },
+    "InnerTopRight": {
+      "X": 24,
+      "Y": 8,
+      "Width": 8,
+      "Height": 8
+    },
+    "InnerTopLeft": {
+      "X": 32,
+      "Y": 8,
+      "Width": 8,
+      "Height": 8
+    },
+    "MarkerNextPage": {
+      "X": 40,
+      "Y": 0,
+      "Width": 10,
+      "Height": 10
+    },
+    "MarkerEndDialog": {
+      "X": 50,
+      "Y": 0,
+      "Width": 10,
+      "Height": 10
+    }
+  }
+}

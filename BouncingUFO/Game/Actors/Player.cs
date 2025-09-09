@@ -1,0 +1,180 @@
+﻿using Foster.Framework;
+using System.Numerics;
+
+namespace BouncingUFO.Game.Actors
+{
+    public class Player : ActorBase
+    {
+        private const float acceleration = 1500f, friction = 100f, maxSpeed = 200f;
+        private const float spriteRotation = 10f;
+        private const float bounceCooldown = 25f;
+        private const float fastShieldRechargeDelay = 3f, fastShieldUnitRechargeDelay = 0.25f;
+        private const float slowShieldRechargeDelay = 5f, slowShieldUnitRechargeDelay = 1f;
+
+        public const int MaxEnergy = 69;
+        public const int MaxShield = 5;
+
+        public enum State { Normal, InputDisabled }
+        public State CurrentState;
+
+        private Vector2 currentBounceCooldown = Vector2.Zero;
+
+        public Vector2 BounceCooldown => currentBounceCooldown;
+
+        public int Shield = 0, Energy = 0;
+        private float shieldRechargeTimer = 0f, shieldUnitRechargeTimer = 0f;
+        private bool slowShieldRecharge = false;
+
+        public Player(Manager manager, LevelManager level, int mapLayer = 0, int argument = 0) : base(manager, level, mapLayer, argument)
+        {
+            Class = ActorClass.Solid | ActorClass.Player;
+            Sprite = manager.Assets.Sprites["Player"];
+            Hitbox = new(new(0, 12, 32, 12));
+            DrawPriority = 100;
+            HasShadow = true;
+            HasHighlight = true;
+            HighlightColor = new(0f, 0f, 0f, 0.5f);
+            BobSpeed = 5f;
+            BobDirection = 1f;
+            PlayAnimation("Idle");
+
+            CurrentState = State.InputDisabled;
+
+            Energy = MaxEnergy;
+            Shield = MaxShield;
+
+            shieldRechargeTimer = 0f;
+            shieldUnitRechargeTimer = 0f;
+
+            IsRunning = true;
+        }
+
+        public override void Created()
+        {
+            Position -= Hitbox.Rectangle.Center / 2 + Point2.UnitY * 8;
+        }
+
+        public override void OnCollisionX(ActorBase? other)
+        {
+            if ((other != null && other.Class.HasFlag(ActorClass.Solid)) || other == null)
+            {
+                Velocity.X = -Velocity.X;
+                veloRemainder.X = -veloRemainder.X;
+                currentBounceCooldown.X = bounceCooldown;
+                CalcEnergyAndShield(-1);
+            }
+        }
+
+        public override void OnCollisionY(ActorBase? other)
+        {
+            if ((other != null && other.Class.HasFlag(ActorClass.Solid)) || other == null)
+            {
+                Velocity.Y = -Velocity.Y;
+                veloRemainder.Y = -veloRemainder.Y;
+                currentBounceCooldown.Y = bounceCooldown;
+                CalcEnergyAndShield(-1);
+            }
+        }
+
+        public override void Update()
+        {
+            base.Update();
+
+            var actorHit = level.GetFirstOverlapActor(this, ActorClass.None);
+            if (actorHit != null)
+            {
+                OnCollisionX(actorHit);
+                OnCollisionY(actorHit);
+
+                level.DestroyActor(actorHit);
+            }
+
+            switch (CurrentState)
+            {
+                case State.Normal:
+                    CalcPlayerVelocityAndRotation(manager.Controls.Move.IntValue, manager.Controls.Confirm.Down, manager.Controls.Cancel.Down);
+                    CalcEnergyAndShield();
+                    break;
+
+                case State.InputDisabled:
+                    break;
+            }
+
+            CalcBounceCooldown();
+        }
+
+        private void CalcEnergyAndShield(int diff = 0)
+        {
+            if (diff != 0)
+            {
+                shieldRechargeTimer = fastShieldRechargeDelay;
+                slowShieldRecharge = false;
+
+                Shield += diff;
+                if (Shield <= 0)
+                {
+                    Energy += Shield;
+
+                    shieldRechargeTimer = slowShieldRechargeDelay;
+                    slowShieldRecharge = true;
+                }
+            }
+
+            Energy = Math.Clamp(Energy, 0, MaxEnergy);
+
+            var shieldUnitRechargeDelay = slowShieldRecharge ? slowShieldUnitRechargeDelay : fastShieldUnitRechargeDelay;
+            if (shieldRechargeTimer > 0f)
+            {
+                shieldRechargeTimer -= manager.Time.Delta;
+                if (shieldRechargeTimer <= 0f)
+                {
+                    shieldRechargeTimer = 0f;
+                    shieldUnitRechargeTimer = shieldUnitRechargeDelay;
+                }
+            }
+            else if (shieldUnitRechargeTimer > 0f)
+            {
+                shieldUnitRechargeTimer -= manager.Time.Delta;
+                if (shieldUnitRechargeTimer <= 0f && Shield < MaxShield)
+                {
+                    Shield++;
+                    shieldUnitRechargeTimer = shieldUnitRechargeDelay;
+                }
+            }
+
+            Shield = Math.Clamp(Shield, 0, MaxShield);
+        }
+
+        private void CalcPlayerVelocityAndRotation(Point2 direction, bool buttonConfirm, bool buttonCancel)
+        {
+            var accel = acceleration * (buttonConfirm ? 2f : 1f) * manager.Time.Delta;
+
+            if (currentBounceCooldown.X == 0f) Velocity.X += direction.X * accel;
+            if (currentBounceCooldown.Y == 0f) Velocity.Y += direction.Y * accel;
+
+            var maxRotation = 0f;
+            if (Velocity.X < 0f) maxRotation = -spriteRotation * (buttonConfirm ? 3f : 1f);
+            else if (Velocity.X > 0f) maxRotation = spriteRotation * (buttonConfirm ? 3f : 1f);
+            Rotation = Calc.Approach(Rotation, maxRotation, manager.Time.Delta * (buttonConfirm ? 100f : 25f));
+
+            if (MathF.Abs(Velocity.X) > maxSpeed) Velocity.X = Calc.Approach(Velocity.X, MathF.Sign(Velocity.X) * maxSpeed, 2000f * manager.Time.Delta);
+            if (MathF.Abs(Velocity.Y) > maxSpeed) Velocity.Y = Calc.Approach(Velocity.Y, MathF.Sign(Velocity.Y) * maxSpeed, 2000f * manager.Time.Delta);
+
+            var fric = friction * (buttonCancel ? 20f : 1f) * manager.Time.Delta;
+
+            if (direction.X == 0)
+            {
+                Velocity.X = Calc.Approach(Velocity.X, 0f, fric);
+                Rotation = Calc.Approach(Rotation, 0f, friction * manager.Time.Delta);
+            }
+            if (direction.Y == 0)
+                Velocity.Y = Calc.Approach(Velocity.Y, 0f, fric);
+        }
+
+        private void CalcBounceCooldown()
+        {
+            currentBounceCooldown.X = MathF.Floor(Calc.Approach(currentBounceCooldown.X, 0f, manager.Time.Delta));
+            currentBounceCooldown.Y = MathF.Floor(Calc.Approach(currentBounceCooldown.Y, 0f, manager.Time.Delta));
+        }
+    }
+}

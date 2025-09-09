@@ -1,0 +1,55 @@
+{
+  "Level1Intro": [
+    {
+      "SpeakerName": "Alien",
+      "TextStrings": [
+        "Argh, those idiots! They really had to go and lose all of our cargo! Our fresh samples!\nAnd on a mission to a planet with such annoying gravitational properties, no less!",
+        "Sigh. Getting these back won\u0027t be fun..."
+      ]
+    }
+  ],
+  "Level2Intro": [
+    {
+      "SpeakerName": "Alien",
+      "TextStrings": [
+        "As I suspected, this won\u0027t be fun at all, unlike when we originally collected the samples.",
+        "Okay, I should focus on navigation, need to be careful when accelerating and slowing down..."
+      ]
+    }
+  ],
+  "Level3Intro": [
+    {
+      "SpeakerName": "Alien",
+      "TextStrings": [
+        "All these narrow passages really test my patience! But also, hrm... I can\u0027t seem to see one of the samples with my own eye, even though the scanner says it\u0027s here?\nI wonder where it went..."
+      ]
+    }
+  ],
+  "Level4Intro": [
+    {
+      "SpeakerName": "Alien",
+      "TextStrings": [
+        "This area looks to be straightforward enough for a change. Not much to do here, just gotta grab the cargo. We don\u0027t want it to get loose again, after all."
+      ]
+    }
+  ],
+  "Level5Intro": [
+    {
+      "SpeakerName": "Alien",
+      "TextStrings": [
+        "Oh, what the helly? Is this were they lost the majority of the cargo?! Just how many capsules are there?! Well, at least it\u0027s a relatively open area, so I don\u0027t have to worry about the shields so much...",
+        "Still, I\u0027m gonna bint their boat a new one when we\u0027re done with this... *grumble*"
+      ]
+    }
+  ],
+  "Level5Ending": [
+    {
+      "SpeakerName": "xdaniel",
+      "TextStrings": [
+        "Hey, thanks for trying this demo build of \u0022Bouncing UFO\u0022! I know there isn\u0027t too much to it, but it *is* the first game (if you can call it that) that I started coding, that went anywhere near this far!",
+        "That said, if you do want to mess around in the game some more, I have unlocked the level select menu for you!",
+        "Anyway, that\u0027s about it! Thank you very much for playing, and I hope you enjoyed this demo at least a little bit! See you later!"
+      ]
+    }
+  ]
+}

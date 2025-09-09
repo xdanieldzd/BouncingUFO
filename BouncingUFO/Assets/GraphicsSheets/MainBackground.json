@@ -1,0 +1,30 @@
+{
+  "Name": "MainBackground",
+  "ImageFile": "Assets\\GraphicsSheets\\MainBackground.png",
+  "Rectangles": {
+    "BGLayer1": {
+      "X": 0,
+      "Y": 0,
+      "Width": 640,
+      "Height": 270
+    },
+    "BGLayer2": {
+      "X": 0,
+      "Y": 270,
+      "Width": 640,
+      "Height": 270
+    },
+    "BGLayer3": {
+      "X": 0,
+      "Y": 540,
+      "Width": 640,
+      "Height": 270
+    },
+    "BGLayer4": {
+      "X": 0,
+      "Y": 810,
+      "Width": 640,
+      "Height": 270
+    }
+  }
+}
