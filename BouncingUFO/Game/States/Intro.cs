@@ -34,10 +34,15 @@ namespace BouncingUFO.Game.States
                 "\n" +
                 "This is a work-in-progress demo build. There will be missing features, bugs and glitches, and a general lack of polish.\n" +
                 "\n" +
-                "Suggestions for improvements, bug reports, etc. are very welcome and much appreciated.\n" +
-                "\n" +
-                $"Build {Manager.BuildInfo.BuildDateTime:yyyy-MM-dd HH:mm:ss 'UTC'zzz}",
+                "Suggestions for improvements, bug reports, etc. are very welcome and much appreciated.",
                 largeFont, manager.Screen.Bounds, Color.White);
+
+            var bottomText = $"Build {Manager.BuildInfo.BuildDateTime:yyyy-MM-dd HH:mm:ss 'UTC'zzz}";
+            manager.Batcher.Text(
+                smallFont,
+                bottomText,
+                manager.Screen.Bounds.BottomCenter - smallFont.SizeOf(bottomText) / 2f - new Vector2(0f, smallFont.Size * 2f),
+                Color.White);
 
             if (manager.Settings.ShowDebugInfo)
             {
