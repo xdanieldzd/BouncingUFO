@@ -146,7 +146,7 @@ namespace BouncingUFO.Game
 
                 var nonEmptyCells = new List<Point2>();
 
-                for (var i = actor.MapLayer; i < Map.Layers.Count; i++)
+                for (var i = actor.MapLayer + 1; i < Map.Layers.Count; i++)
                 {
                     foreach (var cell in actorOverCells)
                     {

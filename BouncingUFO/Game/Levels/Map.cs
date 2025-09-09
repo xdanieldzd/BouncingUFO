@@ -14,6 +14,8 @@ namespace BouncingUFO.Game.Levels
         [JsonInclude]
         public string IntroID = string.Empty;
         [JsonInclude]
+        public string EndingID = string.Empty;
+        [JsonInclude]
         public List<MapLayer> Layers = [];
         [JsonInclude]
         public List<Spawn> Spawns = [];

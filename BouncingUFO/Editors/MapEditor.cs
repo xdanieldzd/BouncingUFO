@@ -139,6 +139,7 @@ namespace BouncingUFO.Editors
                         tilesetDirty = true;
                     }
                     ImGui.InputText("Intro ID", ref map.IntroID, 128);
+                    ImGui.InputText("Ending ID", ref map.EndingID, 128);
                     ImGui.EndGroup();
                     ImGui.SameLine();
 
@@ -257,7 +258,7 @@ namespace BouncingUFO.Editors
                     {
                         ImGui.Separator();
 
-                        var mapScrollHeight = tileset.CellSize.Y * 12 * tilesetZoom;
+                        var mapScrollHeight = tileset.CellSize.Y * 14 * tilesetZoom;
                         var tileScrollWidth = tileset.CellSize.X * tileSelectorWidth * tilesetZoom + style.ScrollbarSize;
 
                         ImGui.BeginGroup();
@@ -445,10 +446,14 @@ namespace BouncingUFO.Editors
 
                     ImGui.BeginGroup();
                     ImGui.InputText("Actor type", ref spawn.ActorType, 64);
-                    ImGui.SameLine();
-                    ImGui.SliderInt("Position X", ref spawn.Position.X, 0, map.Size.X - 1);
                     ImGui.SliderInt("Map layer", ref spawn.MapLayer, 0, map.Layers.Count - 1);
+                    ImGui.InputInt("Argument", ref spawn.Argument);
+                    ImGui.EndGroup();
+
                     ImGui.SameLine();
+
+                    ImGui.BeginGroup();
+                    ImGui.SliderInt("Position X", ref spawn.Position.X, 0, map.Size.X - 1);
                     ImGui.SliderInt("Position Y", ref spawn.Position.Y, 0, map.Size.Y - 1);
                     ImGui.EndGroup();
                 }

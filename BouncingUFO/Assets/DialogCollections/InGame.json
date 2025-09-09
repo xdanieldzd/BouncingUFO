@@ -3,7 +3,8 @@
     {
       "SpeakerName": "Alien",
       "TextStrings": [
-        "This is the intro to level 1!"
+        "Argh, those idiots! They really had to go and lose all of our cargo! Our fresh samples!\nAnd on a mission to a planet with such annoying gravitational properties, no less!",
+        "Sigh. Getting these back won\u0027t be fun..."
       ]
     }
   ],
@@ -11,7 +12,8 @@
     {
       "SpeakerName": "Alien",
       "TextStrings": [
-        "This is the intro to level 2!"
+        "As I suspected, this won\u0027t be fun at all, unlike when we originally collected the samples.",
+        "Okay, I should focus on navigation, need to be careful when accelerating and slowing down..."
       ]
     }
   ],
@@ -19,7 +21,7 @@
     {
       "SpeakerName": "Alien",
       "TextStrings": [
-        "This is the intro to level 3!"
+        "All these narrow passages really test my patience! But also, hrm... I can\u0027t seem to see one of the samples with my own eye, even though the scanner says it\u0027s here?\nI wonder where it went..."
       ]
     }
   ],
@@ -27,7 +29,7 @@
     {
       "SpeakerName": "Alien",
       "TextStrings": [
-        "This is the intro to level 4!"
+        "This area looks to be straightforward enough for a change. Not much to do here, just gotta grab the cargo. We don\u0027t want it to get loose again, after all."
       ]
     }
   ],
@@ -35,20 +37,18 @@
     {
       "SpeakerName": "Alien",
       "TextStrings": [
-        "This is the intro to level 5!"
+        "Oh, what the helly? Is this were they lost the majority of the cargo?! Just how many capsules are there?! Well, at least it\u0027s a relatively open area, so I don\u0027t have to worry about the shields so much...",
+        "Still, I\u0027m gonna bint their boat a new one when we\u0027re done with this... *grumble*"
       ]
     }
   ],
-  "BigTestMapIntro": [
+  "Level5Ending": [
     {
       "SpeakerName": "xdaniel",
       "TextStrings": [
-        "Hello and welcome to \u0022Bouncing UFO\u0022!",
-        "In this game (if you want to call it that), you control a UFO on a mission on Earth, which has lost its cargo of, erm... \u0022biological material for research purposes\u0022. Yes.",
-        "Your objective is to collect all the floating capsules of cargo around each stage. Not much of a difficult task, you think?",
-        "Well, velocity and inertia on Earth are a b*tch, and your fancy spacecraft wasn\u0027t built for that stuff! Nor for slamming into earthly geology and structures for that matter, so watch for your shield energy!",
-        "In short: Collect the capsules, be smart about accelerating and breaking. That\u0027s all there is to it! Which isn\u0027t much, I know, but eh, it\u0027s my first \u0022game\u0022 that went anywhere near this far, so I hope you\u0027ll enjoy it a bit regardless.",
-        "Alright, that\u0027s about it, I\u0027ll leave you to the game, then! Have fun!"
+        "Hey, thanks for trying this demo build of \u0022Bouncing UFO\u0022! I know there isn\u0027t too much to it, but it *is* the first game (if you can call it that) that I started coding, that went anywhere near this far!",
+        "That said, if you do want to mess around in the game some more, I have unlocked the level select menu for you!",
+        "Anyway, that\u0027s about it! Thank you very much for playing, and I hope you enjoyed this demo at least a little bit! See you later!"
       ]
     }
   ]

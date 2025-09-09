@@ -6,6 +6,7 @@
   },
   "Tileset": "Grass3",
   "IntroID": "Level4Intro",
+  "EndingID": "",
   "Layers": [
     {
       "Tiles": [

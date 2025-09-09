@@ -91,7 +91,9 @@ namespace BouncingUFO
             if (Input.Keyboard.Pressed(Keys.Escape)) Exit();
             if (Input.Keyboard.Alt && Input.Keyboard.Pressed(Keys.Enter)) Settings.Fullscreen = !Settings.Fullscreen;
 
+#if DEBUG
             if (Controls.DebugDisplay.ConsumePress()) Settings.ShowDebugInfo = !Settings.ShowDebugInfo;
+#endif
 
             if (GameStates.TryPeek(out IGameState? gameState))
                 gameState.Update();

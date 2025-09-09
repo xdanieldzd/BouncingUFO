@@ -29,6 +29,8 @@ namespace BouncingUFO.Game.States
 
         private readonly ParallaxBackground parallaxBackground;
 
+        private readonly bool isArcadeMode;
+
         private readonly Queue<DialogText> currentDialogQueue = [];
         private DialogText? currentDialogText = null;
 
@@ -92,6 +94,9 @@ namespace BouncingUFO.Game.States
             parallaxBackground = ParallaxBackground.FromGraphicsSheet(manager, manager.Assets.GraphicsSheets["MainBackground"], [new(2f, 0f), new(4f, 0f), new(6f, 0f), new(8f, 0f)]);
 
             levelManager.Load([.. this.args.Where(x => x is string).Cast<string>()]);
+
+            if (this.args.Length != 0 && this.args[0] is bool value)
+                isArcadeMode = value;
         }
 
         public override void OnEnterState()
@@ -123,12 +128,8 @@ namespace BouncingUFO.Game.States
 
             currentDialogQueue.Clear();
 
-            if (!string.IsNullOrWhiteSpace(levelManager.Map?.IntroID) &&
-                manager.Assets.DialogCollections[levelsDialogFile].TryGetValue(levelManager.Map.IntroID, out List<DialogText>? dialogTextList))
-            {
-                foreach (var dialogText in dialogTextList)
-                    currentDialogQueue.Enqueue(dialogText);
-            }
+            if (isArcadeMode)
+                GetDialogText(levelManager.Map?.IntroID);
         }
 
         public override void OnFadeIn() => UpdateGame();
@@ -136,35 +137,6 @@ namespace BouncingUFO.Game.States
         public override void OnFadeInComplete() => currentState = State.ShowLevelName;
 
         public override void OnUpdate() => UpdateGame();
-
-        public override void OnRender()
-        {
-            manager.Screen.Clear(0x3E4F65);
-
-            if (levelManager.SizeInPixels.X < manager.Screen.Width || levelManager.SizeInPixels.Y < manager.Screen.Height)
-                parallaxBackground.Render();
-
-            RenderMap();
-            RenderHUD();
-
-            if (manager.Settings.ShowDebugInfo)
-            {
-                if (levelManager.GetFirstActor<Player>() is Player player)
-                {
-                    manager.Batcher.Text(smallFont, $"Current hitbox == {player.Position + player.Hitbox.Rectangle}", Vector2.Zero, Color.White);
-                    manager.Batcher.Text(smallFont, $"{manager.Controls.Move.Name}:{manager.Controls.Move.IntValue} {manager.Controls.Confirm.Name}:{manager.Controls.Confirm.Down} {manager.Controls.Cancel.Name}:{manager.Controls.Cancel.Down} {manager.Controls.Menu.Name}:{manager.Controls.Menu.Down} {manager.Controls.DebugDisplay.Name}:{manager.Controls.DebugDisplay.Down}", new Vector2(0f, manager.Screen.Height - smallFont.LineHeight), Color.White);
-
-                    var cells = player.GetMapCells();
-                    for (var i = 0; i < cells.Length; i++)
-                        manager.Batcher.Text(smallFont, cells[i].ToString(), new(0f, 60f + i * smallFont.LineHeight), Color.CornflowerBlue);
-
-                    manager.Batcher.Text(smallFont, $"Camera {camera.Matrix.Translation:0.0000}", new(0f, 25f), Color.Yellow);
-                }
-            }
-
-            dialogBox.Render();
-            menuBox.Render();
-        }
 
         public override void OnBeginFadeOut()
         {
@@ -209,6 +181,45 @@ namespace BouncingUFO.Game.States
                     else
                         manager.GameStates.Pop();
                     break;
+            }
+        }
+
+        public override void OnRender()
+        {
+            manager.Screen.Clear(0x3E4F65);
+
+            if (levelManager.SizeInPixels.X < manager.Screen.Width || levelManager.SizeInPixels.Y < manager.Screen.Height)
+                parallaxBackground.Render();
+
+            RenderMap();
+            RenderHUD();
+
+            if (manager.Settings.ShowDebugInfo)
+            {
+                if (levelManager.GetFirstActor<Player>() is Player player)
+                {
+                    manager.Batcher.Text(smallFont, $"Current hitbox == {player.Position + player.Hitbox.Rectangle}", Vector2.Zero, Color.White);
+                    manager.Batcher.Text(smallFont, $"{manager.Controls.Move.Name}:{manager.Controls.Move.IntValue} {manager.Controls.Confirm.Name}:{manager.Controls.Confirm.Down} {manager.Controls.Cancel.Name}:{manager.Controls.Cancel.Down} {manager.Controls.Menu.Name}:{manager.Controls.Menu.Down} {manager.Controls.DebugDisplay.Name}:{manager.Controls.DebugDisplay.Down}", new Vector2(0f, manager.Screen.Height - smallFont.LineHeight), Color.White);
+
+                    var cells = player.GetMapCells();
+                    for (var i = 0; i < cells.Length; i++)
+                        manager.Batcher.Text(smallFont, cells[i].ToString(), new(0f, 60f + i * smallFont.LineHeight), Color.CornflowerBlue);
+
+                    manager.Batcher.Text(smallFont, $"Camera {camera.Matrix.Translation:0.0000}", new(0f, 25f), Color.Yellow);
+                }
+            }
+
+            dialogBox.Render();
+            menuBox.Render();
+        }
+
+        private void GetDialogText(string? id)
+        {
+            if (!string.IsNullOrWhiteSpace(id) &&
+                manager.Assets.DialogCollections[levelsDialogFile].TryGetValue(id, out List<DialogText>? dialogTextList))
+            {
+                foreach (var dialogText in dialogTextList)
+                    currentDialogQueue.Enqueue(dialogText);
             }
         }
 
@@ -297,9 +308,31 @@ namespace BouncingUFO.Game.States
                             player.PlayAnimation("WarpOut", false);
                         }
 
+                        if (isArcadeMode && capsuleCount <= 0 && gameOverWaitTimer > 0f)
+                            GetDialogText(levelManager.Map?.EndingID);
+
                         gameOverWaitTimer = Calc.Approach(gameOverWaitTimer, 0f, manager.Time.Delta);
-                        if (gameOverWaitTimer <= 0f)
-                            currentState = State.ShowGameOverMenu;
+
+                        if (!dialogBox.IsOpen)
+                        {
+                            if (currentDialogQueue.TryDequeue(out currentDialogText))
+                            {
+                                if (!currentDialogText.HasBeenShownOnce)
+                                {
+                                    dialogBox.DialogText = currentDialogText;
+                                    dialogBox.Open();
+
+                                    currentDialogText.HasBeenShownOnce = true;
+                                }
+                            }
+                            else
+                            {
+                                dialogBox.Close();
+
+                                if (gameOverWaitTimer <= 0f)
+                                    currentState = State.ShowGameOverMenu;
+                            }
+                        }
                     }
                     break;
 
@@ -312,14 +345,20 @@ namespace BouncingUFO.Game.States
                                 menuBox.MenuItems = [nextLevelMenuItem, .. gameOverMenuItems];
                             else
                                 menuBox.MenuItems = [.. gameOverMenuItems];
+
+                            if (isArcadeMode && levelManager.QueuedMaps.Count == 0)
+                                manager.Settings.EnableLevelSelect = true;
+
                             menuBox.Open();
                         }
                     }
                     break;
             }
 
+#if DEBUG
             if (manager.Controls.DebugEditors.ConsumePress())
                 manager.GameStates.Push(new Editor(manager));
+#endif
 
             parallaxBackground.Update();
 

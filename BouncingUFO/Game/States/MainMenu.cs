@@ -34,12 +34,24 @@ namespace BouncingUFO.Game.States
         {
             parallaxBackground = ParallaxBackground.FromGraphicsSheet(manager, manager.Assets.GraphicsSheets["MainBackground"], parallaxScrollSpeeds);
 
-            gameSelectMenuItems =
-            [
-                new() { Label = "Arcade Mode", Action = MenuArcadeModeSelectAction },
-                new() { Label = "Play Single Level", Action = MenuSingleLevelSelectAction },
-                new() { Label = "Cancel", Action = MenuCancelAction, IsCancelAction = true }
-            ];
+            if (manager.Settings.EnableLevelSelect || manager.Settings.ShowDebugInfo)
+            {
+                gameSelectMenuItems =
+                [
+                    new() { Label = "Arcade Mode", Action = MenuArcadeModeSelectAction },
+                    new() { Label = "Play Single Level", Action = MenuSingleLevelSelectAction },
+                    new() { Label = "Cancel", Action = MenuCancelAction, IsCancelAction = true }
+                ];
+            }
+            else
+            {
+                gameSelectMenuItems =
+                [
+                    new() { Label = "Arcade Mode", Action = MenuArcadeModeSelectAction },
+                    new() { Label = "Cancel", Action = MenuCancelAction, IsCancelAction = true }
+                ];
+            }
+
             modeSelectMenuItems = [.. manager.Assets.LevelCollections[arcadeLevelCollectionName].Select(x => new MenuBoxItem() { Label = x.Title, Action = MenuArcadeModeStartAction }), new() { Label = "Cancel", Action = MenuEnterMainMenuAction, IsCancelAction = true }];
             levelSelectMenuItems = [.. manager.Assets.Maps.Select(x => new MenuBoxItem() { Label = $"{x.Value.Title} ({x.Key})", Action = MenuSingleLevelStartAction }), new() { Label = "Cancel", Action = MenuEnterMainMenuAction, IsCancelAction = true }];
 
@@ -96,7 +108,7 @@ namespace BouncingUFO.Game.States
 
         private void MenuArcadeModeStartAction()
         {
-            nextGameState = new InGame(manager, [.. manager.Assets.LevelCollections[arcadeLevelCollectionName].ElementAt(menuBox.SelectedIndex).MapNames]);
+            nextGameState = new InGame(manager, [true, .. manager.Assets.LevelCollections[arcadeLevelCollectionName].ElementAt(menuBox.SelectedIndex).MapNames]);
             LeaveState();
         }
 
@@ -109,7 +121,7 @@ namespace BouncingUFO.Game.States
 
         private void MenuSingleLevelStartAction()
         {
-            nextGameState = new InGame(manager, [manager.Assets.Maps.ElementAt(menuBox.SelectedIndex).Key]);
+            nextGameState = new InGame(manager, [false, manager.Assets.Maps.ElementAt(menuBox.SelectedIndex).Key]);
             LeaveState();
         }
 
