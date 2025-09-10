@@ -24,9 +24,11 @@ SOFTWARE.
 
 # Derivative Content
 
+## Foster Framework samples
+
 Various code (ex. ``ImGuiRenderer.cs``, parts of ``ActorBase.cs`` and ``Sprite.cs``) derived from [Foster Framework sample code](https://github.com/FosterFramework/Samples/commit/5b97ca5329e61768f85a45d655da5df7f882519d) at commit ``5b97ca5``, licensed under the following terms:
 
-## MIT License
+### MIT License
 
 Copyright (c) 2023 Noel Berry
 
@@ -47,3 +49,7 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+## Scrolling background graphics
+
+Graphics for parallax scrolling background on title screen, main menu and in-game, derived from ["Bevouliin Free Mountain Game Background" by bevouliin.com](https://opengameart.org/content/bevouliin-free-mountain-game-background) on OpenGameArt.org, released into the public domain via [CC0 1.0 Universal](https://creativecommons.org/publicdomain/zero/1.0/).
