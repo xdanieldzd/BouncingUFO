@@ -1,10 +1,11 @@
 ﻿using BouncingUFO.Editors;
+using BouncingUFO.Game.States.Parameters;
 using Foster.Framework;
 using ImGuiNET;
 
 namespace BouncingUFO.Game.States
 {
-    public class Editor(Manager manager, params object[] args) : GameStateBase(manager, args)
+    public class Editor(Manager manager, IGameStateParameters? parameters = default) : GameStateBase(manager, parameters)
     {
         public override Color ClearColor => Color.Black;
         public override float FadeDuration => 0f;

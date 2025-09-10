@@ -1,9 +1,10 @@
-﻿using Foster.Framework;
+﻿using BouncingUFO.Game.States.Parameters;
+using Foster.Framework;
 using System.Numerics;
 
 namespace BouncingUFO.Game.States
 {
-    public class Intro(Manager manager, params object[] args) : GameStateBase(manager, args)
+    public class Intro(Manager manager, IGameStateParameters? parameters = default) : GameStateBase(manager, parameters)
     {
         public override Color ClearColor => Color.Black;
 

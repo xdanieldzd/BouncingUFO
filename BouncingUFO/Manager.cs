@@ -1,4 +1,5 @@
 ﻿using BouncingUFO.Game.States;
+using BouncingUFO.Game.States.Parameters;
 using BouncingUFO.Utilities;
 using Foster.Framework;
 using System.Globalization;
@@ -72,7 +73,7 @@ namespace BouncingUFO
             else if (Globals.StartInTestGameState)
                 GameStates.Push(new Test(this));
             else if (Globals.QuickStart)
-                GameStates.Push(new InGame(this));
+                GameStates.Push(new InGame(this, new InGameParameters() { IsArcadeMode = false, Maps = ["Level4"] }));
             else
                 GameStates.Push(new Intro(this));
         }

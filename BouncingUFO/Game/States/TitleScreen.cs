@@ -1,11 +1,12 @@
-﻿using BouncingUFO.Game.UI;
+﻿using BouncingUFO.Game.States.Parameters;
+using BouncingUFO.Game.UI;
 using BouncingUFO.Utilities;
 using Foster.Framework;
 using System.Numerics;
 
 namespace BouncingUFO.Game.States
 {
-    public class TitleScreen(Manager manager, params object[] args) : GameStateBase(manager, args)
+    public class TitleScreen(Manager manager, IGameStateParameters? parameters = default) : GameStateBase(manager, parameters)
     {
         private readonly SpriteFont smallFont = manager.Assets.Fonts["SmallFont"];
         private readonly SpriteFont largeFont = manager.Assets.Fonts["LargeFont"];

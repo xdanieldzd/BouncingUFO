@@ -1,4 +1,5 @@
 ﻿using BouncingUFO.Game.Actors;
+using BouncingUFO.Game.States.Parameters;
 using BouncingUFO.Game.UI;
 using BouncingUFO.Utilities;
 using Foster.Framework;
@@ -45,7 +46,7 @@ namespace BouncingUFO.Game.States
 
         private float gameOverWaitTimer;
 
-        public InGame(Manager manager, params object[] args) : base(manager, args)
+        public InGame(Manager manager, IGameStateParameters? parameters = default) : base(manager, parameters)
         {
             smallFont = manager.Assets.Fonts["SmallFont"];
             largeFont = manager.Assets.Fonts["LargeFont"];
@@ -93,24 +94,21 @@ namespace BouncingUFO.Game.States
 
             parallaxBackground = ParallaxBackground.FromGraphicsSheet(manager, manager.Assets.GraphicsSheets["MainBackground"], [new(2f, 0f), new(4f, 0f), new(6f, 0f), new(8f, 0f)]);
 
-            levelManager.Load([.. this.args.Where(x => x is string).Cast<string>()]);
-
-            if (this.args.Length != 0 && this.args[0] is bool value)
-                isArcadeMode = value;
+            if (this.parameters is InGameParameters inGameParameters)
+            {
+                levelManager.Load(inGameParameters.Maps);
+                isArcadeMode = inGameParameters.IsArcadeMode;
+            }
         }
 
         public override void OnEnterState()
         {
-            if (!Globals.QuickStart)
-            {
-                levelManager.Reset();
-                gameStartCountdown = 5f;
-            }
-            else
-            {
-                levelManager.Load(@"Level4");
-                gameStartCountdown = 5f;
+            levelManager.Reset();
+            gameStartCountdown = 5f;
 
+            if (Globals.QuickStart)
+            {
+                gameStartCountdown = 0f;
                 if (levelManager.GetFirstActor<Player>() is Player player)
                     player.CurrentState = Player.State.Normal;
             }

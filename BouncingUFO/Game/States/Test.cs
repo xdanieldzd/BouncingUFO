@@ -1,9 +1,10 @@
-﻿using Foster.Framework;
+﻿using BouncingUFO.Game.States.Parameters;
+using Foster.Framework;
 using System.Numerics;
 
 namespace BouncingUFO.Game.States
 {
-    public class Test(Manager manager, params object[] args) : GameStateBase(manager, args)
+    public class Test(Manager manager, IGameStateParameters? parameters = default) : GameStateBase(manager, parameters)
     {
         private const float waitDuration = 15f;
 

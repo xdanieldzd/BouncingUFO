@@ -1,11 +1,12 @@
-﻿using BouncingUFO.Game.UI;
+﻿using BouncingUFO.Game.States.Parameters;
+using BouncingUFO.Game.UI;
 using BouncingUFO.Utilities;
 using Foster.Framework;
 using System.Numerics;
 
 namespace BouncingUFO.Game.States
 {
-    public class MainMenu(Manager manager, params object[] args) : GameStateBase(manager, args)
+    public class MainMenu(Manager manager, IGameStateParameters? parameters = default) : GameStateBase(manager, parameters)
     {
         private const string arcadeLevelCollectionName = "ArcadeMode";
 
@@ -108,7 +109,11 @@ namespace BouncingUFO.Game.States
 
         private void MenuArcadeModeStartAction()
         {
-            nextGameState = new InGame(manager, [true, .. manager.Assets.LevelCollections[arcadeLevelCollectionName].ElementAt(menuBox.SelectedIndex).MapNames]);
+            nextGameState = new InGame(manager, new InGameParameters()
+            {
+                IsArcadeMode = true,
+                Maps = [.. manager.Assets.LevelCollections[arcadeLevelCollectionName].ElementAt(menuBox.SelectedIndex).MapNames]
+            });
             LeaveState();
         }
 
@@ -121,7 +126,11 @@ namespace BouncingUFO.Game.States
 
         private void MenuSingleLevelStartAction()
         {
-            nextGameState = new InGame(manager, [false, manager.Assets.Maps.ElementAt(menuBox.SelectedIndex).Key]);
+            nextGameState = new InGame(manager, new InGameParameters()
+            {
+                IsArcadeMode = false,
+                Maps = [manager.Assets.Maps.ElementAt(menuBox.SelectedIndex).Key]
+            });
             LeaveState();
         }
 

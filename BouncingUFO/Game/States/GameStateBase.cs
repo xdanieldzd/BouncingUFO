@@ -1,9 +1,10 @@
-﻿using BouncingUFO.Utilities;
+﻿using BouncingUFO.Game.States.Parameters;
+using BouncingUFO.Utilities;
 using Foster.Framework;
 
 namespace BouncingUFO.Game.States
 {
-    public abstract class GameStateBase(Manager manager, params object[] args) : IGameState
+    public abstract class GameStateBase(Manager manager, IGameStateParameters? parameters = default) : IGameState
     {
         public enum FadeMode { UseFadeColor, UsePreviousColor }
 
@@ -14,7 +15,7 @@ namespace BouncingUFO.Game.States
         public virtual FadeMode FadeOutMode { get; set; } = FadeMode.UseFadeColor;
 
         protected readonly Manager manager = manager;
-        protected readonly object[] args = args;
+        protected readonly IGameStateParameters? parameters = parameters;
 
         private readonly ScreenFader screenFader = new(manager);
         private enum BaseState { EnterState, FadeIn, Main, FadeOut }
